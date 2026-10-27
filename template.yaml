@@ -3,18 +3,17 @@ Transform: AWS::Serverless-2016-10-31
 Description: ClimateGuard backend. Deploy with `sam build && sam deploy --guided`.
 
 Parameters:
-  BasetenApiKey:
+  FrontendUrl:
     Type: String
-    NoEcho: true
-    Description: Baseten key for the monitoring agent (Muse Spark Open)
+    Description: >-
+      Public URL of the frontend (CORS origin and links in alert emails), no trailing slash.
+      Use http://localhost:5173 until the Vercel app exists, then redeploy with the real URL.
+  MaxSubscribers:
+    Type: Number
+    Default: 500
   NwsUserAgent:
     Type: String
     Description: NWS asks for a User-Agent with contact info, e.g. "ClimateGuard/0.1 (you@example.com)"
-  AirNowApiKey:
-    Type: String
-    Default: ""
-    NoEcho: true
-    Description: Optional EPA AirNow key. Empty = Open-Meteo modeled AQI.
 
 Globals:
   Function:
@@ -29,9 +28,12 @@ Globals:
         USAGE_TABLE: !Ref UsageTable
         CACHE_TABLE: !Ref CacheTable
         ALERTS_TABLE: !Ref AlertsTable
+        RATELIMIT_TABLE: !Ref RateLimitTable
+        NOTIFY_MODE: sns
+        FRONTEND_URL: !Ref FrontendUrl
+        MAX_SUBSCRIBERS: !Ref MaxSubscribers
         CG_LOCAL_DIR: /tmp/climateguard
         NWS_USER_AGENT: !Ref NwsUserAgent
-        AIRNOW_API_KEY: !Ref AirNowApiKey
 
 Resources:
   SnapshotsTable:
@@ -90,6 +92,19 @@ Resources:
         - { AttributeName: sk, KeyType: RANGE }
       TimeToLiveSpecification: { AttributeName: ttl, Enabled: true }
 
+  # Per-IP / per-email sign-up limits, "already subscribed" markers, subscriber counter
+  RateLimitTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: climateguard-ratelimit
+      BillingMode: PROVISIONED
+      ProvisionedThroughput: { ReadCapacityUnits: 2, WriteCapacityUnits: 2 }
+      AttributeDefinitions:
+        - { AttributeName: k, AttributeType: S }
+      KeySchema:
+        - { AttributeName: k, KeyType: HASH }
+      TimeToLiveSpecification: { AttributeName: ttl, Enabled: true }
+
   CollectFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -98,12 +113,21 @@ Resources:
       Timeout: 300
       Environment:
         Variables:
-          BASETEN_API_KEY: !Ref BasetenApiKey
+          # SecureString created by hand (CloudFormation can't create SecureStrings); see README "Deploy"
+          BASETEN_API_KEY_PARAM: /climateguard/baseten-api-key
+          # Optional; if the parameter is missing, AQI falls back to Open-Meteo
+          AIRNOW_API_KEY_PARAM: /climateguard/airnow-api-key
       Policies:
         - DynamoDBCrudPolicy: { TableName: !Ref SnapshotsTable }
         - DynamoDBCrudPolicy: { TableName: !Ref UsageTable }
         - DynamoDBCrudPolicy: { TableName: !Ref CacheTable }
         - DynamoDBCrudPolicy: { TableName: !Ref AlertsTable }
+        - SSMParameterReadPolicy: { ParameterName: climateguard/baseten-api-key }
+        - SSMParameterReadPolicy: { ParameterName: climateguard/airnow-api-key }
+        - Statement:
+            - Effect: Allow
+              Action: [sns:CreateTopic, sns:Publish, sns:TagResource]
+              Resource: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:climateguard-*
       Events:
         Every15Min:
           Type: ScheduleV2
@@ -114,10 +138,10 @@ Resources:
     Type: AWS::Serverless::HttpApi
     Properties:
       CorsConfiguration:
-        AllowOrigins: ["*"]  # tighten to the Vercel domain once deployed
+        AllowOrigins: [!Ref FrontendUrl, "http://localhost:5173"]
         AllowMethods: [GET, POST, OPTIONS]
         AllowHeaders: [Content-Type]
-      DefaultRouteSettings:
+      DefaultRouteSettings:  # whole-API safety net; per-IP limits are enforced in code
         ThrottlingBurstLimit: 20
         ThrottlingRateLimit: 10
 
@@ -128,6 +152,12 @@ Resources:
       Timeout: 10
       Policies:
         - DynamoDBReadPolicy: { TableName: !Ref SnapshotsTable }
+        - DynamoDBReadPolicy: { TableName: !Ref AlertsTable }
+        - DynamoDBCrudPolicy: { TableName: !Ref RateLimitTable }
+        - Statement:
+            - Effect: Allow
+              Action: [sns:CreateTopic, sns:Subscribe, sns:TagResource]
+              Resource: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:climateguard-*
       Events:
         ListCities:
           Type: HttpApi
@@ -138,6 +168,15 @@ Resources:
             ApiId: !Ref HttpApi
             Method: GET
             Path: /cities/{city}
+        GetCityAlerts:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Method: GET
+            Path: /cities/{city}/alerts
+        Subscribe:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /subscribe }
 
 Outputs:
   ApiUrl:

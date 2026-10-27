@@ -91,3 +91,22 @@ def test_reasoning_effort_default_and_override(fake):
     assert fake.calls[-1]["reasoning_effort"] == config.REASONING_EFFORT["baseten"]
     _ask(reasoning_effort="high", use_cache=False)
     assert fake.calls[-1]["reasoning_effort"] == "high"
+
+
+def test_api_key_read_from_ssm_when_env_missing(monkeypatch):
+    from climateguard import ssm
+
+    monkeypatch.setattr(config, "BASETEN_API_KEY", "")
+    monkeypatch.setattr(config, "BASETEN_API_KEY_PARAM", "/climateguard/baseten-api-key")
+    monkeypatch.setattr(ssm, "get_secret", lambda name: f"secret-from:{name}")
+    monkeypatch.setattr(llm, "_clients", {})
+    client = llm._client("baseten")
+    assert client.api_key == "secret-from:/climateguard/baseten-api-key"
+
+
+def test_missing_key_and_param_raises(monkeypatch):
+    monkeypatch.setattr(config, "MODEL_API_KEY", "")
+    monkeypatch.setattr(config, "MODEL_API_KEY_PARAM", "")
+    monkeypatch.setattr(llm, "_clients", {})
+    with pytest.raises(RuntimeError, match="not set"):
+        llm._client("meta")

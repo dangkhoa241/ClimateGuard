@@ -72,6 +72,35 @@ def test_daily_cap():
     for hazard in ("heat", "smoke", "flood"):
         assert monitor.tool_send_alert(run, _alert(hazard=hazard))["sent"]
     assert "cap" in monitor.tool_send_alert(run, _alert(hazard="wind"))["rejected"]
+    assert "cap" in monitor.tool_send_alert(run, _alert(hazard="wind", severity="moderate"))["rejected"]
+
+
+def test_daily_cap_bypassed_only_by_higher_severity_than_all_sent_today():
+    run = _run()
+    for hazard, sev in (("heat", "moderate"), ("smoke", "high"), ("flood", "moderate")):
+        assert monitor.tool_send_alert(run, _alert(hazard=hazard, severity=sev))["sent"]
+    # "high" equals the highest already sent -> still capped
+    assert "cap" in monitor.tool_send_alert(run, _alert(hazard="wind", severity="high"))["rejected"]
+    # "extreme" beats every alert sent today -> goes through despite the cap
+    assert monitor.tool_send_alert(run, _alert(hazard="wind", severity="extreme"))["sent"]
+    # now extreme is the highest; nothing can bypass anymore
+    assert "cap" in monitor.tool_send_alert(run, _alert(hazard="heat", severity="extreme"))["rejected"]
+
+
+@pytest.mark.parametrize("summary", [
+    {"active_alerts": ["Dense Fog Advisory"]},  # any NWS alert, even a mild one
+    {"active_alerts": ["Special Weather Statement"]},
+    {"aqi_now": 101},
+    {"aqi_forecast_max": 101},
+    {"aqi_now": 250, "active_alerts": []},
+])
+def test_prefilter_always_passes_nws_alerts_and_aqi_over_100(summary):
+    assert monitor.risk_signals(summary)
+
+
+def test_prefilter_blocks_quiet_data():
+    assert monitor.risk_signals({"aqi_now": 100, "aqi_forecast_max": 100, "max_heat_index_f": 99,
+                                 "hours_ge_95f": 0, "max_precip_prob": 59, "active_alerts": []}) == []
 
 
 def test_tools_refuse_other_cities():

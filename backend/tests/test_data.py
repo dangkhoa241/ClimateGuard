@@ -161,3 +161,59 @@ def test_handler_runs_agent_only_for_changed_cities(local, monkeypatch):
     calls.clear()
     r = collect_mod.handler({}, None)
     assert calls == [] and r["decisions"] == {}  # nothing changed: no agent, no spend
+
+
+def test_source_errors_never_contain_query_params(monkeypatch):
+    import requests
+    from climateguard.sources import http
+
+    class Resp:
+        status_code, reason = 410, "Gone"
+
+        def raise_for_status(self):
+            raise requests.HTTPError("410 Client Error for url: https://x.example/aq?API_KEY=SECRET-123")
+
+    monkeypatch.setattr(http._session, "get", lambda *a, **k: Resp())
+    with pytest.raises(http.SourceError) as exc:
+        http.get_json("https://x.example/aq", params={"API_KEY": "SECRET-123"})
+    assert "SECRET" not in str(exc.value) and "410" in str(exc.value)
+
+
+# --- AirNow replacement services (shapes captured from live responses, 2026-10-27) ---
+
+def test_airnow_parsing_new_format():
+    from climateguard.sources import airnow
+
+    obs = [{"dateObserved": "2026-10-27", "hourObserved": "14:00", "reportingAreaName": "Stockton",
+            "parameterName": "PM2.5", "nowcastAQI": 162, "aqiCategoryName": "Unhealthy"},
+           {"dateObserved": "2026-10-27", "hourObserved": "14:00", "reportingAreaName": "Stockton",
+            "parameterName": "OZONE", "nowcastAQI": 40, "aqiCategoryName": "Good"},
+           {"parameterName": "PM10", "nowcastAQI": -1}]
+    cur = airnow.parse_observations(obs)
+    assert (cur["aqi"], cur["category"], cur["pollutant"], cur["pm25_aqi"]) == (162, "Unhealthy", "PM2.5", 162)
+    assert cur["observed_at"].startswith("2026-10-27T14:00")
+
+    fc = airnow.parse_forecast([
+        {"dateValid": "2026-10-27", "parameterName": "PM2.5", "aqi": 62, "categoryNumber": 2,
+         "categoryName": "Moderate", "actionDay": False},
+        {"dateValid": "2026-10-27", "parameterName": "OZONE", "aqi": -1, "categoryNumber": 1,
+         "categoryName": "Good", "actionDay": False},
+        {"dateValid": "2026-10-28", "parameterName": "PM2.5", "aqi": -1, "categoryNumber": 4,
+         "categoryName": "Unhealthy", "actionDay": True},
+    ])
+    assert fc == [
+        {"date": "2026-10-27", "aqi": 62, "category": "Moderate", "pollutant": "PM2.5", "action_day": False},
+        {"date": "2026-10-28", "aqi": None, "category": "Unhealthy", "pollutant": "PM2.5", "action_day": True},
+    ]
+
+
+def test_airnow_key_from_ssm_when_env_missing(monkeypatch):
+    from climateguard import ssm
+    from climateguard.sources import airnow
+
+    monkeypatch.setattr(config, "AIRNOW_API_KEY", "")
+    monkeypatch.setattr(config, "AIRNOW_API_KEY_PARAM", "")
+    assert not airnow.enabled()  # no key anywhere -> Open-Meteo fallback
+    monkeypatch.setattr(config, "AIRNOW_API_KEY_PARAM", "/climateguard/airnow-api-key")
+    monkeypatch.setattr(ssm, "get_secret", lambda name: "KEY-FROM-SSM")
+    assert airnow.enabled() and airnow._params(1, 2)["API_KEY"] == "KEY-FROM-SSM"

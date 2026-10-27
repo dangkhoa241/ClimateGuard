@@ -44,3 +44,51 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
   font-weight: 600;
 }
 .big:disabled { opacity: 0.5; }
+
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+
+.back {
+  margin-top: 16px;
+  min-height: 44px;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+.signup { display: flex; flex-direction: column; gap: 8px; }
+.signup label { font-weight: 600; margin-top: 8px; }
+.signup select,
+.signup input {
+  min-height: 52px;
+  padding: 0 12px;
+  border: 2px solid #cfcac0;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--fg);
+  font-size: 1.05rem;
+}
+.signup .big { margin-top: 12px; }
+.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+
+.notice { padding: 12px 14px; border-radius: 10px; }
+.notice h2 { margin: 0 0 8px; font-size: 1.2rem; }
+.notice.success { background: #e7f5ea; border: 2px solid #2f7d43; }
+.notice.error { background: #fdecea; border: 2px solid #b42318; color: #7a1a12; margin: 8px 0 0; }
+
+.recent { margin-top: 28px; }
+.recent h2 { font-size: 1.2rem; margin: 0 0 8px; }
+.alert-card {
+  margin-bottom: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fff;
+  border-left: 8px solid #d97706;
+}
+.alert-card.sev-high { border-left-color: #c2410c; }
+.alert-card.sev-extreme { border-left-color: #991b1b; }
+.alert-card p { margin: 6px 0 0; line-height: 1.4; }
+.alert-meta { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); }
+.alert-meta strong { color: var(--fg); }

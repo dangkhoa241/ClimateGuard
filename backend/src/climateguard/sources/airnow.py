@@ -1,57 +1,77 @@
-"""EPA AirNow (official monitor readings; free key, ~500 requests/hour).
+"""EPA AirNow (official monitor readings; free key).
 
-UNVERIFIED: AirNow's docs are behind a login, so the request format below follows
-the commonly used public format. It only runs when AIRNOW_API_KEY is set; verify
-with `python scripts/collect_local.py stockton` after adding a key.
+AirNow retired its old lat/long web services on 2026-10-01 (they now return 410).
+This uses the replacement services; field names verified against live responses
+on 2026-10-27 (AirNow's own docs are behind a login):
+  observations: /aq/observation/current/ziplatlong/  -> dateObserved, hourObserved ("2:00"),
+                parameterName (PM2.5 | OZONE | PM10), nowcastAQI, aqiCategoryName, reportingAreaName
+  forecasts:    /aq/forecast/current/                -> dateValid, parameterName, aqi (-1 if none),
+                categoryNumber, categoryName, actionDay, discussion
 """
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from .. import config, risk
+from .. import config, risk, ssm
 from ..cities import TIMEZONE
 from .http import SourceError, get_json
 
 BASE = "https://www.airnowapi.org/aq"
 _TZ = ZoneInfo(TIMEZONE)
+_POLLUTANT = {"OZONE": "O3"}  # keep the short names used elsewhere
 
 
-def _params(lat: float, lon: float, **extra) -> dict:
+def enabled() -> bool:
+    return bool(config.AIRNOW_API_KEY or config.AIRNOW_API_KEY_PARAM)
+
+
+def _api_key() -> str:
+    return config.AIRNOW_API_KEY or ssm.get_secret(config.AIRNOW_API_KEY_PARAM)
+
+
+def _params(lat: float, lon: float) -> dict:
     return {"format": "application/json", "latitude": lat, "longitude": lon,
-            "distance": 25, "API_KEY": config.AIRNOW_API_KEY, **extra}
+            "distance": 25, "API_KEY": _api_key()}
+
+
+def parse_observations(obs: list) -> dict:
+    readings = [o for o in obs if isinstance(o.get("nowcastAQI"), int) and o["nowcastAQI"] >= 0]
+    if not readings:
+        raise SourceError("AirNow returned no observations within 25 miles")
+    worst = max(readings, key=lambda o: o["nowcastAQI"])
+    pm25 = next((o["nowcastAQI"] for o in readings if o.get("parameterName") == "PM2.5"), None)
+    hour = int(str(worst.get("hourObserved", "0")).split(":")[0])
+    observed = datetime.strptime(worst["dateObserved"].strip(), "%Y-%m-%d").replace(hour=hour, tzinfo=_TZ)
+    return {
+        "aqi": worst["nowcastAQI"],
+        "category": worst.get("aqiCategoryName") or risk.aqi_category(worst["nowcastAQI"]),
+        "pollutant": _POLLUTANT.get(worst.get("parameterName"), worst.get("parameterName")),
+        "pm25_aqi": pm25,
+        "observed_at": observed.isoformat(),
+        "area": worst.get("reportingAreaName"),
+    }
+
+
+def parse_forecast(rows: list) -> list[dict]:
+    by_day: dict[str, dict] = {}
+    for f in rows:
+        day = (f.get("dateValid") or "").strip()
+        if not day:
+            continue
+        aqi = f.get("aqi")
+        aqi = aqi if isinstance(aqi, int) and aqi >= 0 else None
+        cat_num = f.get("categoryNumber") or 0
+        prev = by_day.get(day)
+        if prev is None or cat_num > prev["_cat"] or (cat_num == prev["_cat"] and (aqi or 0) > (prev["aqi"] or 0)):
+            by_day[day] = {"date": day, "aqi": aqi, "category": f.get("categoryName") or risk.aqi_category(aqi),
+                           "pollutant": _POLLUTANT.get(f.get("parameterName"), f.get("parameterName")),
+                           "action_day": bool(f.get("actionDay")), "_cat": cat_num}
+    return [{k: v for k, v in d.items() if k != "_cat"} for _, d in sorted(by_day.items())]
 
 
 def get_aqi(lat: float, lon: float) -> dict:
-    obs = get_json(f"{BASE}/observation/latLong/current/", params=_params(lat, lon))
-    if not obs:
-        raise SourceError("AirNow returned no observations within 25 miles")
-    worst = max(obs, key=lambda o: o.get("AQI", -1))
-    pm25 = next((o["AQI"] for o in obs if o.get("ParameterName") == "PM2.5"), None)
-    observed = datetime.strptime(worst["DateObserved"].strip(), "%Y-%m-%d").replace(
-        hour=int(worst.get("HourObserved", 0)), tzinfo=_TZ)
-
-    today = datetime.now(_TZ).strftime("%Y-%m-%d")
-    fc_raw = get_json(f"{BASE}/forecast/latLong/", params=_params(lat, lon, date=today))
-    by_day: dict[str, dict] = {}
-    for f in fc_raw:
-        day = f["DateForecast"].strip()
-        aqi = f.get("AQI", -1)
-        cat_num = (f.get("Category") or {}).get("Number", 0)
-        prev = by_day.get(day)
-        if prev is None or cat_num > prev["_cat"]:
-            by_day[day] = {"date": day, "aqi": aqi if aqi >= 0 else None,
-                           "category": (f.get("Category") or {}).get("Name"),
-                           "pollutant": f.get("ParameterName"),
-                           "action_day": bool(f.get("ActionDay")), "_cat": cat_num}
-
-    return {
-        "source": "airnow",
-        "current": {
-            "aqi": worst["AQI"],
-            "category": (worst.get("Category") or {}).get("Name") or risk.aqi_category(worst["AQI"]),
-            "pollutant": worst.get("ParameterName"),
-            "pm25_aqi": pm25,
-            "observed_at": observed.isoformat(),
-            "area": worst.get("ReportingArea"),
-        },
-        "forecast": [{k: v for k, v in d.items() if k != "_cat"} for _, d in sorted(by_day.items())],
-    }
+    current = parse_observations(get_json(f"{BASE}/observation/current/ziplatlong/", params=_params(lat, lon)))
+    try:
+        forecast = parse_forecast(get_json(f"{BASE}/forecast/current/", params=_params(lat, lon)))
+    except SourceError:
+        forecast = []  # forecasts are optional; current readings are what matter most
+    return {"source": "airnow", "current": current, "forecast": forecast}

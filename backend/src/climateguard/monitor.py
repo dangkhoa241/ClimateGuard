@@ -6,7 +6,8 @@ Every run ends with one decision-log entry (sent / skipped / error, and why).
 
 Guardrails enforced in code, not just in the prompt:
   - dedup: same hazard at same-or-lower severity within COOLDOWN_HOURS is rejected
-  - daily cap per city, required languages, message length, no medical wording
+  - daily cap per city (bypassed only by an alert more severe than all sent in 24h),
+    required languages, message length, no medical wording
   - only the city under review can be queried or alerted
 """
 import json
@@ -181,7 +182,11 @@ def validate_alert(run: Run, args: dict) -> str | None:
                     "actions only; rewrite without medical content")
     recent = alerts_store.recent_sent(run.city, hours=24)
     if len(recent) >= MAX_ALERTS_PER_DAY:
-        return f"daily cap reached ({MAX_ALERTS_PER_DAY} alerts in 24h for this city)"
+        # An alert more severe than everything sent in the last 24h always goes through.
+        highest_sent = max(SEVERITIES.get(r["severity"], 0) for r in recent)
+        if SEVERITIES[severity] <= highest_sent:
+            return (f"daily cap reached ({MAX_ALERTS_PER_DAY} alerts in 24h for this city); only an alert more "
+                    f"severe than every alert already sent today can go through")
     for r in alerts_store.recent_sent(run.city, hours=COOLDOWN_HOURS):
         if r["hazard"] == hazard and SEVERITIES.get(r["severity"], 0) >= SEVERITIES[severity]:
             return (f"duplicate: a {r['severity']} {hazard} alert was already sent at {_local_time(r['ts'])}. "
@@ -196,7 +201,7 @@ def tool_send_alert(run: Run, args: dict) -> dict:
         return {"sent": False, "rejected": rejection}
     msgs = {lang: args["messages_by_language"][lang].strip() for lang in LANGS}
     alerts_store.record_sent(run.city, args["hazard"], args["severity"], msgs, args.get("reason", ""))
-    delivery = notify.deliver(run.city, args["severity"], msgs)
+    delivery = notify.deliver(run.city, args["hazard"], args["severity"], msgs)
     run.sent.append({"hazard": args["hazard"], "severity": args["severity"], "messages": msgs})
     return {"sent": True, "delivery": delivery}
 

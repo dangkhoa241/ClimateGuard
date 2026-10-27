@@ -9,7 +9,7 @@ __pycache__/
 .venv/
 .pytest_cache/
 .aws-sam/
-# sam deploy --guided may store parameter values (e.g. the AirNow key) here
+# local deploy settings (no secrets: API keys live in SSM Parameter Store)
 samconfig.toml
 
 # Local runtime data (usage log, response cache)

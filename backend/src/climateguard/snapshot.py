@@ -26,7 +26,7 @@ def _fetch_forecast(lat, lon):
 
 
 def _fetch_aqi(lat, lon):
-    if config.AIRNOW_API_KEY:
+    if airnow.enabled():
         try:
             return airnow.get_aqi(lat, lon), None
         except Exception as e:

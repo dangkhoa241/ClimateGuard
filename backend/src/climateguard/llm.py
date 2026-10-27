@@ -10,7 +10,7 @@ from dataclasses import dataclass
 
 from openai import OpenAI
 
-from . import cache, config, usage
+from . import cache, config, ssm, usage
 
 _THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
 
@@ -36,11 +36,13 @@ class ChatResult:
 def _client(provider: str) -> OpenAI:
     if provider not in _clients:
         if provider == "baseten":
-            key, url = config.BASETEN_API_KEY, config.BASETEN_BASE_URL
+            key, param, url = config.BASETEN_API_KEY, config.BASETEN_API_KEY_PARAM, config.BASETEN_BASE_URL
         elif provider == "meta":
-            key, url = config.MODEL_API_KEY, config.META_BASE_URL
+            key, param, url = config.MODEL_API_KEY, config.MODEL_API_KEY_PARAM, config.META_BASE_URL
         else:
             raise ValueError(f"unknown provider {provider!r}")
+        if not key and param:
+            key = ssm.get_secret(param)
         if not key:
             raise RuntimeError(f"API key for {provider} is not set (see .env.example)")
         # Pass api_key explicitly: the SDK does not read MODEL_API_KEY / BASETEN_API_KEY.

@@ -7,8 +7,12 @@ from dotenv import load_dotenv
 REPO_ROOT = Path(__file__).resolve().parents[3]
 load_dotenv(REPO_ROOT / ".env")
 
+# Keys come from .env locally. In Lambda they come from SSM Parameter Store (SecureString):
+# the *_PARAM env var names the parameter and the key is read on first use (see llm._client).
 BASETEN_API_KEY = os.getenv("BASETEN_API_KEY", "")
+BASETEN_API_KEY_PARAM = os.getenv("BASETEN_API_KEY_PARAM", "")
 MODEL_API_KEY = os.getenv("MODEL_API_KEY", "")
+MODEL_API_KEY_PARAM = os.getenv("MODEL_API_KEY_PARAM", "")
 
 BASETEN_BASE_URL = "https://inference.baseten.co/v1"
 META_BASE_URL = "https://api.meta.ai/v1"
@@ -40,7 +44,9 @@ CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", "3600"))
 # NWS asks for a User-Agent with contact info: https://www.weather.gov/documentation/services-web-api
 NWS_USER_AGENT = os.getenv("NWS_USER_AGENT", "ClimateGuard/0.1 (hackathon project)")
 # Optional: official EPA AirNow AQI. Without a key we use Open-Meteo's modeled AQI.
+# Locally from .env; in Lambda from the SSM SecureString named by AIRNOW_API_KEY_PARAM.
 AIRNOW_API_KEY = os.getenv("AIRNOW_API_KEY", "")
+AIRNOW_API_KEY_PARAM = os.getenv("AIRNOW_API_KEY_PARAM", "")
 
 # --- Storage ---
 # "local" = JSON files under LOCAL_DIR (dev); "dynamodb" = the tables below (Lambda).
@@ -49,6 +55,14 @@ SNAPSHOTS_TABLE = os.getenv("SNAPSHOTS_TABLE", "climateguard-snapshots")
 USAGE_TABLE = os.getenv("USAGE_TABLE", "climateguard-usage")
 CACHE_TABLE = os.getenv("CACHE_TABLE", "climateguard-cache")
 ALERTS_TABLE = os.getenv("ALERTS_TABLE", "climateguard-alerts")  # sent alerts + agent decision log
+RATELIMIT_TABLE = os.getenv("RATELIMIT_TABLE", "climateguard-ratelimit")
+
+# --- Alerts delivery and sign-up ---
+# "dryrun" = write to backend/.local/outbox.jsonl (dev); "sns" = real email via Amazon SNS (Lambda).
+NOTIFY_MODE = os.getenv("NOTIFY_MODE", "dryrun")
+SNS_TOPIC_PREFIX = os.getenv("SNS_TOPIC_PREFIX", "climateguard")
+MAX_SUBSCRIBERS = int(os.getenv("MAX_SUBSCRIBERS", "500"))
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
 # Local runtime data (gitignored). Lambda sets CG_LOCAL_DIR=/tmp/climateguard (only /tmp is writable).
 LOCAL_DIR = Path(os.getenv("CG_LOCAL_DIR", REPO_ROOT / "backend" / ".local"))
