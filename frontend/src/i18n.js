@@ -30,6 +30,7 @@ export const STRINGS = {
     checkEmailTitle: 'Almost done! Check your email.',
     checkEmailBody:
       'You will get an email in English from "ClimateGuard" (AWS Notifications). Open it and tap "Confirm subscription". If you do not see it, check your spam folder.',
+    monitoringStarts: 'Monitoring for your area starts within about an hour.',
     unsubscribeNote: 'Every alert email has a link to stop alerts at any time.',
     privacyNote: 'We only use your email to send alerts. Free. No spam.',
     notCoveredTitle: 'Not covered: tornado, flash flood, severe thunderstorm and extreme wind warnings',
@@ -80,6 +81,7 @@ export const STRINGS = {
     checkEmailTitle: '¡Casi listo! Revise su correo.',
     checkEmailBody:
       'Recibirá un correo en inglés de "ClimateGuard" (AWS Notifications). Ábralo y toque "Confirm subscription". Si no lo ve, revise la carpeta de spam.',
+    monitoringStarts: 'La vigilancia de su zona empieza en aproximadamente una hora.',
     unsubscribeNote: 'Cada correo de alerta tiene un enlace para dejar de recibir alertas cuando quiera.',
     privacyNote: 'Solo usamos su correo para enviar alertas. Gratis. Sin spam.',
     notCoveredTitle: 'No incluye: avisos de tornado, inundación repentina, tormenta eléctrica severa y viento extremo',
@@ -130,6 +132,7 @@ export const STRINGS = {
     checkEmailTitle: 'Sắp xong! Hãy kiểm tra email.',
     checkEmailBody:
       'Bạn sẽ nhận một email bằng tiếng Anh từ "ClimateGuard" (AWS Notifications). Mở email và bấm "Confirm subscription". Nếu không thấy, hãy xem trong thư mục spam.',
+    monitoringStarts: 'Việc theo dõi khu vực của bạn sẽ bắt đầu trong khoảng một giờ.',
     unsubscribeNote: 'Mỗi email cảnh báo đều có liên kết để ngừng nhận bất cứ lúc nào.',
     privacyNote: 'Chúng tôi chỉ dùng email để gửi cảnh báo. Miễn phí. Không spam.',
     notCoveredTitle: 'Không bao gồm: cảnh báo lốc xoáy, lũ quét, dông bão nghiêm trọng và gió cực mạnh',

@@ -82,6 +82,7 @@ export default function AlertsScreen({ lang, t, zone, setZone }) {
         <div className="notice success" role="status">
           <h2>{t.checkEmailTitle}</h2>
           <p>{t.checkEmailBody}</p>
+          <p>{t.monitoringStarts}</p>
           <p className="muted">{t.unsubscribeNote}</p>
         </div>
       ) : (
