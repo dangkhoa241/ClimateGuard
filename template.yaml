@@ -1,8 +1,18 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: ClimateGuard backend. Deploy with `sam build && sam deploy --guided`.
+Description: ClimateGuard backend. Deploy with `sam build` then `.\deploy.ps1` (reads keys from .env).
 
 Parameters:
+  BasetenApiKey:
+    Type: String
+    NoEcho: true
+    MinLength: 1
+    Description: Baseten key for the monitoring agent (Muse Spark Open)
+  AirNowApiKey:
+    Type: String
+    NoEcho: true
+    Default: ""
+    Description: Optional EPA AirNow key. Empty = Open-Meteo modeled AQI.
   FrontendUrl:
     Type: String
     Description: >-
@@ -13,7 +23,7 @@ Parameters:
     Default: 500
   NwsUserAgent:
     Type: String
-    Description: NWS asks for a User-Agent with contact info, e.g. "ClimateGuard/0.1 (you@example.com)"
+    Description: NWS asks for a User-Agent with contact info, e.g. "ClimateGuard/0.1 you@example.com"
 
 Globals:
   Function:
@@ -113,17 +123,16 @@ Resources:
       Timeout: 300
       Environment:
         Variables:
-          # SecureString created by hand (CloudFormation can't create SecureStrings); see README "Deploy"
-          BASETEN_API_KEY_PARAM: /climateguard/baseten-api-key
-          # Optional; if the parameter is missing, AQI falls back to Open-Meteo
-          AIRNOW_API_KEY_PARAM: /climateguard/airnow-api-key
+          # Keys arrive as NoEcho stack parameters (this account's SCP denies SSM). The code reads
+          # the env var first and SSM second: to move to SSM on an account that allows it, replace
+          # these with BASETEN_API_KEY_PARAM / AIRNOW_API_KEY_PARAM and add SSMParameterReadPolicy.
+          BASETEN_API_KEY: !Ref BasetenApiKey
+          AIRNOW_API_KEY: !Ref AirNowApiKey  # empty = Open-Meteo modeled AQI
       Policies:
         - DynamoDBCrudPolicy: { TableName: !Ref SnapshotsTable }
         - DynamoDBCrudPolicy: { TableName: !Ref UsageTable }
         - DynamoDBCrudPolicy: { TableName: !Ref CacheTable }
         - DynamoDBCrudPolicy: { TableName: !Ref AlertsTable }
-        - SSMParameterReadPolicy: { ParameterName: climateguard/baseten-api-key }
-        - SSMParameterReadPolicy: { ParameterName: climateguard/airnow-api-key }
         - Statement:
             - Effect: Allow
               Action: [sns:CreateTopic, sns:Publish, sns:TagResource]
