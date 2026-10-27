@@ -92,3 +92,39 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 .alert-card p { margin: 6px 0 0; line-height: 1.4; }
 .alert-meta { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); }
 .alert-meta strong { color: var(--fg); }
+
+.location { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 4px; }
+.zip-row label { font-weight: 600; }
+.row { display: flex; gap: 8px; margin-top: 6px; }
+.row input {
+  flex: 1;
+  min-height: 52px;
+  padding: 0 12px;
+  border: 2px solid #cfcac0;
+  border-radius: 10px;
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+}
+.mid {
+  min-height: 52px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.gps {
+  min-height: 48px;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 1rem;
+  font-weight: 600;
+}
+.mid:disabled, .gps:disabled { opacity: 0.5; }
+.zone-chip { margin: 4px 0 0; padding: 10px 12px; border-radius: 10px; background: #fff; }
+.notice.warn { margin-top: 20px; background: #fff7e6; border: 2px solid #b45309; }
+.notice.warn p { margin: 6px 0 0; line-height: 1.4; }

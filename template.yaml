@@ -38,6 +38,7 @@ Globals:
         CACHE_TABLE: !Ref CacheTable
         ALERTS_TABLE: !Ref AlertsTable
         RATELIMIT_TABLE: !Ref RateLimitTable
+        ZONES_TABLE: !Ref ZonesTable
         NOTIFY_MODE: sns
         FRONTEND_URL: !Ref FrontendUrl
         MAX_SUBSCRIBERS: !Ref MaxSubscribers
@@ -52,10 +53,10 @@ Resources:
       BillingMode: PROVISIONED  # free tier: 25 RCU / 25 WCU total across tables
       ProvisionedThroughput: { ReadCapacityUnits: 5, WriteCapacityUnits: 5 }
       AttributeDefinitions:
-        - { AttributeName: city, AttributeType: S }
+        - { AttributeName: zone, AttributeType: S }
         - { AttributeName: sk, AttributeType: S }
       KeySchema:
-        - { AttributeName: city, KeyType: HASH }
+        - { AttributeName: zone, KeyType: HASH }
         - { AttributeName: sk, KeyType: RANGE }
       TimeToLiveSpecification: { AttributeName: ttl, Enabled: true }
 
@@ -94,12 +95,24 @@ Resources:
       BillingMode: PROVISIONED
       ProvisionedThroughput: { ReadCapacityUnits: 2, WriteCapacityUnits: 2 }
       AttributeDefinitions:
-        - { AttributeName: city, AttributeType: S }
+        - { AttributeName: zone, AttributeType: S }
         - { AttributeName: sk, AttributeType: S }
       KeySchema:
-        - { AttributeName: city, KeyType: HASH }
+        - { AttributeName: zone, KeyType: HASH }
         - { AttributeName: sk, KeyType: RANGE }
       TimeToLiveSpecification: { AttributeName: ttl, Enabled: true }
+
+  # NWS forecast zones: name, timezone, sign-up languages, confirmed-subscriber counts
+  ZonesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: climateguard-zones
+      BillingMode: PROVISIONED
+      ProvisionedThroughput: { ReadCapacityUnits: 2, WriteCapacityUnits: 2 }
+      AttributeDefinitions:
+        - { AttributeName: zone, AttributeType: S }
+      KeySchema:
+        - { AttributeName: zone, KeyType: HASH }
 
   # Per-IP / per-email sign-up limits, "already subscribed" markers, subscriber counter
   RateLimitTable:
@@ -131,8 +144,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: climateguard.handlers.collect.handler
-      # Collection ~6 s; each agent run ~10-20 s, and only for cities whose data changed
-      Timeout: 300
+      # Zones are collected in parallel; agent runs (~10-20 s each) only for changed zones, 4 at a time
+      Timeout: 600
+      MemorySize: 512
       LoggingConfig: { LogGroup: !Ref CollectLogGroup }
       Environment:
         Variables:
@@ -140,6 +154,10 @@ Resources:
           # The code reads BASETEN_API_KEY / AIRNOW_API_KEY env vars first, then these parameters.
           BASETEN_API_KEY_PARAM: /climateguard/baseten-api-key
           AIRNOW_API_KEY_PARAM: /climateguard/airnow-api-key  # if missing: Open-Meteo modeled AQI
+          # Muse Spark 1.3 translates alerts for zh/tl/ko/ar sign-ups; if missing: English with a note
+          MODEL_API_KEY_PARAM: /climateguard/meta-model-api-key
+          USE_CONTRIBUTOR: "false"
+          DAILY_MODEL_BUDGET_USD: "5"
       Policies:
         - DynamoDBCrudPolicy: { TableName: !Ref SnapshotsTable }
         - DynamoDBCrudPolicy: { TableName: !Ref UsageTable }
@@ -148,9 +166,11 @@ Resources:
         # Decryption uses the AWS-managed aws/ssm key, whose key policy already allows SSM callers
         - SSMParameterReadPolicy: { ParameterName: climateguard/baseten-api-key }
         - SSMParameterReadPolicy: { ParameterName: climateguard/airnow-api-key }
+        - SSMParameterReadPolicy: { ParameterName: climateguard/meta-model-api-key }
+        - DynamoDBCrudPolicy: { TableName: !Ref ZonesTable }
         - Statement:
             - Effect: Allow
-              Action: [sns:CreateTopic, sns:Publish, sns:TagResource]
+              Action: [sns:CreateTopic, sns:Publish, sns:TagResource, sns:ListSubscriptionsByTopic]
               Resource: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:climateguard-*
       Events:
         Every15Min:
@@ -186,26 +206,30 @@ Resources:
         - DynamoDBReadPolicy: { TableName: !Ref SnapshotsTable }
         - DynamoDBReadPolicy: { TableName: !Ref AlertsTable }
         - DynamoDBCrudPolicy: { TableName: !Ref RateLimitTable }
+        - DynamoDBCrudPolicy: { TableName: !Ref ZonesTable }  # /locate registers new zones
         - Statement:
             - Effect: Allow
               Action: [sns:CreateTopic, sns:Subscribe, sns:TagResource]
               Resource: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:climateguard-*
       Events:
-        ListCities:
+        Locate:
           Type: HttpApi
-          Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /cities }
-        GetCity:
+          Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /locate }
+        Languages:
           Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Method: GET
-            Path: /cities/{city}
-        GetCityAlerts:
+          Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /languages }
+        GetZone:
           Type: HttpApi
           Properties:
             ApiId: !Ref HttpApi
             Method: GET
-            Path: /cities/{city}/alerts
+            Path: /zones/{zone}
+        GetZoneAlerts:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Method: GET
+            Path: /zones/{zone}/alerts
         Subscribe:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /subscribe }

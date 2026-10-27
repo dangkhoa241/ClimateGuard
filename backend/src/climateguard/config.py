@@ -56,6 +56,7 @@ USAGE_TABLE = os.getenv("USAGE_TABLE", "climateguard-usage")
 CACHE_TABLE = os.getenv("CACHE_TABLE", "climateguard-cache")
 ALERTS_TABLE = os.getenv("ALERTS_TABLE", "climateguard-alerts")  # sent alerts + agent decision log
 RATELIMIT_TABLE = os.getenv("RATELIMIT_TABLE", "climateguard-ratelimit")
+ZONES_TABLE = os.getenv("ZONES_TABLE", "climateguard-zones")  # NWS zones, languages, confirmed counts
 
 # --- Alerts delivery and sign-up ---
 # "dryrun" = write to backend/.local/outbox.jsonl (dev); "sns" = real email via Amazon SNS (Lambda).
@@ -63,6 +64,12 @@ NOTIFY_MODE = os.getenv("NOTIFY_MODE", "dryrun")
 SNS_TOPIC_PREFIX = os.getenv("SNS_TOPIC_PREFIX", "climateguard")
 MAX_SUBSCRIBERS = int(os.getenv("MAX_SUBSCRIBERS", "500"))
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+
+# --- Cost and scale controls ---
+DAILY_MODEL_BUDGET_USD = float(os.getenv("DAILY_MODEL_BUDGET_USD", "5"))
+COLLECT_WORKERS = int(os.getenv("COLLECT_WORKERS", "8"))   # zones collected in parallel (I/O bound)
+AGENT_WORKERS = int(os.getenv("AGENT_WORKERS", "4"))       # agent runs in parallel
+ACTIVE_REFRESH_MINUTES = int(os.getenv("ACTIVE_REFRESH_MINUTES", "60"))  # how often to recount confirmed subs
 
 # Local runtime data (gitignored). Lambda sets CG_LOCAL_DIR=/tmp/climateguard (only /tmp is writable).
 LOCAL_DIR = Path(os.getenv("CG_LOCAL_DIR", REPO_ROOT / "backend" / ".local"))

@@ -1,22 +1,18 @@
 """National Weather Service API (free, no key): hourly forecast + active alerts.
 
 Docs: https://www.weather.gov/documentation/services-web-api
+
+Alerts are fetched ONCE per collector run for the whole country (~300 alerts, ~1.4 MB)
+and matched to each monitored zone by UGC code (forecast zone, county, fire zone),
+instead of one request per zone.
 """
-from .. import risk
+from .. import hazards, risk
 from .http import SourceError, get_json
 
 BASE = "https://api.weather.gov"
 _GEOJSON = {"Accept": "application/geo+json"}
-_points_cache: dict[tuple, dict] = {}  # lat/lon -> /points properties (stable; cache per container)
 
 ALERT_DESCRIPTION_MAX = 1200  # keep agent prompts small
-
-
-def _points(lat: float, lon: float) -> dict:
-    key = (round(lat, 4), round(lon, 4))
-    if key not in _points_cache:
-        _points_cache[key] = get_json(f"{BASE}/points/{key[0]},{key[1]}", headers=_GEOJSON)["properties"]
-    return _points_cache[key]
 
 
 def _wind_mph(text: str | None) -> int | None:
@@ -44,9 +40,8 @@ def parse_hourly(data: dict, hours: int = 48) -> list[dict]:
     return out
 
 
-def get_hourly_forecast(lat: float, lon: float, hours: int = 48) -> list[dict]:
-    url = _points(lat, lon)["forecastHourly"]
-    data = get_json(url, headers=_GEOJSON, timeout=15)
+def get_hourly_forecast(forecast_url: str, hours: int = 48) -> list[dict]:
+    data = get_json(forecast_url, headers=_GEOJSON, timeout=15)
     hourly = parse_hourly(data, hours)
     if not hourly:
         raise SourceError("NWS returned an empty hourly forecast")
@@ -63,6 +58,7 @@ def parse_alerts(data: dict) -> list[dict]:
         out.append({
             "id": p["id"],
             "event": p["event"],
+            "hazard": hazards.group_for(p["event"]),
             "message_type": p.get("messageType"),  # Alert | Update
             "severity": p.get("severity"),
             "urgency": p.get("urgency"),
@@ -76,10 +72,20 @@ def parse_alerts(data: dict) -> list[dict]:
             "expires": p.get("expires"),
             "references": [r.get("identifier") for r in p.get("references") or []],
             "sender": p.get("senderName"),
+            "ugc": sorted(set(((p.get("geocode") or {}).get("UGC")) or [])),
         })
     return out
 
 
-def get_active_alerts(lat: float, lon: float) -> list[dict]:
-    data = get_json(f"{BASE}/alerts/active", params={"point": f"{lat:.4f},{lon:.4f}"}, headers=_GEOJSON)
-    return parse_alerts(data)
+def get_national_alerts() -> list[dict]:
+    """Every active, actual US alert in one request."""
+    return parse_alerts(get_json(f"{BASE}/alerts/active", params={"status": "actual"},
+                                 headers=_GEOJSON, timeout=20))
+
+
+def alerts_for_zone(alerts: list[dict], zone: dict) -> tuple[list[dict], list[dict]]:
+    """Alerts covering this zone, split into (handled, excluded short-fuse warnings)."""
+    codes = {c for c in (zone.get("zone"), zone.get("county"), zone.get("fire_zone")) if c}
+    mine = [a for a in alerts if codes & set(a.get("ugc", []))]
+    return ([a for a in mine if not hazards.is_excluded(a["event"])],
+            [a for a in mine if hazards.is_excluded(a["event"])])

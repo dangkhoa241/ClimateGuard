@@ -1,25 +1,41 @@
 import { useEffect, useState } from 'react'
 import { LANGS, STRINGS } from './i18n.js'
-import { CITIES } from './api.js'
 import AlertsScreen from './AlertsScreen.jsx'
 
-function load(key, fallback, allowed) {
-  // URL params win (links in alert emails carry ?city=...&lang=...), then saved choice.
-  const fromUrl = new URLSearchParams(window.location.search).get(key)
-  let saved = null
+const ZONE_RE = /^[A-Z]{2}Z\d{3}$/
+
+function readStorage(key) {
   try {
-    saved = localStorage.getItem(key)
+    return localStorage.getItem(key)
   } catch {
-    // storage blocked (private mode): fall back to defaults
+    return null // storage blocked (private mode): fall back to defaults
   }
-  return [fromUrl, saved].find((v) => v && allowed.includes(v)) || fallback
 }
 
 function save(key, value) {
   try {
-    localStorage.setItem(key, value)
+    if (value == null) localStorage.removeItem(key)
+    else localStorage.setItem(key, value)
   } catch {
     // ignore: preference just won't persist
+  }
+}
+
+function initialLang() {
+  // URL params win (links in alert emails carry ?zone=...&lang=...), then saved choice.
+  const allowed = LANGS.map((l) => l.code)
+  const fromUrl = new URLSearchParams(window.location.search).get('lang')
+  return [fromUrl, readStorage('lang')].find((v) => v && allowed.includes(v)) || 'en'
+}
+
+function initialZone() {
+  const fromUrl = (new URLSearchParams(window.location.search).get('zone') || '').toUpperCase()
+  if (ZONE_RE.test(fromUrl)) return { zone: fromUrl, name: fromUrl }
+  try {
+    const saved = JSON.parse(readStorage('zone') || 'null')
+    return saved && ZONE_RE.test(saved.zone) ? saved : null
+  } catch {
+    return null
   }
 }
 
@@ -41,10 +57,10 @@ function LanguagePicker({ lang, setLang, label }) {
 }
 
 export default function App() {
-  const [lang, setLang] = useState(() => load('lang', 'en', LANGS.map((l) => l.code)))
-  const [city, setCity] = useState(() => load('city', 'stockton', CITIES.map((c) => c.slug)))
+  const [lang, setLang] = useState(initialLang)
+  const [zone, setZone] = useState(initialZone)
   const [screen, setScreen] = useState(() =>
-    new URLSearchParams(window.location.search).has('city') ? 'alerts' : 'home',
+    new URLSearchParams(window.location.search).has('zone') ? 'alerts' : 'home',
   )
   const t = STRINGS[lang]
 
@@ -52,7 +68,7 @@ export default function App() {
     document.documentElement.lang = lang
     save('lang', lang)
   }, [lang])
-  useEffect(() => save('city', city), [city])
+  useEffect(() => save('zone', zone ? JSON.stringify(zone) : null), [zone])
 
   return (
     <main className="app">
@@ -72,7 +88,7 @@ export default function App() {
         <>
           <button className="back" onClick={() => setScreen('home')}>← {t.back}</button>
           <h1>{t.alerts}</h1>
-          <AlertsScreen lang={lang} t={t} city={city} setCity={setCity} />
+          <AlertsScreen lang={lang} t={t} zone={zone} setZone={setZone} />
         </>
       )}
     </main>

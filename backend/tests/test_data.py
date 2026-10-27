@@ -98,16 +98,25 @@ def test_fingerprint_changes_on_material_change():
 
 # --- collector + API (fake snapshots, local store in tmp dir) ---
 
+ZONE_A = {"zone": "CAZ159", "name": "Stockton zone", "place": "Stockton, CA", "state": "CA",
+          "tz": "America/Los_Angeles", "lat": 37.96, "lon": -121.29, "demo": True}
+ZONE_B = {"zone": "MNZ060", "name": "Hennepin", "place": "Minneapolis, MN", "state": "MN",
+          "tz": "America/Chicago", "lat": 44.98, "lon": -93.27, "demo": False, "confirmed": 1}
+
+
 @pytest.fixture
 def local(monkeypatch, tmp_path):
     monkeypatch.setattr(config, "LOCAL_DIR", tmp_path)
+    monkeypatch.setattr(config, "USAGE_LOG", tmp_path / "usage.jsonl")
     monkeypatch.setattr(config, "STORAGE", "local")
+    monkeypatch.setattr(nws, "get_national_alerts", lambda: [])
     state = {"temps": [90], "errors": {}}
 
-    def fake_build(slug):
+    def fake_build(zone, national, prev=None):
         s = snapshot.summarize(_hours(state["temps"]), _aqi(), [])
-        return {"city": slug, "name": slug.title(), "generated_at": "t", "forecast": {"source": "test", "hours": []},
-                "aqi": _aqi(), "alerts": [], "summary": s, "errors": dict(state["errors"]),
+        return {"zone": zone["zone"], "name": zone["name"], "place": zone.get("place"), "tz": zone["tz"],
+                "generated_at": "t", "forecast": {"source": "test", "hours": []}, "aqi": _aqi(), "alerts": [],
+                "excluded_alerts": [], "summary": s, "errors": dict(state["errors"]),
                 "fingerprint": snapshot.fingerprint(s, [])}
 
     monkeypatch.setattr(collect_mod, "build_snapshot", fake_build)
@@ -115,29 +124,52 @@ def local(monkeypatch, tmp_path):
 
 
 def test_collect_reports_changes_only_when_material(local):
-    assert collect_mod.collect(["stockton"])["changed"] == ["stockton"]
-    assert collect_mod.collect(["stockton"])["unchanged"] == ["stockton"]
+    assert collect_mod.collect([ZONE_A])["changed"] == ["CAZ159"]
+    assert collect_mod.collect([ZONE_A])["unchanged"] == ["CAZ159"]
     local["temps"] = [101]
-    assert collect_mod.collect(["stockton"])["changed"] == ["stockton"]
+    assert collect_mod.collect([ZONE_A])["changed"] == ["CAZ159"]
 
 
 def test_collect_keeps_last_good_snapshot_on_outage(local):
-    collect_mod.collect(["stockton"])
-    local["errors"] = {"alerts": "503 from api.weather.gov"}
+    collect_mod.collect([ZONE_A])
+    local["errors"] = {"alerts": "NWS national alerts unavailable"}
     local["temps"] = [110]
-    r = collect_mod.collect(["stockton"])
-    assert "stockton" in r["failed"] and not r["changed"]
+    r = collect_mod.collect([ZONE_A])
+    assert "CAZ159" in r["failed"] and not r["changed"]
+
+
+def test_collect_runs_zones_in_parallel_and_independently(local):
+    r = collect_mod.collect([ZONE_A, ZONE_B])
+    assert sorted(r["changed"]) == ["CAZ159", "MNZ060"] and r["zones"] == 2
 
 
 def test_api_routes(local):
-    assert api.handler({"routeKey": "GET /cities"}, None)["statusCode"] == 200
-    assert api.handler({"routeKey": "GET /cities/{city}", "pathParameters": {"city": "atlantis"}}, None)[
-        "statusCode"] == 404
-    assert api.handler({"routeKey": "GET /cities/{city}", "pathParameters": {"city": "lodi"}}, None)[
-        "statusCode"] == 503
-    collect_mod.collect(["lodi"])
-    r = api.handler({"routeKey": "GET /cities/{city}", "pathParameters": {"city": "lodi"}}, None)
-    assert r["statusCode"] == 200 and json.loads(r["body"])["city"] == "lodi"
+    bad = api.handler({"routeKey": "GET /zones/{zone}", "pathParameters": {"zone": "atlantis"}}, None)
+    assert bad["statusCode"] == 404 and json.loads(bad["body"])["error"] == "unknown_zone"
+    # the demo zone is known but has no snapshot yet
+    r = api.handler({"routeKey": "GET /zones/{zone}", "pathParameters": {"zone": "caz159"}}, None)
+    assert r["statusCode"] == 404 and json.loads(r["body"])["error"] == "not_monitored"
+    collect_mod.collect([ZONE_A])
+    r = api.handler({"routeKey": "GET /zones/{zone}", "pathParameters": {"zone": "CAZ159"}}, None)
+    assert r["statusCode"] == 200 and json.loads(r["body"])["zone"] == "CAZ159"
+
+
+def test_locate_demo_zip_needs_no_network(local, monkeypatch):
+    from climateguard import zones
+    monkeypatch.setattr(zones, "resolve_point", lambda *a: pytest.fail("demo ZIP must not call NWS"))
+    r = api.handler({"routeKey": "GET /locate", "queryStringParameters": {"zip": "95202"},
+                     "requestContext": {"http": {"sourceIp": "1.1.1.1"}}}, None)
+    body = json.loads(r["body"])
+    assert r["statusCode"] == 200 and body["zone"] == "CAZ159" and body["monitored"] and body["calosha_applies"]
+    assert "Wireless Emergency Alerts" in body["not_covered"]
+
+
+@pytest.mark.parametrize("q,code", [({"zip": "abc"}, "invalid_zip"), ({"zip": "00000"}, "unknown_zip"),
+                                    ({"lat": "51.5", "lon": "-0.1"}, "outside_us"), ({}, "missing_location")])
+def test_locate_rejects_bad_input(local, q, code):
+    r = api.handler({"routeKey": "GET /locate", "queryStringParameters": q,
+                     "requestContext": {"http": {"sourceIp": "1.1.1.2"}}}, None)
+    assert r["statusCode"] == 400 and json.loads(r["body"])["error"] == code
 
 
 def test_calosha_flags_use_air_temperature_not_heat_index():
@@ -150,17 +182,31 @@ def test_calosha_flags_use_air_temperature_not_heat_index():
     assert "calosha_high_heat_95f" not in s["flags"] and "calosha_shade_80f" in s["flags"]
 
 
-def test_handler_runs_agent_only_for_changed_cities(local, monkeypatch):
-    from climateguard import monitor
+def test_handler_runs_agent_only_for_changed_zones(local, monkeypatch):
+    from climateguard import monitor, subscriptions, zones
     calls = []
-    monkeypatch.setattr(monitor, "run_monitor", lambda slug: calls.append(slug) or
+    monkeypatch.setattr(monitor, "run_monitor", lambda slug, skip_reason=None: calls.append(slug) or
                         {"action": "skipped", "reason": "test", "cost_usd": 0})
-    monkeypatch.setattr(collect_mod, "CITIES", {"stockton": {}, "lodi": {}})
+    monkeypatch.setattr(zones, "monitored", lambda: [ZONE_A, ZONE_B])
+    monkeypatch.setattr(subscriptions, "refresh_confirmed", lambda: [])
     collect_mod.handler({}, None)
-    assert sorted(calls) == ["lodi", "stockton"]  # first run: both new
+    assert sorted(calls) == ["CAZ159", "MNZ060"]  # first run: both new
     calls.clear()
     r = collect_mod.handler({}, None)
     assert calls == [] and r["decisions"] == {}  # nothing changed: no agent, no spend
+
+
+def test_over_budget_only_zones_with_a_warning_run_the_agent(local, monkeypatch):
+    from climateguard import budget, monitor, subscriptions, zones
+    seen = {}
+    monkeypatch.setattr(monitor, "run_monitor", lambda slug, skip_reason=None: seen.update({slug: skip_reason}) or
+                        {"action": "skipped", "reason": skip_reason or "ran", "cost_usd": 0})
+    monkeypatch.setattr(zones, "monitored", lambda: [ZONE_A, ZONE_B])
+    monkeypatch.setattr(subscriptions, "refresh_confirmed", lambda: [])
+    monkeypatch.setattr(budget, "over_budget", lambda: True)
+    monkeypatch.setattr(budget, "has_active_warning", lambda snap: snap.get("zone") == "MNZ060")
+    collect_mod.handler({}, None)
+    assert seen["MNZ060"] is None and "budget" in seen["CAZ159"]
 
 
 def test_source_errors_never_contain_query_params(monkeypatch):

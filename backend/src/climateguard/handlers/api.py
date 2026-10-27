@@ -1,21 +1,25 @@
 """Lambda (HTTP API): public endpoints for the frontend. No model calls.
 
-GET  /cities                 -> [{slug, name}]
-GET  /cities/{city}          -> latest snapshot (summary + alerts + hourly forecast + AQI)
-GET  /cities/{city}/alerts   -> alerts ClimateGuard sent to this city in the last 48 h
-POST /subscribe              -> {email, city, lang} sign-up for email alerts (double opt-in)
+GET  /locate?zip=95202 | ?lat=..&lon=..  -> the NWS forecast zone for a location
+GET  /zones/{zone}                       -> latest snapshot (summary + alerts + hourly forecast + AQI)
+GET  /zones/{zone}/alerts                -> alerts ClimateGuard sent to this zone in the last 48 h
+POST /subscribe                          -> {email, lang, zip | lat+lon} sign-up (SNS double opt-in)
 """
 import base64
 import json
 import logging
+import re
 
-from .. import alerts_store
-from ..cities import CITIES
+from .. import alerts_store, hazards, ratelimit, zones
+from ..geo import GeoError
+from ..languages import LANGS
 from ..store import get_store
 from ..subscriptions import SignupError, subscribe
 
 log = logging.getLogger()
 MAX_BODY_BYTES = 2048
+ZONE_RE = re.compile(r"^[A-Z]{2}Z\d{3}$")
+LOCATE_PER_IP_PER_HOUR = 30  # a lookup can cost two NWS requests
 
 
 def _resp(status: int, body, cache_s: int = 0, headers: dict | None = None) -> dict:
@@ -47,21 +51,44 @@ def _source_ip(event) -> str:
     return ((event.get("requestContext") or {}).get("http") or {}).get("sourceIp", "unknown")
 
 
+def _zone_view(rec: dict) -> dict:
+    return {"zone": rec["zone"], "name": rec["name"], "place": rec.get("place"), "state": rec.get("state"),
+            "tz": rec.get("tz"), "demo": bool(rec.get("demo")),
+            "monitored": bool(rec.get("demo") or (rec.get("confirmed") or 0) > 0),
+            "calosha_applies": rec.get("state") == "CA", "not_covered": hazards.EXCLUSION_NOTE}
+
+
+def get_locate(event) -> dict:
+    q = event.get("queryStringParameters") or {}
+    if not ratelimit.hit("locate-ip", _source_ip(event), LOCATE_PER_IP_PER_HOUR, 3600):
+        return _resp(429, {"error": "rate_limited"}, headers={"Retry-After": "3600"})
+    try:
+        rec = zones.locate(zip_code=q.get("zip"), lat=q.get("lat"), lon=q.get("lon")) if (
+            q.get("zip") or (q.get("lat") and q.get("lon"))) else None
+    except GeoError as e:
+        return _resp(400, {"error": e.code})
+    except zones.ZoneError as e:
+        return _resp(503 if e.code == "nws_unavailable" else 400, {"error": e.code})
+    if rec is None:
+        return _resp(400, {"error": "missing_location"})
+    return _resp(200, _zone_view(rec), cache_s=3600)
+
+
 def post_subscribe(event) -> dict:
     try:
         body = _json_body(event)
         if body.get("website"):  # honeypot field, hidden from humans: pretend success, do nothing
             return _resp(202, {"status": "pending_confirmation"})
-        result = subscribe(str(body.get("email", "")), str(body.get("city", "")), str(body.get("lang", "")),
-                           ip=_source_ip(event))
-        return _resp(202, result)
+        result = subscribe(str(body.get("email", "")), str(body.get("lang", "")), ip=_source_ip(event),
+                           zip_code=body.get("zip"), lat=body.get("lat"), lon=body.get("lon"))
+        return _resp(202, {**result, "not_covered": hazards.EXCLUSION_NOTE})
     except SignupError as e:
         headers = {"Retry-After": "3600"} if e.status == 429 else None
         return _resp(e.status, {"error": e.code}, headers=headers)
 
 
-def get_city_alerts(city: str) -> dict:
-    rows = alerts_store.recent_sent(city, hours=48)
+def get_zone_alerts(zone: str) -> dict:
+    rows = alerts_store.recent_sent(zone, hours=48)
     rows.sort(key=lambda r: r["ts"], reverse=True)
     return _resp(200, [{"sent_at": r["ts"], "hazard": r["hazard"], "severity": r["severity"],
                         "messages": r["messages"]} for r in rows], cache_s=60)
@@ -69,18 +96,22 @@ def get_city_alerts(city: str) -> dict:
 
 def handler(event, context):
     route = event.get("routeKey", "")
-    city = (event.get("pathParameters") or {}).get("city", "")
-    if route == "GET /cities":
-        return _resp(200, [{"slug": s, "name": c["name"]} for s, c in CITIES.items()], cache_s=3600)
+    zone = ((event.get("pathParameters") or {}).get("zone") or "").upper()
+    if route == "GET /locate":
+        return get_locate(event)
+    if route == "GET /languages":
+        return _resp(200, LANGS, cache_s=86400)
     if route == "POST /subscribe":
         return post_subscribe(event)
-    if route in ("GET /cities/{city}", "GET /cities/{city}/alerts") and city not in CITIES:
-        return _resp(404, {"error": "unknown city"})
-    if route == "GET /cities/{city}":
-        snap = get_store().get_latest(city)
+    if route in ("GET /zones/{zone}", "GET /zones/{zone}/alerts") and not ZONE_RE.match(zone):
+        return _resp(404, {"error": "unknown_zone"})
+    if route == "GET /zones/{zone}":
+        snap = get_store().get_latest(zone)
         if snap is None:
-            return _resp(503, {"error": "no data yet, try again in a few minutes"})
+            rec = zones.get(zone)
+            code = "not_monitored" if rec else "unknown_zone"  # monitored once someone confirms a sign-up
+            return _resp(404, {"error": code, **({"zone": _zone_view(rec)} if rec else {})})
         return _resp(200, snap, cache_s=300)
-    if route == "GET /cities/{city}/alerts":
-        return get_city_alerts(city)
+    if route == "GET /zones/{zone}/alerts":
+        return get_zone_alerts(zone)
     return _resp(404, {"error": "not found"})

@@ -3,7 +3,9 @@
     "id": "calosha-heat-water",
     "source": "Cal/OSHA Heat Illness Prevention (T8 CCR 3395)",
     "url": "https://www.dir.ca.gov/title8/3395.html",
-    "hazards": ["heat"],
+    "hazards": [
+      "heat"
+    ],
     "title": "Outdoor workers: drinking water",
     "text": "Employers must provide fresh, pure, suitably cool drinking water free of charge, close to where employees work, enough for each employee to drink at least one quart per hour for the whole shift. Employers should encourage workers to drink water frequently, even if they are not thirsty."
   },
@@ -11,7 +13,9 @@
     "id": "calosha-heat-shade",
     "source": "Cal/OSHA Heat Illness Prevention (T8 CCR 3395)",
     "url": "https://www.dir.ca.gov/title8/3395.html",
-    "hazards": ["heat"],
+    "hazards": [
+      "heat"
+    ],
     "title": "Outdoor workers: shade and cool-down rest at 80F",
     "text": "When the outdoor temperature exceeds 80 degrees Fahrenheit, employers must have shade up and available for all workers on rest or meal breaks, as close as practical to the work area. Workers have the right to take a preventative cool-down rest in the shade when they feel they need it to avoid overheating, for at least five minutes."
   },
@@ -19,7 +23,9 @@
     "id": "calosha-heat-high-heat",
     "source": "Cal/OSHA Heat Illness Prevention (T8 CCR 3395)",
     "url": "https://www.dir.ca.gov/title8/3395.html",
-    "hazards": ["heat"],
+    "hazards": [
+      "heat"
+    ],
     "title": "Outdoor workers: high-heat procedures at 95F",
     "text": "When the temperature equals or exceeds 95 degrees Fahrenheit, employers must use high-heat procedures: hold short pre-shift meetings about heat safety, keep effective communication with every worker, closely observe workers, remind workers to drink water often, and have a designated person ready to call emergency services. In agriculture, workers must get a net ten-minute preventative cool-down rest period every two hours at or above 95 degrees."
   },
@@ -27,7 +33,9 @@
     "id": "calosha-heat-acclimatization",
     "source": "Cal/OSHA Heat Illness Prevention (T8 CCR 3395)",
     "url": "https://www.dir.ca.gov/title8/3395.html",
-    "hazards": ["heat"],
+    "hazards": [
+      "heat"
+    ],
     "title": "New workers and heat waves",
     "text": "Workers new to working in high heat, and all workers during a heat wave, need time to adjust and must be closely observed. Start new workers slowly and avoid the hardest work during the hottest part of the day when possible."
   },
@@ -35,7 +43,10 @@
     "id": "calosha-worker-rights",
     "source": "California Department of Industrial Relations (Cal/OSHA)",
     "url": "https://www.dir.ca.gov/dosh/heatillnessinfo.html",
-    "hazards": ["heat", "smoke"],
+    "hazards": [
+      "heat",
+      "smoke"
+    ],
     "title": "Worker rights",
     "text": "California workplace safety protections, including water, shade and rest for heat, apply to all workers regardless of immigration status. Workers can report unsafe conditions to Cal/OSHA, and it is illegal for an employer to retaliate against a worker for raising a safety concern."
   },
@@ -43,7 +54,9 @@
     "id": "nws-heat-warning",
     "source": "National Weather Service heat safety",
     "url": "https://www.weather.gov/safety/heat",
-    "hazards": ["heat"],
+    "hazards": [
+      "heat"
+    ],
     "title": "Extreme Heat Warning and Watch",
     "text": "An Extreme Heat Warning (formerly Excessive Heat Warning) means dangerous heat is happening or about to happen: take action now. An Extreme Heat Watch means dangerous heat is possible in the next few days: get ready. A Heat Advisory means heat is dangerous enough to require precautions. Stay in air conditioning if possible, limit hard outdoor work to early morning or evening, wear light-colored loose clothing, drink plenty of water, check on neighbors and relatives, and never leave children or pets in a parked vehicle."
   },
@@ -51,7 +64,9 @@
     "id": "cdc-heat-home",
     "source": "CDC Extreme Heat",
     "url": "https://www.cdc.gov/extreme-heat/",
-    "hazards": ["heat"],
+    "hazards": [
+      "heat"
+    ],
     "title": "Staying cool at home",
     "text": "During extreme heat, spend time in air-conditioned places such as a cooling center, library or shopping mall if your home is not air-conditioned. Electric fans alone will not keep you safe when temperatures are in the high 90s. Take cool showers or baths, close blinds during the day, and check on older adults, young children and neighbors at least twice a day."
   },
@@ -59,7 +74,9 @@
     "id": "calosha-smoke",
     "source": "Cal/OSHA Protection from Wildfire Smoke (T8 CCR 5141.1)",
     "url": "https://www.dir.ca.gov/title8/5141_1.html",
-    "hazards": ["smoke"],
+    "hazards": [
+      "smoke"
+    ],
     "title": "Outdoor workers: wildfire smoke at AQI 151",
     "text": "When the Air Quality Index for PM2.5 is 151 or higher because of wildfire smoke, employers must reduce workers' exposure, for example by moving work into enclosed buildings or vehicles with filtered air, changing work schedules, or relocating work. Employers must provide N95 respirators for voluntary use at no cost. When the AQI for PM2.5 is above 500, respirator use is required."
   },
@@ -67,7 +84,9 @@
     "id": "airnow-smoke-home",
     "source": "EPA AirNow wildfire smoke guidance",
     "url": "https://www.airnow.gov/wildfire-guide-factsheets/",
-    "hazards": ["smoke"],
+    "hazards": [
+      "smoke"
+    ],
     "title": "Protecting yourself from wildfire smoke",
     "text": "When smoke is in the air, stay indoors with windows and doors closed, run an air purifier with a HEPA filter or a box fan with a filter attached, and avoid hard outdoor activity. If you must be outside, a well-fitted N95 respirator protects against smoke; cloth and surgical masks do not. In a car, keep windows closed and set the air to recirculate."
   },
@@ -75,7 +94,10 @@
     "id": "airnow-aqi-categories",
     "source": "EPA AirNow AQI basics",
     "url": "https://www.airnow.gov/aqi/aqi-basics/",
-    "hazards": ["smoke", "air"],
+    "hazards": [
+      "smoke",
+      "air"
+    ],
     "title": "What the AQI colors mean",
     "text": "AQI 0-50 Good (green). 51-100 Moderate (yellow): unusually sensitive people should consider limiting long or heavy outdoor exertion. 101-150 Unhealthy for Sensitive Groups (orange): children, older adults, pregnant people, people with heart or lung disease and outdoor workers should reduce long or heavy outdoor exertion. 151-200 Unhealthy (red): everyone should reduce long or heavy outdoor exertion. 201-300 Very Unhealthy (purple) and 301+ Hazardous (maroon): everyone should avoid outdoor exertion."
   },
@@ -83,7 +105,9 @@
     "id": "nws-flood-turn-around",
     "source": "National Weather Service flood safety",
     "url": "https://www.weather.gov/safety/flood-turn-around-dont-drown",
-    "hazards": ["flood"],
+    "hazards": [
+      "flood"
+    ],
     "title": "Turn Around Don't Drown",
     "text": "Never walk, swim or drive through floodwater. Just six inches of fast-moving water can knock over an adult, and twelve inches of rushing water can carry away most cars. If you see a flooded road, turn around and find another way."
   },
@@ -91,7 +115,9 @@
     "id": "nws-flood-warnings",
     "source": "National Weather Service flood safety",
     "url": "https://www.weather.gov/safety/flood",
-    "hazards": ["flood"],
+    "hazards": [
+      "flood"
+    ],
     "title": "Flood Watch and Flood Warning",
     "text": "A Flood Watch means flooding is possible: be ready to move to higher ground and keep important documents, medicine and phone chargers in a waterproof bag. A Flood Warning or Flash Flood Warning means flooding is happening or about to happen: move to higher ground right away and follow instructions from local officials, including evacuation orders."
   },
@@ -99,7 +125,9 @@
     "id": "cdc-floodwater",
     "source": "CDC floods and your safety",
     "url": "https://www.cdc.gov/floods/safety/",
-    "hazards": ["flood"],
+    "hazards": [
+      "flood"
+    ],
     "title": "Staying safe around floodwater and after a flood",
     "text": "Stay out of floodwater: it can hide sharp debris and downed power lines and can contain sewage and chemicals. After a flood, never use a generator, grill or camp stove inside a home or garage, because it can cause deadly carbon monoxide build-up. Do not return home until local officials say it is safe."
   },
@@ -107,7 +135,12 @@
     "id": "fema-after-disaster",
     "source": "FEMA disaster assistance",
     "url": "https://www.disasterassistance.gov/",
-    "hazards": ["flood", "wildfire", "wind", "other"],
+    "hazards": [
+      "flood",
+      "wildfire",
+      "wind",
+      "other"
+    ],
     "title": "After a disaster: documenting damage and getting help",
     "text": "Take photos and video of all damage before you clean up or throw anything away, keep receipts for repairs and temporary housing, and contact your insurance company as soon as possible. If a federal disaster is declared, apply for FEMA assistance at DisasterAssistance.gov or by calling 1-800-621-3362. Interpreters are available."
   },
@@ -115,7 +148,9 @@
     "id": "nws-wind",
     "source": "National Weather Service wind safety",
     "url": "https://www.weather.gov/safety/wind",
-    "hazards": ["wind"],
+    "hazards": [
+      "wind"
+    ],
     "title": "High winds",
     "text": "A High Wind Warning means strong winds that can blow down trees and power lines are expected. Secure or bring inside loose outdoor objects, avoid driving high-profile vehicles, stay away from downed power lines and report them to your utility, and stay indoors away from windows during the strongest winds."
   },
@@ -123,7 +158,9 @@
     "id": "nws-fog",
     "source": "National Weather Service fog safety",
     "url": "https://www.weather.gov/safety/fog",
-    "hazards": ["fog"],
+    "hazards": [
+      "fog"
+    ],
     "title": "Dense fog (tule fog) while driving",
     "text": "A Dense Fog Advisory means visibility can drop to a quarter mile or less. If you must drive, slow down, use low-beam headlights, leave plenty of distance from the car ahead, and if you cannot see, pull fully off the road, turn on hazard lights and wait."
   },
@@ -131,8 +168,100 @@
     "id": "nws-cold",
     "source": "National Weather Service cold safety",
     "url": "https://www.weather.gov/safety/cold",
-    "hazards": ["cold"],
+    "hazards": [
+      "cold"
+    ],
     "title": "Freeze and cold",
     "text": "A Freeze Warning means temperatures at or below freezing are expected. Dress in layers, bring pets inside, protect outdoor water pipes, and never use an oven, grill or generator to heat your home because of the carbon monoxide danger."
+  },
+  {
+    "id": "osha-heat-water-rest-shade",
+    "source": "OSHA (federal) heat safety",
+    "url": "https://www.osha.gov/heat",
+    "hazards": [
+      "heat"
+    ],
+    "title": "Outdoor workers outside California: water, rest, shade",
+    "text": "OSHA's guidance for working in heat is Water, Rest, Shade: drink water often (about every 15 to 20 minutes, even if not thirsty), take rest breaks in the shade or a cool place, and build up gradually when new to the heat or returning after time away. Some states have their own heat rules for outdoor workers."
+  },
+  {
+    "id": "nws-winter-storm",
+    "source": "Ready.gov winter weather",
+    "url": "https://www.ready.gov/winter-weather",
+    "hazards": [
+      "winter"
+    ],
+    "title": "Winter Storm Warning and Watch",
+    "text": "A Winter Storm Warning means heavy snow or ice is expected: stay off the roads if you can. If you must drive, keep blankets, water, food, a flashlight and a phone charger in the car and tell someone your route. A Winter Storm Watch means get ready now. Never use a generator, grill or camp stove indoors."
+  },
+  {
+    "id": "nws-extreme-cold",
+    "source": "National Weather Service cold safety",
+    "url": "https://www.weather.gov/safety/cold",
+    "hazards": [
+      "cold"
+    ],
+    "title": "Extreme Cold Warning",
+    "text": "An Extreme Cold Warning (formerly Wind Chill Warning) means dangerously cold air or wind chills. Limit time outdoors, wear layers, a hat and gloves and cover exposed skin, bring pets inside, and check on older neighbors. Never heat your home with an oven, grill or generator."
+  },
+  {
+    "id": "ready-hurricane",
+    "source": "Ready.gov hurricanes",
+    "url": "https://www.ready.gov/hurricanes",
+    "hazards": [
+      "tropical"
+    ],
+    "title": "Hurricanes and tropical storms",
+    "text": "Know your evacuation zone and leave when local officials tell you to. Before the storm, gather water, food and medicines for several days, charge phones and secure loose outdoor items. Never walk or drive through floodwater, and after the storm stay away from downed power lines."
+  },
+  {
+    "id": "nws-tornado-watch",
+    "source": "National Weather Service tornado safety",
+    "url": "https://www.weather.gov/safety/tornado",
+    "hazards": [
+      "tornado"
+    ],
+    "title": "Tornado Watch: get ready",
+    "text": "A Tornado Watch means tornadoes are possible: review your plan now. Know your safe place (a basement or a small interior room on the lowest floor, away from windows), keep your phone charged and make sure Wireless Emergency Alerts are turned on. If a Tornado Warning is issued, take shelter immediately."
+  },
+  {
+    "id": "nws-thunderstorm-watch",
+    "source": "National Weather Service thunderstorm safety",
+    "url": "https://www.weather.gov/safety/thunderstorm",
+    "hazards": [
+      "thunderstorm"
+    ],
+    "title": "Severe Thunderstorm Watch and lightning",
+    "text": "A Severe Thunderstorm Watch means storms with damaging wind or large hail are possible. When thunder roars, go indoors: stop outdoor work and get inside a building or a hard-topped vehicle. Secure loose objects and stay away from windows during the storm."
+  },
+  {
+    "id": "nws-red-flag",
+    "source": "National Weather Service fire weather",
+    "url": "https://www.weather.gov/safety/wildfire",
+    "hazards": [
+      "fire"
+    ],
+    "title": "Red Flag Warning (fire weather)",
+    "text": "A Red Flag Warning means warm, dry and windy conditions where fires can start and spread fast. Avoid anything that makes sparks or flames outdoors (burning, welding, mowing dry grass), don't park on dry grass, know your evacuation routes and keep a go-bag ready."
+  },
+  {
+    "id": "nws-dust-storm",
+    "source": "National Weather Service dust storm safety",
+    "url": "https://www.weather.gov/safety/wind-dust",
+    "hazards": [
+      "dust"
+    ],
+    "title": "Dust storms while driving: Pull Aside, Stay Alive",
+    "text": "If blowing dust makes it hard to see while driving, pull off the road as far as you can, turn off all lights, set the parking brake, take your foot off the brake and stay buckled until the dust passes. Don't drive into a dust storm."
+  },
+  {
+    "id": "nws-coastal-flood",
+    "source": "National Weather Service coastal flood safety",
+    "url": "https://www.weather.gov/safety/flood",
+    "hazards": [
+      "coastal"
+    ],
+    "title": "Coastal Flood Warning and rip currents",
+    "text": "A Coastal Flood Warning means sea water is expected to flood low areas near the shore: move cars and belongings to higher ground and never drive through flooded roads. If caught in a rip current, stay calm and swim parallel to the shore, then back to land."
   }
 ]

@@ -12,11 +12,9 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from .. import config, risk, ssm
-from ..cities import TIMEZONE
 from .http import SourceError, get_json
 
 BASE = "https://www.airnowapi.org/aq"
-_TZ = ZoneInfo(TIMEZONE)
 _POLLUTANT = {"OZONE": "O3"}  # keep the short names used elsewhere
 
 
@@ -33,14 +31,14 @@ def _params(lat: float, lon: float) -> dict:
             "distance": 25, "API_KEY": _api_key()}
 
 
-def parse_observations(obs: list) -> dict:
+def parse_observations(obs: list, tz_name: str = "America/Los_Angeles") -> dict:
     readings = [o for o in obs if isinstance(o.get("nowcastAQI"), int) and o["nowcastAQI"] >= 0]
     if not readings:
         raise SourceError("AirNow returned no observations within 25 miles")
     worst = max(readings, key=lambda o: o["nowcastAQI"])
     pm25 = next((o["nowcastAQI"] for o in readings if o.get("parameterName") == "PM2.5"), None)
     hour = int(str(worst.get("hourObserved", "0")).split(":")[0])
-    observed = datetime.strptime(worst["dateObserved"].strip(), "%Y-%m-%d").replace(hour=hour, tzinfo=_TZ)
+    observed = datetime.strptime(worst["dateObserved"].strip(), "%Y-%m-%d").replace(hour=hour, tzinfo=ZoneInfo(tz_name))
     return {
         "aqi": worst["nowcastAQI"],
         "category": worst.get("aqiCategoryName") or risk.aqi_category(worst["nowcastAQI"]),
@@ -68,8 +66,9 @@ def parse_forecast(rows: list) -> list[dict]:
     return [{k: v for k, v in d.items() if k != "_cat"} for _, d in sorted(by_day.items())]
 
 
-def get_aqi(lat: float, lon: float) -> dict:
-    current = parse_observations(get_json(f"{BASE}/observation/current/ziplatlong/", params=_params(lat, lon)))
+def get_aqi(lat: float, lon: float, tz_name: str) -> dict:
+    current = parse_observations(get_json(f"{BASE}/observation/current/ziplatlong/", params=_params(lat, lon)),
+                                 tz_name)
     try:
         forecast = parse_forecast(get_json(f"{BASE}/forecast/current/", params=_params(lat, lon)))
     except SourceError:

@@ -6,6 +6,7 @@ Usage: python scripts/local_api.py
 import json
 import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import parse_qs
 
 import _path  # noqa: F401
 
@@ -13,9 +14,10 @@ from climateguard.handlers.api import handler
 
 PORT = 8787
 ROUTES = [  # (method, regex, routeKey)
-    ("GET", r"^/cities$", "GET /cities"),
-    ("GET", r"^/cities/(?P<city>[a-z]+)$", "GET /cities/{city}"),
-    ("GET", r"^/cities/(?P<city>[a-z]+)/alerts$", "GET /cities/{city}/alerts"),
+    ("GET", r"^/locate$", "GET /locate"),
+    ("GET", r"^/languages$", "GET /languages"),
+    ("GET", r"^/zones/(?P<zone>[A-Za-z]{2}[Zz]\d{3})$", "GET /zones/{zone}"),
+    ("GET", r"^/zones/(?P<zone>[A-Za-z]{2}[Zz]\d{3})/alerts$", "GET /zones/{zone}/alerts"),
     ("POST", r"^/subscribe$", "POST /subscribe"),
 ]
 CORS = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -34,12 +36,13 @@ class Handler(BaseHTTPRequestHandler):
         self._send(204, {}, "")
 
     def _dispatch(self, method):
-        path = self.path.split("?")[0]
+        path, _, query = self.path.partition("?")
         for m, pattern, route in ROUTES:
             match = re.match(pattern, path)
             if m == method and match:
                 length = int(self.headers.get("Content-Length") or 0)
                 event = {"routeKey": route, "pathParameters": match.groupdict(),
+                         "queryStringParameters": {k: v[0] for k, v in parse_qs(query).items()} or None,
                          "body": self.rfile.read(length).decode("utf-8") if length else None,
                          "requestContext": {"http": {"sourceIp": self.client_address[0]}}}
                 r = handler(event, None)

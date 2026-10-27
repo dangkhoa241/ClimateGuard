@@ -24,11 +24,11 @@ def local(monkeypatch, tmp_path):
 
 
 def _run(scenario="heatwave"):
-    return monitor.Run(city="stockton", snapshot=scenarios.build(scenario))
+    return monitor.Run(zone="CAZ159", snapshot=scenarios.build(scenario, "CAZ159"))
 
 
 def _alert(**over):
-    return {"city": "stockton", "hazard": "heat", "severity": "high", "messages_by_language": dict(GOOD),
+    return {"zone": "CAZ159", "hazard": "heat", "severity": "high", "messages_by_language": dict(GOOD),
             "reason": "test", **over}
 
 
@@ -37,7 +37,7 @@ def _alert(**over):
 def test_valid_alert_is_sent_and_recorded():
     run = _run()
     assert monitor.tool_send_alert(run, _alert())["sent"] is True
-    assert alerts_store.recent_sent("stockton")[0]["severity"] == "high"
+    assert alerts_store.recent_sent("CAZ159")[0]["severity"] == "high"
 
 
 @pytest.mark.parametrize("lang,text", [
@@ -103,15 +103,15 @@ def test_prefilter_blocks_quiet_data():
                                  "hours_ge_95f": 0, "max_precip_prob": 59, "active_alerts": []}) == []
 
 
-def test_tools_refuse_other_cities():
+def test_tools_refuse_other_zones():
     run = _run()
-    assert "error" in monitor.tool_get_forecast(run, {"city": "fresno"})
-    assert "error" in monitor.tool_send_alert(run, _alert(city="modesto"))
-    assert "error" not in monitor.tool_get_forecast(run, {"city": "Stockton"})
+    assert "error" in monitor.tool_get_forecast(run, {"zone": "CAZ999"})
+    assert "error" in monitor.tool_send_alert(run, _alert(zone="MNZ060"))
+    assert "error" not in monitor.tool_get_forecast(run, {"zone": "caz159"})
 
 
 def test_forecast_tool_reports_local_times_and_air_temp_flags():
-    r = monitor.tool_get_forecast(_run(), {"city": "stockton"})
+    r = monitor.tool_get_forecast(_run(), {"zone": "CAZ159"})
     assert len(r["hourly_local_time"]) == 24 and "heat index" in r["hourly_local_time"][0]
     assert "calosha_high_heat_95f" in r["summary"]["flags"]
 
@@ -138,43 +138,43 @@ class FakeModel:
 
 def test_agent_sends_and_logs_decision(monkeypatch):
     fake = FakeModel([
-        {"tool_calls": [_tool_call(1, "get_nws_alerts", {"city": "stockton"}),
-                        _tool_call(2, "get_recent_alerts_sent", {"city": "stockton"})]},
+        {"tool_calls": [_tool_call(1, "get_nws_alerts", {"zone": "CAZ159"}),
+                        _tool_call(2, "get_recent_alerts_sent", {"zone": "CAZ159"})]},
         {"tool_calls": [_tool_call(3, "search_safety_guidance", {"query": "heat water shade"})]},
         {"tool_calls": [_tool_call(4, "send_alert", _alert(severity="extreme"))]},
         {"content": "SENT: Extreme Heat Warning with 108F and no prior alert."},
     ])
     monkeypatch.setattr(monitor, "chat", fake)
-    d = monitor.run_monitor("stockton", scenarios.build("heatwave"))
+    d = monitor.run_monitor("CAZ159", scenarios.build("heatwave", "CAZ159"))
     assert d["action"] == "sent" and d["reason"].startswith("Extreme Heat Warning")
     assert d["model_calls"] == 4 and d["cost_usd"] == pytest.approx(0.004)
     assert [t["tool"] for t in d["tools"]][-1] == "send_alert"
     # reasoning is never fed back into the conversation
     assert all("reasoning_content" not in m for convo in fake.seen for m in convo)
-    assert alerts_store.recent_decisions("stockton")[-1]["action"] == "sent"
+    assert alerts_store.recent_decisions("CAZ159")[-1]["action"] == "sent"
 
 
 def test_agent_skip_when_model_declines(monkeypatch):
     monkeypatch.setattr(monitor, "chat", FakeModel([{"content": "SKIPPED: already alerted."}]))
-    d = monitor.run_monitor("stockton", scenarios.build("heatwave"))
+    d = monitor.run_monitor("CAZ159", scenarios.build("heatwave", "CAZ159"))
     assert d["action"] == "skipped" and d["reason"] == "already alerted."
 
 
 def test_prefilter_skips_without_model_call(monkeypatch):
     monkeypatch.setattr(monitor, "chat", lambda *a, **k: pytest.fail("model must not be called"))
-    d = monitor.run_monitor("stockton", scenarios.build("calm"))
+    d = monitor.run_monitor("CAZ159", scenarios.build("calm", "CAZ159"))
     assert d["action"] == "skipped" and d["model_calls"] == 0
 
 
 def test_step_limit_and_errors_are_logged(monkeypatch):
-    loop = [{"tool_calls": [_tool_call(i, "get_aqi", {"city": "stockton"})]} for i in range(monitor.MAX_STEPS)]
+    loop = [{"tool_calls": [_tool_call(i, "get_aqi", {"zone": "CAZ159"})]} for i in range(monitor.MAX_STEPS)]
     monkeypatch.setattr(monitor, "chat", FakeModel(loop))
-    assert "step limit" in monitor.run_monitor("stockton", scenarios.build("smoke"))["reason"]
+    assert "step limit" in monitor.run_monitor("CAZ159", scenarios.build("smoke", "CAZ159"))["reason"]
 
     def boom(*a, **k):
         raise TimeoutError("Baseten timed out")
     monkeypatch.setattr(monitor, "chat", boom)
-    d = monitor.run_monitor("stockton", scenarios.build("smoke"))
+    d = monitor.run_monitor("CAZ159", scenarios.build("smoke", "CAZ159"))
     assert d["action"] == "error" and "timed out" in d["reason"]
 
 
@@ -185,7 +185,7 @@ class FakeTable:
         self.items = {}
 
     def _k(self, item):
-        return tuple(sorted((k, v) for k, v in item.items() if k in ("day", "sk", "key", "city")))
+        return tuple(sorted((k, v) for k, v in item.items() if k in ("day", "sk", "key", "zone")))
 
     def put_item(self, Item):
         self.items[self._k(Item)] = dict(Item)
@@ -217,6 +217,6 @@ def test_dynamodb_usage_cache_and_alerts(monkeypatch):
     cache.put("k2", {"a": 2}, ttl=-1)  # already expired: DynamoDB TTL is lazy, so reads must check
     assert cache.get("k2", ttl=60) is None
 
-    alerts_store.record_sent("stockton", "heat", "high", GOOD, "test")
-    [row] = alerts_store.recent_sent("stockton")
+    alerts_store.record_sent("CAZ159", "heat", "high", GOOD, "test")
+    [row] = alerts_store.recent_sent("CAZ159")
     assert row["hazard"] == "heat" and row["messages"]["vi"] == GOOD["vi"]

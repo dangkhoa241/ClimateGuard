@@ -1,19 +1,29 @@
 import { useEffect, useState } from 'react'
-import { CITIES, getCityAlerts, subscribe } from './api.js'
+import { ALERT_LANGS, getZoneAlerts, subscribe } from './api.js'
+import LocationPicker from './LocationPicker.jsx'
 
-function RecentAlerts({ city, lang, t }) {
+function NotCoveredNotice({ t }) {
+  return (
+    <aside className="notice warn" role="note">
+      <strong>{t.notCoveredTitle}</strong>
+      <p>{t.notCoveredBody}</p>
+    </aside>
+  )
+}
+
+function RecentAlerts({ zone, lang, t }) {
   const [state, setState] = useState({ loading: true, alerts: [], error: false })
 
   useEffect(() => {
     let cancelled = false
     setState({ loading: true, alerts: [], error: false })
-    getCityAlerts(city)
+    getZoneAlerts(zone)
       .then((alerts) => !cancelled && setState({ loading: false, alerts, error: false }))
       .catch(() => !cancelled && setState({ loading: false, alerts: [], error: true }))
     return () => {
       cancelled = true
     }
-  }, [city])
+  }, [zone])
 
   if (state.loading) return null
   return (
@@ -36,18 +46,24 @@ function RecentAlerts({ city, lang, t }) {
   )
 }
 
-export default function AlertsScreen({ lang, t, city, setCity }) {
+export default function AlertsScreen({ lang, t, zone, setZone }) {
+  // zone.location ({zip} or {lat, lon}) is set when picked here; a zone from an email link has none,
+  // so it shows alerts but asks for a location before signing up.
+  const location = zone?.location
+  const [alertLang, setAlertLang] = useState(lang)
   const [email, setEmail] = useState('')
   const [website, setWebsite] = useState('') // honeypot: hidden from people, bots fill it in
   const [status, setStatus] = useState('idle') // idle | sending | done | error
   const [error, setError] = useState(null)
+
+  useEffect(() => setAlertLang(lang), [lang])
 
   async function onSubmit(e) {
     e.preventDefault()
     setStatus('sending')
     setError(null)
     try {
-      await subscribe({ email, city, lang, website })
+      await subscribe({ email, lang: alertLang, location, website })
       setStatus('done')
     } catch (err) {
       setError(err.code)
@@ -55,8 +71,13 @@ export default function AlertsScreen({ lang, t, city, setCity }) {
     }
   }
 
+  const canSubmit = email && location && status !== 'sending'
+
   return (
     <>
+      <p>{t.signupIntro}</p>
+      <LocationPicker t={t} zone={zone} onLocated={(z, loc) => setZone({ ...z, location: loc })} />
+
       {status === 'done' ? (
         <div className="notice success" role="status">
           <h2>{t.checkEmailTitle}</h2>
@@ -64,44 +85,49 @@ export default function AlertsScreen({ lang, t, city, setCity }) {
           <p className="muted">{t.unsubscribeNote}</p>
         </div>
       ) : (
-        <form className="signup" onSubmit={onSubmit} noValidate>
-          <p>{t.signupIntro}</p>
-          <label htmlFor="city">{t.city}</label>
-          <select id="city" value={city} onChange={(e) => setCity(e.target.value)}>
-            {CITIES.map((c) => (
-              <option key={c.slug} value={c.slug}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          <label htmlFor="email">{t.email}</label>
-          <input
-            id="email"
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            placeholder={t.emailPlaceholder}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <div className="hp" aria-hidden="true">
-            <label htmlFor="website">Website</label>
-            <input id="website" tabIndex={-1} autoComplete="off" value={website}
-              onChange={(e) => setWebsite(e.target.value)} />
-          </div>
-          {status === 'error' && (
-            <p className="notice error" role="alert">
-              {t.errors[error] || t.errors.default}
-            </p>
-          )}
-          <button className="big" type="submit" disabled={status === 'sending' || !email}>
-            {status === 'sending' ? t.sending : t.signupButton}
-          </button>
-          <p className="muted small">{t.privacyNote}</p>
-        </form>
+        location && (
+          <form className="signup" onSubmit={onSubmit} noValidate>
+            <label htmlFor="alert-lang">{t.alertLanguage}</label>
+            <select id="alert-lang" value={alertLang} onChange={(e) => setAlertLang(e.target.value)}>
+              {ALERT_LANGS.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.native}{l.reviewed ? '' : ` · ${t.autoTranslation}`}
+                </option>
+              ))}
+            </select>
+            {!ALERT_LANGS.find((l) => l.code === alertLang)?.reviewed && (
+              <p className="muted small">{t.autoTranslationNote}</p>
+            )}
+            <label htmlFor="email">{t.email}</label>
+            <input
+              id="email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder={t.emailPlaceholder}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <div className="hp" aria-hidden="true">
+              <label htmlFor="website">Website</label>
+              <input id="website" tabIndex={-1} autoComplete="off" value={website}
+                onChange={(e) => setWebsite(e.target.value)} />
+            </div>
+            {status === 'error' && (
+              <p className="notice error" role="alert">
+                {t.errors[error] || t.errors.default}
+              </p>
+            )}
+            <button className="big" type="submit" disabled={!canSubmit}>
+              {status === 'sending' ? t.sending : t.signupButton}
+            </button>
+            <p className="muted small">{t.privacyNote}</p>
+          </form>
+        )
       )}
-      <RecentAlerts city={city} lang={lang} t={t} />
+      <NotCoveredNotice t={t} />
+      {zone && <RecentAlerts zone={zone.zone} lang={lang} t={t} />}
     </>
   )
 }

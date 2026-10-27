@@ -1,47 +1,54 @@
-"""Synthetic snapshots for testing the monitoring agent (and later, demo mode).
+"""Synthetic snapshots for testing the monitoring agent.
 
-Shapes match snapshot.build_snapshot(); times start at the current hour so the
-agent sees a plausible "now".
+Shapes match snapshot.build_snapshot(); times start at the current hour in the zone's
+timezone so the agent sees a plausible "now". (Real archived events come in replays.)
 """
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from . import risk, snapshot
-from .cities import TIMEZONE, get_city
+from . import hazards, risk, snapshot, zones
 
-_TZ = ZoneInfo(TIMEZONE)
+# A non-California zone for testing other timezones and hazards (not monitored, test data only)
+TEST_ZONES = {
+    "MNZ060": {"zone": "MNZ060", "name": "Hennepin", "state": "MN", "tz": "America/Chicago",
+               "place": "Minneapolis, MN", "county": "MNC053", "fire_zone": "MNZ060", "lat": 44.98, "lon": -93.27},
+}
 
 
-def _hours(temp_at, rh_at, precip_at=lambda h: 0, short_at=lambda h: "Sunny", n=48):
-    start = datetime.now(_TZ).replace(minute=0, second=0, microsecond=0)
+def _zone(zone_id: str) -> dict:
+    return zones.DEMO_ZONES.get(zone_id) or TEST_ZONES[zone_id]
+
+
+def _hours(tz, temp_at, rh_at, precip_at=lambda h: 0, short_at=lambda h: "Sunny", wind_at=lambda h: 8, n=48):
+    start = datetime.now(tz).replace(minute=0, second=0, microsecond=0)
     out = []
     for i in range(n):
         t = start + timedelta(hours=i)
         temp, rh = temp_at(t.hour), rh_at(t.hour)
         out.append({"time": t.isoformat(), "temp_f": temp, "rh": rh,
-                    "heat_index_f": round(risk.heat_index_f(temp, rh)), "wind_mph": 8,
+                    "heat_index_f": round(risk.heat_index_f(temp, rh)), "wind_mph": wind_at(t.hour),
                     "precip_prob": precip_at(t.hour), "short": short_at(t.hour)})
     return out
 
 
-def _aqi(now, fc, pollutant="PM2.5"):
-    today = datetime.now(_TZ).date()
+def _aqi(tz, now, fc, pollutant="PM2.5"):
+    today = datetime.now(tz).date()
     return {"source": "scenario",
             "current": {"aqi": now, "category": risk.aqi_category(now), "pollutant": pollutant,
                         "pm25_aqi": now if pollutant == "PM2.5" else None,
-                        "observed_at": datetime.now(_TZ).isoformat(timespec="seconds"), "area": None},
+                        "observed_at": datetime.now(tz).isoformat(timespec="seconds"), "area": None},
             "forecast": [{"date": str(today + timedelta(days=d)), "aqi": v, "category": risk.aqi_category(v),
                           "pollutant": pollutant, "action_day": v > 100} for d, v in enumerate(fc)]}
 
 
-def _nws(event, severity, hours_from_now, headline, description, instruction):
-    now = datetime.now(_TZ)
+def _nws(tz, event, severity, hours_from_now, headline, description, instruction, sender="NWS Sacramento CA"):
+    now = datetime.now(tz)
     ends = (now + timedelta(hours=hours_from_now)).isoformat(timespec="seconds")
-    return {"id": f"scenario-{event.lower().replace(' ', '-')}", "event": event, "message_type": "Alert",
-            "severity": severity, "urgency": "Expected", "certainty": "Likely", "headline": headline,
-            "description": description, "instruction": instruction,
+    return {"id": f"scenario-{event.lower().replace(' ', '-')}", "event": event, "hazard": hazards.group_for(event),
+            "message_type": "Alert", "severity": severity, "urgency": "Expected", "certainty": "Likely",
+            "headline": headline, "description": description, "instruction": instruction,
             "sent": now.isoformat(timespec="seconds"), "onset": now.isoformat(timespec="seconds"),
-            "ends": ends, "expires": ends, "references": [], "sender": "NWS Sacramento CA"}
+            "ends": ends, "expires": ends, "references": [], "sender": sender, "ugc": []}
 
 
 def _heat_curve(peak):
@@ -50,37 +57,58 @@ def _heat_curve(peak):
 
 
 SCENARIOS = {
-    "heatwave": lambda: dict(
-        hours=_hours(_heat_curve(108), lambda h: 22 if 10 <= h <= 20 else 45),
-        aqi=_aqi(72, [78, 80]),
-        alerts=[_nws("Extreme Heat Warning", "Severe", 36,
+    "heatwave": ("CAZ159", lambda tz: dict(
+        hours=_hours(tz, _heat_curve(108), lambda h: 22 if 10 <= h <= 20 else 45),
+        aqi=_aqi(tz, 72, [78, 80]),
+        alerts=[_nws(tz, "Extreme Heat Warning", "Severe", 36,
                      "Extreme Heat Warning in effect through tomorrow evening",
                      "Dangerously hot conditions with temperatures up to 108 expected.",
-                     "Drink plenty of fluids, stay in an air-conditioned room, stay out of the sun.")]),
-    "smoke": lambda: dict(
-        hours=_hours(_heat_curve(88), lambda h: 30, short_at=lambda h: "Areas of Smoke"),
-        aqi=_aqi(178, [185, 160]),
-        alerts=[_nws("Air Quality Alert", "Unknown", 30, "Air Quality Alert due to wildfire smoke",
+                     "Drink plenty of fluids, stay in an air-conditioned room, stay out of the sun.")])),
+    "smoke": ("CAZ159", lambda tz: dict(
+        hours=_hours(tz, _heat_curve(88), lambda h: 30, short_at=lambda h: "Areas of Smoke"),
+        aqi=_aqi(tz, 178, [185, 160]),
+        alerts=[_nws(tz, "Air Quality Alert", "Unknown", 30, "Air Quality Alert due to wildfire smoke",
                      "Smoke from a wildfire will cause unhealthy air quality.",
-                     "Limit time outdoors. Keep windows and doors closed.")]),
-    "flood": lambda: dict(
-        hours=_hours(lambda h: 52, lambda h: 95, precip_at=lambda h: 90, short_at=lambda h: "Heavy Rain"),
-        aqi=_aqi(25, [20, 22]),
-        alerts=[_nws("Flood Warning", "Severe", 24, "Flood Warning for low-lying areas near the Calaveras River",
+                     "Limit time outdoors. Keep windows and doors closed.")])),
+    "flood": ("CAZ303", lambda tz: dict(
+        hours=_hours(tz, lambda h: 52, lambda h: 95, precip_at=lambda h: 90, short_at=lambda h: "Heavy Rain"),
+        aqi=_aqi(tz, 25, [20, 22]),
+        alerts=[_nws(tz, "Flood Warning", "Severe", 24, "Flood Warning for Bear Creek near Planada",
                      "Heavy rain is causing flooding of low-lying areas and roads.",
-                     "Turn around, don't drown when encountering flooded roads.")]),
-    "calm": lambda: dict(
-        hours=_hours(_heat_curve(72), lambda h: 50),
-        aqi=_aqi(35, [38, 40]),
-        alerts=[]),
+                     "Turn around, don't drown when encountering flooded roads.", "NWS Hanford CA")])),
+    "calm": ("CAZ159", lambda tz: dict(
+        hours=_hours(tz, _heat_curve(72), lambda h: 50),
+        aqi=_aqi(tz, 35, [38, 40]),
+        alerts=[])),
+    # Only an excluded short-fuse warning: must never trigger the agent
+    "tornado_warning": ("MNZ060", lambda tz: dict(
+        hours=_hours(tz, lambda h: 78, lambda h: 70, precip_at=lambda h: 50, short_at=lambda h: "Thunderstorms"),
+        aqi=_aqi(tz, 30, [30, 30]),
+        alerts=[_nws(tz, "Tornado Warning", "Extreme", 1, "Tornado Warning for Hennepin County",
+                     "A tornado was observed.", "Take shelter now.", "NWS Twin Cities MN")])),
+    "winter_storm": ("MNZ060", lambda tz: dict(
+        hours=_hours(tz, lambda h: 12, lambda h: 85, precip_at=lambda h: 90, short_at=lambda h: "Heavy Snow",
+                     wind_at=lambda h: 35),
+        aqi=_aqi(tz, 20, [20, 20]),
+        alerts=[_nws(tz, "Winter Storm Warning", "Severe", 30, "Winter Storm Warning through tomorrow night",
+                     "Heavy snow, total accumulations of 10 to 14 inches, wind gusts to 40 mph.",
+                     "If you must travel, keep an extra flashlight, food, and water in your vehicle.",
+                     "NWS Twin Cities MN")])),
 }
 
 
-def build(name: str, city: str = "stockton") -> dict:
-    c = get_city(city)
-    parts = SCENARIOS[name]()
-    summary = snapshot.summarize(parts["hours"], parts["aqi"], parts["alerts"])
-    return {"city": city, "name": c["name"], "generated_at": datetime.now(_TZ).isoformat(timespec="seconds"),
+def build(name: str, zone_id: str | None = None) -> dict:
+    default_zone, make = SCENARIOS[name]
+    z = _zone(zone_id or default_zone)
+    tz = ZoneInfo(z["tz"])
+    parts = make(tz)
+    handled = [a for a in parts["alerts"] if not hazards.is_excluded(a["event"])]
+    excluded = [a for a in parts["alerts"] if hazards.is_excluded(a["event"])]
+    summary = snapshot.summarize(parts["hours"], parts["aqi"], handled)
+    now = datetime.now(tz).isoformat(timespec="seconds")
+    return {"zone": z["zone"], "name": z["name"], "place": z.get("place"), "state": z.get("state"), "tz": z["tz"],
+            "demo": True, "generated_at": now, "forecast_fetched_at": now, "aqi_fetched_at": now,
             "forecast": {"source": f"scenario:{name}", "hours": parts["hours"]}, "aqi": parts["aqi"],
-            "alerts": parts["alerts"], "summary": summary, "errors": {},
-            "fingerprint": snapshot.fingerprint(summary, parts["alerts"]), "scenario": name}
+            "alerts": handled, "excluded_alerts": [{"event": a["event"], "ends": a["ends"]} for a in excluded],
+            "summary": summary, "errors": {}, "fingerprint": snapshot.fingerprint(summary, handled),
+            "scenario": name}

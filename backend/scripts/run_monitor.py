@@ -1,9 +1,10 @@
-"""Run the monitoring agent for one city (live Baseten calls).
+"""Run the monitoring agent for one zone (live Baseten calls).
 
 Usage:
-  python scripts/run_monitor.py stockton                      # latest stored snapshot
-  python scripts/run_monitor.py stockton --scenario heatwave  # synthetic: heatwave|smoke|flood|calm
-  python scripts/run_monitor.py stockton --scenario heatwave --reset   # forget local sent alerts first
+  python scripts/run_monitor.py CAZ159                         # latest stored snapshot
+  python scripts/run_monitor.py --scenario heatwave            # synthetic (uses the scenario's zone)
+  python scripts/run_monitor.py --scenario heatwave --reset    # forget local sent alerts first
+  scenarios: heatwave smoke flood calm tornado_warning winter_storm
   add --force to skip the no-risk pre-filter, --effort low|medium|high to override reasoning effort
 """
 import argparse
@@ -20,19 +21,22 @@ for noisy in ("httpx", "openai", "urllib3"):
     logging.getLogger(noisy).setLevel(logging.WARNING)
 
 p = argparse.ArgumentParser()
-p.add_argument("city")
+p.add_argument("zone", nargs="?")
 p.add_argument("--scenario", choices=sorted(scenarios.SCENARIOS))
 p.add_argument("--reset", action="store_true")
 p.add_argument("--force", action="store_true")
 p.add_argument("--effort")
 a = p.parse_args()
+if not a.zone and not a.scenario:
+    p.error("give a zone or --scenario")
 
+snap = scenarios.build(a.scenario, a.zone.upper() if a.zone else None) if a.scenario else None
+zone = (snap or {}).get("zone") or a.zone.upper()
 if a.reset:
-    alerts_store.clear_local(a.city)
-snap = scenarios.build(a.scenario, a.city) if a.scenario else None
-d = run_monitor(a.city, snap, force=a.force, reasoning_effort=a.effort)
+    alerts_store.clear_local(zone)
+d = run_monitor(zone, snap, force=a.force, reasoning_effort=a.effort)
 
-print(f"\n== {d['action'].upper()}  ({d.get('model_calls')} model calls, ${d.get('cost_usd', 0):.4f})")
+print(f"\n== {zone}: {d['action'].upper()}  ({d.get('model_calls')} model calls, ${d.get('cost_usd', 0):.4f})")
 print(f"why: {d['reason']}")
 if d.get("signals"):
     print(f"signals: {d['signals']}")

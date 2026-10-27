@@ -24,6 +24,7 @@ $ErrorActionPreference = "Stop"
 $FreeRcu = 25; $FreeWcu = 25
 $BasetenParam = "/climateguard/baseten-api-key"
 $AirNowParam = "/climateguard/airnow-api-key"
+$MetaParam = "/climateguard/meta-model-api-key"
 
 # Run the AWS CLI without ever throwing. (In PowerShell 5.1, redirecting a native command's stderr
 # while ErrorActionPreference is Stop raises a terminating error: that was the old report's crash.)
@@ -98,7 +99,9 @@ Test-Permission "logs:DescribeLogGroups" @("logs", "describe-log-groups", "--reg
 Test-Permission "ssm:DescribeParameters" @("ssm", "describe-parameters", "--region", $Region, "--max-items", "1")
 
 Write-Host "`n[3/4] API keys in SSM Parameter Store (lengths only, never values)"
-foreach ($p in @(@{ Name = $BasetenParam; Required = $true }, @{ Name = $AirNowParam; Required = $false })) {
+foreach ($p in @(@{ Name = $BasetenParam; Required = $true },
+                 @{ Name = $AirNowParam; Required = $false; IfMissing = "AQI will use Open-Meteo instead of AirNow" },
+                 @{ Name = $MetaParam; Required = $false; IfMissing = "zh/tl/ko/ar alerts go out in English with a note" })) {
     $r = Invoke-Aws @("ssm", "get-parameter", "--region", $Region, "--name", $p.Name, "--with-decryption",
         "--query", "[Parameter.Type, length(Parameter.Value)]", "--output", "text")
     if ($r.Ok) {
@@ -108,7 +111,7 @@ foreach ($p in @(@{ Name = $BasetenParam; Required = $true }, @{ Name = $AirNowP
     }
     elseif ($r.Text -match "ParameterNotFound") {
         if ($p.Required) { Report $p.Name "FAIL" "missing: store it first (README, Deploy step 3)" }
-        else { Report $p.Name "WARN" "missing: AQI will use Open-Meteo instead of AirNow" }
+        else { Report $p.Name "WARN" "missing: $($p.IfMissing)" }
     }
     elseif ($d = Get-Denial $r.Text) { Report $p.Name "DENIED" "-> service '$($d.Service)', action '$($d.Action)' ($($d.Why))" }
     else { Report $p.Name "FAIL" (($r.Text -split "`n")[0]) }

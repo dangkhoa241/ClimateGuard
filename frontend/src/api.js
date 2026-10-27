@@ -1,14 +1,16 @@
 // Thin client for the ClimateGuard API. Local dev: `python backend/scripts/local_api.py`.
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8787').replace(/\/$/, '')
 
-// Mirrors backend/src/climateguard/cities.py
-export const CITIES = [
-  { slug: 'stockton', name: 'Stockton' },
-  { slug: 'lodi', name: 'Lodi' },
-  { slug: 'manteca', name: 'Manteca' },
-  { slug: 'tracy', name: 'Tracy' },
-  { slug: 'modesto', name: 'Modesto' },
-  { slug: 'merced', name: 'Merced' },
+// Alert languages (mirrors backend/src/climateguard/languages.py). EN/ES/VI are human-reviewed;
+// the others are machine-translated and labeled as such everywhere.
+export const ALERT_LANGS = [
+  { code: 'en', native: 'English', reviewed: true },
+  { code: 'es', native: 'Español', reviewed: true },
+  { code: 'vi', native: 'Tiếng Việt', reviewed: true },
+  { code: 'zh', native: '中文（简体）', reviewed: false },
+  { code: 'tl', native: 'Tagalog', reviewed: false },
+  { code: 'ko', native: '한국어', reviewed: false },
+  { code: 'ar', native: 'العربية', reviewed: false },
 ]
 
 export class ApiError extends Error {
@@ -31,11 +33,17 @@ async function request(path, options) {
   return body
 }
 
-export const getCityAlerts = (city) => request(`/cities/${city}/alerts`)
+export const locateByZip = (zip) => request(`/locate?zip=${encodeURIComponent(zip)}`)
 
-export const subscribe = ({ email, city, lang, website }) =>
+// Coordinates are rounded to ~1 km before they leave the phone; the server only keeps the zone.
+export const locateByCoords = (lat, lon) =>
+  request(`/locate?lat=${lat.toFixed(2)}&lon=${lon.toFixed(2)}`)
+
+export const getZoneAlerts = (zone) => request(`/zones/${zone}/alerts`)
+
+export const subscribe = ({ email, lang, location, website }) =>
   request('/subscribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, city, lang, website }),
+    body: JSON.stringify({ email, lang, website, ...location }),
   })
