@@ -23,7 +23,7 @@ Built for the Meta Global AI Developer Hackathon (Indie Developer track).
 ## Repo layout
 
 ```
-deploy.ps1             reads keys from .env, runs sam deploy, reports denied AWS actions
+deploy.ps1             permission + free-tier preflight, then sam deploy (us-east-2)
 template.yaml          AWS SAM: DynamoDB tables, collector + agent Lambda (every 15 min), public API
 backend/src/           Lambda code (packaged by `sam build`)
   climateguard/
@@ -38,7 +38,7 @@ backend/src/           Lambda code (packaged by `sam build`)
     subscriptions.py   city sign-up via SNS email (double opt-in), abuse limits
     notify.py          alert delivery: one SNS publish per city + language topic
     ratelimit.py       per-IP / per-email counters, subscriber cap
-    ssm.py             optional: read secrets from SSM Parameter Store
+    ssm.py             read API keys from SSM Parameter Store (Lambda)
     llm.py, cache.py, usage.py   model calls, response cache, usage and cost log
 backend/scripts/       smoke tests, collect_local.py, run_monitor.py, local_api.py, spend.py, compare_effort.py
 backend/tests/         offline tests (pytest)
@@ -131,7 +131,9 @@ python scripts/collect_local.py --monitor                            # real data
 
 ## Deploy (AWS SAM), step by step
 
-Commands are for **PowerShell** from the repo root. Region: `us-west-2` (Oregon).
+Commands are for **PowerShell** from the repo root.
+
+**Region: `us-east-2` (Ohio) only.** This account's Organizations SCP explicitly denies other regions; us-west-2 and us-east-1 were checked and are denied. `deploy.ps1` checks this before every deploy.
 
 **1. Install the tools (once).**
 ```powershell
@@ -143,21 +145,30 @@ Open a new terminal. If `python --version` doesn't print 3.12, put it first on `
 $env:Path = "$env:LOCALAPPDATA\Programs\Python\Python312;$env:LOCALAPPDATA\Programs\Python\Python312\Scripts;$env:Path"
 ```
 
-**2. Sign in to AWS.** Use an IAM user with an access key; `aws login` may be blocked by your organization.
+**2. Sign in to AWS.** Use an IAM user with an access key (`aws login` may be blocked).
 ```powershell
-aws configure                  # access key, secret, region us-west-2, output json
-aws sts get-caller-identity    # should print your user and account
+aws configure                         # access key, secret, region us-east-2, output json
+aws configure set region us-east-2
+aws sts get-caller-identity
 ```
 
-**3. API keys.** Nothing to do here: `deploy.ps1` reads `BASETEN_API_KEY` and `AIRNOW_API_KEY` from `.env`. It passes them as **NoEcho** CloudFormation parameters, which become environment variables on the collector Lambda only.
-- The keys never appear in `samconfig.toml` or in commands you type.
-- CloudFormation hides NoEcho values. Anyone with `lambda:GetFunctionConfiguration` on the account can still read the environment variables.
+**3. Store the API keys in SSM Parameter Store (SecureString, once).**
+- **Why by hand:** CloudFormation can't create SecureStrings.
+- **Keys stay hidden:** the commands read each key from `.env` into a variable, so it never appears on screen or in your history.
+- **Lengths only:** the checks print each value's length, never the value.
+```powershell
+$baseten = ((Get-Content .env | Where-Object { $_ -match '^BASETEN_API_KEY=' }) -replace '^BASETEN_API_KEY=', '').Trim()
+$airnow  = ((Get-Content .env | Where-Object { $_ -match '^AIRNOW_API_KEY=' })  -replace '^AIRNOW_API_KEY=', '').Trim()
+aws ssm put-parameter --region us-east-2 --name /climateguard/baseten-api-key --type SecureString --value $baseten --overwrite
+aws ssm put-parameter --region us-east-2 --name /climateguard/airnow-api-key  --type SecureString --value $airnow  --overwrite
+Remove-Variable baseten, airnow
 
-> **Moving to SSM Parameter Store later** (on an account whose policies allow it). The code already reads the env var first and SSM second.
-> 1. Store each key as a SecureString: `aws ssm put-parameter --name /climateguard/baseten-api-key --type SecureString --value ...`
-> 2. In `template.yaml`, replace `BASETEN_API_KEY: !Ref BasetenApiKey` with `BASETEN_API_KEY_PARAM: /climateguard/baseten-api-key`, and do the same for AirNow.
-> 3. Add `SSMParameterReadPolicy: { ParameterName: climateguard/baseten-api-key }` (and the AirNow one) to `CollectFunction`.
-> 4. Remove the key parameters from the template and from `deploy.ps1`.
+aws ssm get-parameter --region us-east-2 --name /climateguard/baseten-api-key --with-decryption --query "[Parameter.Type, length(Parameter.Value)]" --output text
+aws ssm get-parameter --region us-east-2 --name /climateguard/airnow-api-key  --with-decryption --query "[Parameter.Type, length(Parameter.Value)]" --output text
+```
+- **Expected:** `SecureString 45` for Baseten and `SecureString 36` for AirNow, matching the key lengths in `.env`.
+- **Rotating a key later:** rerun its `put-parameter` command (it already has `--overwrite`). The Lambda reads the new value on its next cold start.
+- **AirNow is optional:** without it, air quality comes from Open-Meteo.
 
 **4. Build.**
 ```powershell
@@ -165,21 +176,28 @@ sam build
 ```
 This packages `backend/src` and its dependencies as Linux arm64 wheels, about 28 MB.
 
-**5. Deploy.**
+**5. Preflight, then deploy.**
 ```powershell
-.\deploy.ps1 -Contact you@example.com                                    # first deploy
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass   # if scripts are blocked
+.\deploy.ps1 -PreflightOnly                                   # dry run: checks only, creates nothing
+.\deploy.ps1 -Contact you@example.com                         # preflight + sam deploy
 .\deploy.ps1 -Contact you@example.com -FrontendUrl https://<app>.vercel.app   # once the frontend is live
 ```
-- **Review before deploying:** the script runs `sam deploy` with `--confirm-changeset`. SAM shows every resource it will create; type `y` to deploy.
-- **Contact address:** `-Contact` goes into the NWS User-Agent, which NWS asks for.
-- **If the deploy fails,** the script lists each failed resource and every denied AWS action, for example `DENIED -> service 'sns', action 'sns:CreateTopic' (blocked by an Organizations SCP)`.
+The preflight checks three things, without creating anything:
+1. **Every permission the stack needs** in us-east-2: CloudFormation, S3, IAM, Lambda, DynamoDB, SNS, Scheduler, API Gateway, Logs and SSM.
+2. **That both SSM keys exist.**
+3. **DynamoDB capacity:** the provisioned capacity of **every table in every region**, plus this template's, against the free 25 RCU / 25 WCU.
+
+A denied permission prints `DENIED -> service 'x', action 'x:Y'` and stops before SAM runs.
+
+The deploy then shows SAM's change set and waits for `y`. Re-running is safe; SAM only applies differences. If a deploy fails, the script lists failed resources and denied actions; a stack that doesn't exist is reported as "nothing was created".
 
 **6. Check that it works.**
 ```powershell
 $api = aws cloudformation describe-stacks --stack-name climateguard --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text
 sam remote invoke CollectFunction --stack-name climateguard      # run one collection now
 curl.exe "$api/cities/stockton"                                   # snapshot from DynamoDB
-sam logs -n CollectFunction --stack-name climateguard --tail      # watch the 15-minute runs (Ctrl+C)
+aws logs tail /climateguard/collect --follow                      # watch the 15-minute runs (Ctrl+C)
 ```
 
 **7. Test email for real.**
@@ -193,11 +211,14 @@ Click "Confirm subscription" in the email from "ClimateGuard". Real alerts arriv
 $env:STORAGE = "dynamodb"; backend\.venv\Scripts\python backend\scripts\spend.py; Remove-Item Env:STORAGE
 sam delete --stack-name climateguard
 ```
-`sam delete` removes everything except the SNS topics, which are created at runtime. Delete those with `aws sns list-topics`, then `aws sns delete-topic --topic-arn ...`.
+`sam delete` removes the stack, including its log groups. Two things stay:
+- **SNS topics**, which the app creates at runtime. Delete them with `aws sns list-topics`, then `aws sns delete-topic --topic-arn ...`.
+- **The two SSM parameters.** Delete them with `aws ssm delete-parameter --name ...`.
 
-**Expected AWS cost:** close to $0.
-- Lambda, DynamoDB (13 RCU/WCU in total, within the free 25) and EventBridge stay inside the free tier.
-- SNS email includes 1,000 free notifications a month.
+**Expected AWS cost:** $0 on the Free plan. All of it stays inside the free allowances:
+- Lambda, DynamoDB (14 of 25 RCU/WCU in total), EventBridge Scheduler and CloudWatch Logs (7-day retention)
+- SSM standard parameters, which are free
+- SNS email, with 1,000 free notifications a month
 
 ## Setup
 

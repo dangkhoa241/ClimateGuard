@@ -1,68 +1,179 @@
 <#
 Deploy the ClimateGuard backend with SAM (Windows PowerShell 5.1+). Run `sam build` first.
 
-Reads BASETEN_API_KEY (required) and AIRNOW_API_KEY (optional) from .env and passes them as
-NoEcho CloudFormation parameters, so keys never appear in the command line you type, in
-samconfig.toml, or in your shell history.
-
-  .\deploy.ps1 -Contact you@example.com
+  .\deploy.ps1 -PreflightOnly                        # dry run: permission + free-tier checks only
+  .\deploy.ps1 -Contact you@example.com              # preflight, then sam deploy (shows the change set first)
   .\deploy.ps1 -Contact you@example.com -FrontendUrl https://your-app.vercel.app
 
-On failure it lists every denied AWS action (e.g. an Organizations SCP) from the stack events.
+The preflight checks, in the target region and without creating anything, every service the stack
+uses. An explicitly denied action (e.g. an Organizations SCP) is reported as
+"DENIED -> service 'x', action 'x:Y'" and the deploy stops before SAM runs. It also checks that the
+SSM SecureStrings exist (value lengths only, never values) and that DynamoDB provisioned capacity,
+summed over every table in every region, stays within the free 25 RCU / 25 WCU.
+Safe to re-run: sam deploy only applies differences.
 #>
 param(
-    [Parameter(Mandatory = $true)][string]$Contact,          # NWS asks for contact info in the User-Agent
+    [string]$Contact = "",                    # NWS asks for contact info in the User-Agent
     [string]$FrontendUrl = "http://localhost:5173",
     [string]$StackName = "climateguard",
-    [string]$Region = "us-west-2",
-    [int]$MaxSubscribers = 500
+    [string]$Region = "us-east-2",            # this account's SCP denies us-west-2 and us-east-1
+    [int]$MaxSubscribers = 500,
+    [switch]$PreflightOnly
 )
 $ErrorActionPreference = "Stop"
+$FreeRcu = 25; $FreeWcu = 25
+$BasetenParam = "/climateguard/baseten-api-key"
+$AirNowParam = "/climateguard/airnow-api-key"
 
-function Read-EnvValue([string]$name) {
-    $line = Get-Content (Join-Path $PSScriptRoot ".env") | Where-Object { $_ -match "^$name=" } | Select-Object -First 1
-    if ($line) { return ($line -replace "^$name=", "").Trim().Trim('"') }
-    return ""
+# Run the AWS CLI without ever throwing. (In PowerShell 5.1, redirecting a native command's stderr
+# while ErrorActionPreference is Stop raises a terminating error: that was the old report's crash.)
+function Invoke-Aws([string[]]$AwsArgs) {
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try { $out = & aws @AwsArgs 2>&1 | ForEach-Object { "$_" } } finally { $ErrorActionPreference = $prev }
+    [pscustomobject]@{ Ok = ($LASTEXITCODE -eq 0); Text = (($out | Where-Object { $_ }) -join "`n").Trim() }
 }
 
-$baseten = Read-EnvValue "BASETEN_API_KEY"
-$airnow = Read-EnvValue "AIRNOW_API_KEY"
-if (-not $baseten) { throw "BASETEN_API_KEY is missing from .env" }
-if ($Contact -match "\s") { throw "-Contact must not contain spaces (e.g. you@example.com)" }
+function Get-Denial([string]$text) {
+    if ($text -notmatch "AccessDenied|not authorized|UnauthorizedOperation") { return $null }
+    $action = if ($text -match "perform: ([a-z0-9-]+:[A-Za-z0-9]+)") { $Matches[1] } else { "unknown action" }
+    $why = if ($text -match "service control policy") { "Organizations SCP, explicit deny" } else { "IAM policy" }
+    [pscustomobject]@{ Service = $action.Split(":")[0]; Action = $action; Why = $why }
+}
 
+$script:failures = 0; $script:warnings = 0
+function Report([string]$check, [string]$status, [string]$detail = "") {
+    $color = @{ OK = "Green"; WARN = "Yellow"; FAIL = "Red"; DENIED = "Red" }[$status]
+    if ($status -in "FAIL", "DENIED") { $script:failures++ } elseif ($status -eq "WARN") { $script:warnings++ }
+    Write-Host ("  {0,-6} {1,-34} {2}" -f $status, $check, $detail) -ForegroundColor $color
+}
+
+# Probe one permission. $allowedIf: a regex for an error that proves the call got past authorization
+# (e.g. a validation error), so nothing is ever created.
+function Test-Permission([string]$check, [string[]]$awsArgs, [string]$allowedIf = "") {
+    $r = Invoke-Aws $awsArgs
+    if ($r.Ok -or ($allowedIf -and $r.Text -match $allowedIf)) { Report $check "OK"; return }
+    $d = Get-Denial $r.Text
+    if ($d) { Report $check "DENIED" "-> service '$($d.Service)', action '$($d.Action)' ($($d.Why))"; return }
+    Report $check "FAIL" (($r.Text -split "`n")[0])
+}
+
+Write-Host "`nPreflight for stack '$StackName' in $Region" -ForegroundColor Cyan
+$who = Invoke-Aws @("sts", "get-caller-identity", "--query", "Arn", "--output", "text")
+if (-not $who.Ok) { Write-Host "  Not signed in to AWS: $($who.Text)" -ForegroundColor Red; exit 1 }
+Write-Host ("  as {0}" -f ($who.Text -replace "\d{12}", "<account>"))
+
+Write-Host "`n[1/3] Permissions (nothing is created)"
+Test-Permission "cloudformation:CreateChangeSet" @("cloudformation", "create-change-set", "--region", $Region,
+    "--stack-name", "$StackName-preflight-probe", "--change-set-name", "probe", "--change-set-type", "CREATE",
+    "--template-body", '{\"Resources\":{}}') "Template format error|ValidationError"
+Test-Permission "cloudformation:DescribeStacks" @("cloudformation", "describe-stacks", "--region", $Region,
+    "--stack-name", $StackName) "does not exist"
+Test-Permission "s3:ListBuckets (SAM uploads)" @("s3api", "list-buckets", "--region", $Region, "--max-items", "1")
+Test-Permission "iam:GetRole (roles for Lambda)" @("iam", "get-role", "--role-name", "climateguard-preflight-nonexistent") "NoSuchEntity"
+Test-Permission "lambda:ListFunctions" @("lambda", "list-functions", "--region", $Region, "--max-items", "1")
+Test-Permission "dynamodb:ListTables" @("dynamodb", "list-tables", "--region", $Region, "--max-items", "1")
+Test-Permission "sns:ListTopics" @("sns", "list-topics", "--region", $Region)
+Test-Permission "scheduler:ListSchedules" @("scheduler", "list-schedules", "--region", $Region, "--max-results", "1")
+Test-Permission "apigateway:GET (HTTP APIs)" @("apigatewayv2", "get-apis", "--region", $Region, "--max-results", "1")
+Test-Permission "logs:DescribeLogGroups" @("logs", "describe-log-groups", "--region", $Region, "--limit", "1")
+Test-Permission "ssm:DescribeParameters" @("ssm", "describe-parameters", "--region", $Region, "--max-items", "1")
+
+Write-Host "`n[2/3] API keys in SSM Parameter Store (lengths only, never values)"
+foreach ($p in @(@{ Name = $BasetenParam; Required = $true }, @{ Name = $AirNowParam; Required = $false })) {
+    $r = Invoke-Aws @("ssm", "get-parameter", "--region", $Region, "--name", $p.Name, "--with-decryption",
+        "--query", "[Parameter.Type, length(Parameter.Value)]", "--output", "text")
+    if ($r.Ok) {
+        $type, $len = $r.Text -split "\s+"
+        if ($type -eq "SecureString") { Report $p.Name "OK" "SecureString, $len characters" }
+        else { Report $p.Name "WARN" "type is $type, expected SecureString" }
+    }
+    elseif ($r.Text -match "ParameterNotFound") {
+        if ($p.Required) { Report $p.Name "FAIL" "missing: store it first (README, Deploy step 3)" }
+        else { Report $p.Name "WARN" "missing: AQI will use Open-Meteo instead of AirNow" }
+    }
+    elseif ($d = Get-Denial $r.Text) { Report $p.Name "DENIED" "-> service '$($d.Service)', action '$($d.Action)' ($($d.Why))" }
+    else { Report $p.Name "FAIL" (($r.Text -split "`n")[0]) }
+}
+
+Write-Host "`n[3/3] DynamoDB free tier: provisioned capacity across ALL tables in ALL regions"
+$regions = Invoke-Aws @("account", "list-regions", "--region-opt-status-contains", "ENABLED", "ENABLED_BY_DEFAULT",
+    "--query", "Regions[].RegionName", "--output", "text")
+if ($regions.Ok) { $regionList = $regions.Text -split "\s+" }
+else {
+    $regionList = "us-east-1 us-east-2 us-west-1 us-west-2 ca-central-1 sa-east-1 eu-west-1 eu-west-2 eu-west-3 eu-central-1 eu-north-1 ap-south-1 ap-northeast-1 ap-northeast-2 ap-northeast-3 ap-southeast-1 ap-southeast-2" -split " "
+    Write-Host "  (account:ListRegions unavailable; checking the 17 default regions)"
+}
+$otherRcu = 0; $otherWcu = 0; $blocked = @()
+foreach ($reg in $regionList) {
+    $t = Invoke-Aws @("dynamodb", "list-tables", "--region", $reg, "--query", "TableNames", "--output", "text")
+    if (-not $t.Ok) { $blocked += $reg; continue }
+    foreach ($name in ($t.Text -split "\s+" | Where-Object { $_ -and $_ -ne "None" })) {
+        if ($name -like "climateguard-*" -and $reg -eq $Region) { continue }  # replaced by the template's values
+        $d = Invoke-Aws @("dynamodb", "describe-table", "--region", $reg, "--table-name", $name, "--output", "json")
+        if (-not $d.Ok) { continue }
+        $tbl = ($d.Text | ConvertFrom-Json).Table
+        $mode = if ($tbl.BillingModeSummary) { $tbl.BillingModeSummary.BillingMode } else { "PROVISIONED" }
+        if ($mode -ne "PROVISIONED") { continue }
+        $r = [int]$tbl.ProvisionedThroughput.ReadCapacityUnits; $w = [int]$tbl.ProvisionedThroughput.WriteCapacityUnits
+        foreach ($g in @($tbl.GlobalSecondaryIndexes)) { if ($g) { $r += [int]$g.ProvisionedThroughput.ReadCapacityUnits; $w += [int]$g.ProvisionedThroughput.WriteCapacityUnits } }
+        Write-Host ("         {0,-28} {1,-10} RCU {2,3}  WCU {3,3}" -f $name, $reg, $r, $w)
+        $otherRcu += $r; $otherWcu += $w
+    }
+}
+$tpl = Get-Content (Join-Path $PSScriptRoot "template.yaml") -Raw
+$cgRcu = ([regex]::Matches($tpl, "ReadCapacityUnits:\s*(\d+)") | ForEach-Object { [int]$_.Groups[1].Value } | Measure-Object -Sum).Sum
+$cgWcu = ([regex]::Matches($tpl, "WriteCapacityUnits:\s*(\d+)") | ForEach-Object { [int]$_.Groups[1].Value } | Measure-Object -Sum).Sum
+Write-Host ("         {0,-28} {1,-10} RCU {2,3}  WCU {3,3}" -f "climateguard-* (template)", $Region, $cgRcu, $cgWcu)
+$totR = $otherRcu + $cgRcu; $totW = $otherWcu + $cgWcu
+$msg = "total RCU $totR / $FreeRcu, WCU $totW / $FreeWcu"
+if ($totR -le $FreeRcu -and $totW -le $FreeWcu) { Report "DynamoDB provisioned capacity" "OK" $msg }
+else { Report "DynamoDB provisioned capacity" "WARN" "${msg}: over the free tier (paid from Free plan credits)" }
+if ($blocked) { Write-Host ("         not readable (SCP region deny, so no tables can be created there): {0}" -f ($blocked -join ", ")) }
+
+Write-Host ""
+if ($script:failures) {
+    Write-Host "Preflight: $($script:failures) problem(s). Nothing was deployed." -ForegroundColor Red
+    exit 1
+}
+Write-Host "Preflight passed ($($script:warnings) warning(s))." -ForegroundColor Green
+if ($PreflightOnly) { exit 0 }
+
+if (-not $Contact -or $Contact -match "\s") { throw "Pass -Contact you@example.com (no spaces) for the NWS User-Agent." }
 $overrides = @(
-    "BasetenApiKey=$baseten",
-    "AirNowApiKey=$airnow",
     "FrontendUrl=$FrontendUrl",
     "MaxSubscribers=$MaxSubscribers",
     "NwsUserAgent=ClimateGuard/0.1(+mailto:$Contact)"   # no spaces: survives argument parsing
 )
-
-Write-Host "Deploying stack '$StackName' to $Region (keys from .env: Baseten=set, AirNow=$(if ($airnow) {'set'} else {'empty -> Open-Meteo'}))"
+Write-Host "`nDeploying '$StackName' to $Region (SAM shows the change set and waits for 'y')`n" -ForegroundColor Cyan
 sam deploy --stack-name $StackName --region $Region --resolve-s3 --capabilities CAPABILITY_IAM `
-    --confirm-changeset --no-fail-on-empty-changeset --parameter-overrides $overrides
+    --confirm-changeset --no-fail-on-empty-changeset --tags Project=climateguard --parameter-overrides $overrides
 $code = $LASTEXITCODE
-Remove-Variable baseten, airnow, overrides
 
 if ($code -ne 0) {
-    Write-Host "`nDeploy failed (exit $code). Failed resources and denied actions:" -ForegroundColor Red
+    Write-Host "`nDeploy failed (exit $code)." -ForegroundColor Red
     foreach ($stack in @($StackName, "aws-sam-cli-managed-default")) {
-        $events = aws cloudformation describe-stack-events --stack-name $stack --region $Region `
-            --query "StackEvents[?contains(ResourceStatus, 'FAILED')].[Timestamp, LogicalResourceId, ResourceStatusReason]" `
-            --output json 2>$null | ConvertFrom-Json
-        foreach ($e in $events) {
-            $reason = [string]$e[2]
-            $denied = [regex]::Matches($reason, "perform: ([a-z0-9-]+:[A-Za-z0-9]+)") | ForEach-Object { $_.Groups[1].Value }
-            Write-Host ("[{0}] {1}: {2}" -f $stack, $e[1], $reason)
-            foreach ($d in $denied) {
-                $scp = if ($reason -match "service control policy") { " (blocked by an Organizations SCP)" } else { "" }
-                Write-Host "   DENIED -> service '$($d.Split(':')[0])', action '$d'$scp" -ForegroundColor Yellow
-            }
+        $ev = Invoke-Aws @("cloudformation", "describe-stack-events", "--region", $Region, "--stack-name", $stack,
+            "--query", "StackEvents[?contains(ResourceStatus, 'FAILED')].[LogicalResourceId, ResourceStatusReason]",
+            "--output", "json")
+        if (-not $ev.Ok) {
+            if ($ev.Text -match "does not exist") { Write-Host "  [$stack] stack does not exist: nothing was created there." }
+            elseif ($d = Get-Denial $ev.Text) { Write-Host "  [$stack] cannot read events: DENIED -> service '$($d.Service)', action '$($d.Action)' ($($d.Why))" -ForegroundColor Yellow }
+            else { Write-Host "  [$stack] cannot read events: $(($ev.Text -split "`n")[0])" }
+            continue
+        }
+        foreach ($e in @($ev.Text | ConvertFrom-Json)) {
+            if (-not $e) { continue }
+            $reason = [string]$e[1]
+            Write-Host "  [$stack] $($e[0]): $reason"
+            if ($d = Get-Denial $reason) { Write-Host "     DENIED -> service '$($d.Service)', action '$($d.Action)' ($($d.Why))" -ForegroundColor Yellow }
         }
     }
+    Write-Host "  If the denial came before CloudFormation started, it is in the sam output above (look for 'not authorized to perform')."
+    Write-Host "  A failed FIRST deploy leaves the stack in ROLLBACK_COMPLETE: run 'sam delete --stack-name $StackName --region $Region --no-prompts' before retrying."
     exit $code
 }
 
-$api = aws cloudformation describe-stacks --stack-name $StackName --region $Region `
-    --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text
-Write-Host "`nDeployed. API URL: $api" -ForegroundColor Green
+$api = Invoke-Aws @("cloudformation", "describe-stacks", "--region", $Region, "--stack-name", $StackName,
+    "--query", "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue", "--output", "text")
+Write-Host "`nDeployed. API URL: $($api.Text)" -ForegroundColor Green
