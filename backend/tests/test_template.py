@@ -1,0 +1,53 @@
+"""template.yaml checks that cfn-lint can't catch: run SAM's own transform locally."""
+from pathlib import Path
+
+import pytest
+
+samtranslator = pytest.importorskip("samtranslator")
+from samtranslator.translator.transform import transform  # noqa: E402
+from samtranslator.yaml_helper import yaml_parse  # noqa: E402
+
+TEMPLATE = Path(__file__).resolve().parents[2] / "template.yaml"
+
+
+class _PolicyLoader:  # managed-policy lookup without calling IAM
+    def load(self):
+        return {"AWSLambdaBasicExecutionRole": "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"}
+
+
+@pytest.fixture(scope="module")
+def transformed():
+    tpl = yaml_parse(TEMPLATE.read_text(encoding="utf-8"))
+    tpl["Globals"]["Function"]["CodeUri"] = "s3://placeholder/code.zip"  # sam deploy uploads the real code
+    return transform(tpl, {}, _PolicyLoader())
+
+
+def _resolve(value, params, conditions):
+    if isinstance(value, dict) and "Fn::If" in value:
+        cond, yes, no = value["Fn::If"]
+        a, b = (params[x["Ref"]] if isinstance(x, dict) else x for x in conditions[cond]["Fn::Equals"])
+        return _resolve(yes if a == b else no, params, conditions)
+    if isinstance(value, list):
+        return [_resolve(v, params, conditions) for v in value]
+    if isinstance(value, dict) and set(value) == {"Ref"}:
+        return params[value["Ref"]]
+    if isinstance(value, dict):
+        return {k: _resolve(v, params, conditions) for k, v in value.items()}
+    return value
+
+
+@pytest.mark.parametrize("frontend", ["http://localhost:5173", "https://example-demo.vercel.app"])
+def test_cors_origins_never_duplicated(transformed, frontend):
+    api = next(r for r in transformed["Resources"].values() if r["Type"] == "AWS::ApiGatewayV2::Api")
+    cors = _resolve(api["Properties"]["Body"]["x-amazon-apigateway-cors"],
+                    {"FrontendUrl": frontend, "LocalDevOrigin": "http://localhost:5173"},
+                    transformed["Conditions"])
+    origins = cors["allowOrigins"]
+    assert len(origins) == len(set(origins)) and frontend in origins
+    assert "http://localhost:5173" in origins
+    assert cors["allowMethods"] == ["GET", "POST", "OPTIONS"]  # SAM must not drop the rest of the block
+
+
+def test_log_groups_keep_seven_days(transformed):
+    groups = [r for r in transformed["Resources"].values() if r["Type"] == "AWS::Logs::LogGroup"]
+    assert len(groups) == 2 and all(g["Properties"]["RetentionInDays"] == 7 for g in groups)

@@ -10,12 +10,19 @@ Parameters:
     Description: >-
       Public URL of the frontend (CORS origin and links in alert emails), no trailing slash.
       Use http://localhost:5173 until the Vercel app exists, then redeploy with the real URL.
+  LocalDevOrigin:
+    Type: String
+    Default: http://localhost:5173
+    Description: Vite dev server origin, allowed by CORS in addition to FrontendUrl
   MaxSubscribers:
     Type: Number
     Default: 500
   NwsUserAgent:
     Type: String
     Description: NWS asks for a User-Agent with contact info, e.g. "ClimateGuard/0.1 you@example.com"
+
+Conditions:
+  FrontendIsLocalDev: !Equals [!Ref FrontendUrl, !Ref LocalDevOrigin]
 
 Globals:
   Function:
@@ -154,10 +161,17 @@ Resources:
   HttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
-      CorsConfiguration:
-        AllowOrigins: [!Ref FrontendUrl, "http://localhost:5173"]
-        AllowMethods: [GET, POST, OPTIONS]
-        AllowHeaders: [Content-Type]
+      # API Gateway rejects duplicate origins, so localhost is only added when it isn't already FrontendUrl
+      # (deploy.ps1 also normalizes FrontendUrl and fails the preflight on duplicates). The !If wraps the
+      # whole block: SAM mistranslates an !If placed on AllowOrigins alone (verified with samtranslator).
+      CorsConfiguration: !If
+        - FrontendIsLocalDev
+        - AllowOrigins: [!Ref FrontendUrl]
+          AllowMethods: [GET, POST, OPTIONS]
+          AllowHeaders: [Content-Type]
+        - AllowOrigins: [!Ref FrontendUrl, !Ref LocalDevOrigin]
+          AllowMethods: [GET, POST, OPTIONS]
+          AllowHeaders: [Content-Type]
       DefaultRouteSettings:  # whole-API safety net; per-IP limits are enforced in code
         ThrottlingBurstLimit: 20
         ThrottlingRateLimit: 10

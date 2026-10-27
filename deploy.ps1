@@ -63,7 +63,25 @@ $who = Invoke-Aws @("sts", "get-caller-identity", "--query", "Arn", "--output", 
 if (-not $who.Ok) { Write-Host "  Not signed in to AWS: $($who.Text)" -ForegroundColor Red; exit 1 }
 Write-Host ("  as {0}" -f ($who.Text -replace "\d{12}", "<account>"))
 
-Write-Host "`n[1/3] Permissions (nothing is created)"
+Write-Host "`n[1/4] Template parameters"
+# Origins are compared exactly (API Gateway rejects duplicates), so normalize before deciding.
+$FrontendUrl = $FrontendUrl.Trim().TrimEnd("/").ToLowerInvariant()
+$tpl = Get-Content (Join-Path $PSScriptRoot "template.yaml") -Raw
+$localDev = if ($tpl -match "LocalDevOrigin:\s*\r?\n\s*Type: String\s*\r?\n\s*Default:\s*(\S+)") { $Matches[1].ToLowerInvariant() } else { "http://localhost:5173" }
+if ($FrontendUrl -notmatch "^https?://[a-z0-9.-]+(:\d{1,5})?$") {
+    Report "FrontendUrl" "FAIL" "'$FrontendUrl' must be a bare origin like https://app.vercel.app (no path)"
+}
+elseif ($tpl -notmatch "CorsConfiguration: !If\s*\r?\n\s*- FrontendIsLocalDev") {
+    Report "CORS AllowOrigins" "FAIL" "template.yaml lost the FrontendIsLocalDev condition; origins could be duplicated"
+}
+else {
+    $origins = if ($FrontendUrl -eq $localDev) { @($FrontendUrl) } else { @($FrontendUrl, $localDev) }
+    $dupes = $origins | Group-Object | Where-Object { $_.Count -gt 1 } | ForEach-Object { $_.Name }
+    if ($dupes) { Report "CORS AllowOrigins" "FAIL" "duplicate origin(s): $($dupes -join ', ')" }
+    else { Report "CORS AllowOrigins" "OK" ($origins -join ", ") }
+}
+
+Write-Host "`n[2/4] Permissions (nothing is created)"
 Test-Permission "cloudformation:CreateChangeSet" @("cloudformation", "create-change-set", "--region", $Region,
     "--stack-name", "$StackName-preflight-probe", "--change-set-name", "probe", "--change-set-type", "CREATE",
     "--template-body", '{\"Resources\":{}}') "Template format error|ValidationError"
@@ -79,7 +97,7 @@ Test-Permission "apigateway:GET (HTTP APIs)" @("apigatewayv2", "get-apis", "--re
 Test-Permission "logs:DescribeLogGroups" @("logs", "describe-log-groups", "--region", $Region, "--limit", "1")
 Test-Permission "ssm:DescribeParameters" @("ssm", "describe-parameters", "--region", $Region, "--max-items", "1")
 
-Write-Host "`n[2/3] API keys in SSM Parameter Store (lengths only, never values)"
+Write-Host "`n[3/4] API keys in SSM Parameter Store (lengths only, never values)"
 foreach ($p in @(@{ Name = $BasetenParam; Required = $true }, @{ Name = $AirNowParam; Required = $false })) {
     $r = Invoke-Aws @("ssm", "get-parameter", "--region", $Region, "--name", $p.Name, "--with-decryption",
         "--query", "[Parameter.Type, length(Parameter.Value)]", "--output", "text")
@@ -96,7 +114,7 @@ foreach ($p in @(@{ Name = $BasetenParam; Required = $true }, @{ Name = $AirNowP
     else { Report $p.Name "FAIL" (($r.Text -split "`n")[0]) }
 }
 
-Write-Host "`n[3/3] DynamoDB free tier: provisioned capacity across ALL tables in ALL regions"
+Write-Host "`n[4/4] DynamoDB free tier: provisioned capacity across ALL tables in ALL regions"
 $regions = Invoke-Aws @("account", "list-regions", "--region-opt-status-contains", "ENABLED", "ENABLED_BY_DEFAULT",
     "--query", "Regions[].RegionName", "--output", "text")
 if ($regions.Ok) { $regionList = $regions.Text -split "\s+" }
@@ -121,7 +139,7 @@ foreach ($reg in $regionList) {
         $otherRcu += $r; $otherWcu += $w
     }
 }
-$tpl = Get-Content (Join-Path $PSScriptRoot "template.yaml") -Raw
+# ($tpl was read in step 1)
 $cgRcu = ([regex]::Matches($tpl, "ReadCapacityUnits:\s*(\d+)") | ForEach-Object { [int]$_.Groups[1].Value } | Measure-Object -Sum).Sum
 $cgWcu = ([regex]::Matches($tpl, "WriteCapacityUnits:\s*(\d+)") | ForEach-Object { [int]$_.Groups[1].Value } | Measure-Object -Sum).Sum
 Write-Host ("         {0,-28} {1,-10} RCU {2,3}  WCU {3,3}" -f "climateguard-* (template)", $Region, $cgRcu, $cgWcu)
