@@ -8,13 +8,12 @@ import json
 import re
 from dataclasses import dataclass
 
-from openai import OpenAI
 
 from . import cache, config, ssm, usage
 
 _THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
 
-_clients: dict[str, OpenAI] = {}
+_clients: dict = {}  # provider -> openai.OpenAI
 
 
 class EmptyAnswerError(RuntimeError):
@@ -33,7 +32,7 @@ class ChatResult:
     raw: dict  # full response, for tool-call handling later; never shown to users
 
 
-def _client(provider: str) -> OpenAI:
+def _client(provider: str):
     if provider not in _clients:
         if provider == "baseten":
             key, param, url = config.BASETEN_API_KEY, config.BASETEN_API_KEY_PARAM, config.BASETEN_BASE_URL
@@ -46,6 +45,10 @@ def _client(provider: str) -> OpenAI:
         if not key:
             raise RuntimeError(f"API key for {provider} is not set (see .env.example)")
         # Pass api_key explicitly: the SDK does not read MODEL_API_KEY / BASETEN_API_KEY.
+        # Imported here, not at module load: the SDK takes ~10 s to import on a 256 MB Lambda,
+        # and most collector runs never call a model.
+        from openai import OpenAI
+
         _clients[provider] = OpenAI(api_key=key, base_url=url, timeout=120)
     return _clients[provider]
 

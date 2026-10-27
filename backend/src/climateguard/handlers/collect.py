@@ -45,7 +45,9 @@ def collect(cities=None) -> dict:
 
 def monitor_changed(result: dict) -> dict:
     """Run the monitoring agent only for cities whose risk fingerprint changed."""
-    from ..monitor import run_monitor  # lazy: collect-only runs don't need the openai client
+    if not result["changed"]:
+        return {}  # nothing changed: skip even importing the agent
+    from ..monitor import run_monitor
 
     decisions = {}
     for slug in result["changed"]:

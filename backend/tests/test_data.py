@@ -217,3 +217,33 @@ def test_airnow_key_from_ssm_when_env_missing(monkeypatch):
     monkeypatch.setattr(config, "AIRNOW_API_KEY_PARAM", "/climateguard/airnow-api-key")
     monkeypatch.setattr(ssm, "get_secret", lambda name: "KEY-FROM-SSM")
     assert airnow.enabled() and airnow._params(1, 2)["API_KEY"] == "KEY-FROM-SSM"
+
+
+# --- fingerprints across cities: equal only when the bucketed risk picture is equal ---
+
+def test_calm_cities_share_a_fingerprint_by_design():
+    # Today's real case: 67F vs 69F (same 5F bucket), AQI 33 vs 45 (both Good), no alerts.
+    assert _fp([67], _aqi(33, 40), []) == _fp([69], _aqi(45, 40), [])
+
+
+@pytest.mark.parametrize("city_a,city_b,why", [
+    (([94], _aqi(40, 40), []), ([96], _aqi(40, 40), []), "crossing Cal/OSHA 95F (air temp)"),
+    (([79], _aqi(40, 40), []), ([81], _aqi(40, 40), []), "crossing Cal/OSHA 80F shade"),
+    (([70], _aqi(100, 100), []), ([70], _aqi(101, 100), []), "AQI category Moderate -> USG now"),
+    (([70], _aqi(40, 150), []), ([70], _aqi(40, 151), []), "forecast AQI crosses 151 smoke rule"),
+    (([70], _aqi(40, 40), []), ([70], _aqi(40, 40), "ALERT"), "new NWS alert in one city only"),
+    (([70], _aqi(40, 40), []), ([75], _aqi(40, 40), []), "next 5F temperature bucket"),
+])
+def test_different_real_values_give_different_fingerprints(city_a, city_b, why):
+    alerts = lambda a: nws.parse_alerts({"features": [_alert()]}) if a == "ALERT" else a
+    fp_a = _fp(city_a[0], city_a[1], alerts(city_a[2]))
+    fp_b = _fp(city_b[0], city_b[1], alerts(city_b[2]))
+    assert fp_a != fp_b, why
+
+
+def test_same_alert_event_different_severity_or_end_changes_fingerprint():
+    base = nws.parse_alerts({"features": [_alert()]})
+    escalated = [dict(base[0], severity="Extreme")]
+    extended = nws.parse_alerts({"features": [_alert(ends="2026-07-16T21:00:00-07:00")]})
+    fps = {_fp([90], _aqi(), a) for a in (base, escalated, extended)}
+    assert len(fps) == 3
