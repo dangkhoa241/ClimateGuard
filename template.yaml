@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: ClimateGuard backend. Deploy with `sam build && sam deploy --guided`.
+
+Parameters:
+  BasetenApiKey:
+    Type: String
+    NoEcho: true
+    Description: Baseten key for the monitoring agent (Muse Spark Open)
+  NwsUserAgent:
+    Type: String
+    Description: NWS asks for a User-Agent with contact info, e.g. "ClimateGuard/0.1 (you@example.com)"
+  AirNowApiKey:
+    Type: String
+    Default: ""
+    NoEcho: true
+    Description: Optional EPA AirNow key. Empty = Open-Meteo modeled AQI.
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Architectures: [arm64]
+    CodeUri: backend/src/
+    MemorySize: 256
+    Environment:
+      Variables:
+        STORAGE: dynamodb
+        SNAPSHOTS_TABLE: !Ref SnapshotsTable
+        USAGE_TABLE: !Ref UsageTable
+        CACHE_TABLE: !Ref CacheTable
+        ALERTS_TABLE: !Ref AlertsTable
+        CG_LOCAL_DIR: /tmp/climateguard
+        NWS_USER_AGENT: !Ref NwsUserAgent
+        AIRNOW_API_KEY: !Ref AirNowApiKey
+
+Resources:
+  SnapshotsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: climateguard-snapshots
+      BillingMode: PROVISIONED  # free tier: 25 RCU / 25 WCU total across tables
+      ProvisionedThroughput: { ReadCapacityUnits: 5, WriteCapacityUnits: 5 }
+      AttributeDefinitions:
+        - { AttributeName: city, AttributeType: S }
+        - { AttributeName: sk, AttributeType: S }
+      KeySchema:
+        - { AttributeName: city, KeyType: HASH }
+        - { AttributeName: sk, KeyType: RANGE }
+      TimeToLiveSpecification: { AttributeName: ttl, Enabled: true }
+
+  # Model usage + estimated cost per call (scripts/spend.py reads it with STORAGE=dynamodb)
+  UsageTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: climateguard-usage
+      BillingMode: PROVISIONED
+      ProvisionedThroughput: { ReadCapacityUnits: 2, WriteCapacityUnits: 2 }
+      AttributeDefinitions:
+        - { AttributeName: day, AttributeType: S }
+        - { AttributeName: sk, AttributeType: S }
+      KeySchema:
+        - { AttributeName: day, KeyType: HASH }
+        - { AttributeName: sk, KeyType: RANGE }
+
+  # Model response cache; DynamoDB TTL removes expired items
+  CacheTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: climateguard-cache
+      BillingMode: PROVISIONED
+      ProvisionedThroughput: { ReadCapacityUnits: 2, WriteCapacityUnits: 2 }
+      AttributeDefinitions:
+        - { AttributeName: key, AttributeType: S }
+      KeySchema:
+        - { AttributeName: key, KeyType: HASH }
+      TimeToLiveSpecification: { AttributeName: expires_at, Enabled: true }
+
+  # Sent alerts (dedup) + monitoring agent decision log
+  AlertsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: climateguard-alerts
+      BillingMode: PROVISIONED
+      ProvisionedThroughput: { ReadCapacityUnits: 2, WriteCapacityUnits: 2 }
+      AttributeDefinitions:
+        - { AttributeName: city, AttributeType: S }
+        - { AttributeName: sk, AttributeType: S }
+      KeySchema:
+        - { AttributeName: city, KeyType: HASH }
+        - { AttributeName: sk, KeyType: RANGE }
+      TimeToLiveSpecification: { AttributeName: ttl, Enabled: true }
+
+  CollectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: climateguard.handlers.collect.handler
+      # Collection ~6 s; each agent run ~10-20 s, and only for cities whose data changed
+      Timeout: 300
+      Environment:
+        Variables:
+          BASETEN_API_KEY: !Ref BasetenApiKey
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref SnapshotsTable }
+        - DynamoDBCrudPolicy: { TableName: !Ref UsageTable }
+        - DynamoDBCrudPolicy: { TableName: !Ref CacheTable }
+        - DynamoDBCrudPolicy: { TableName: !Ref AlertsTable }
+      Events:
+        Every15Min:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: rate(15 minutes)
+
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins: ["*"]  # tighten to the Vercel domain once deployed
+        AllowMethods: [GET, POST, OPTIONS]
+        AllowHeaders: [Content-Type]
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 20
+        ThrottlingRateLimit: 10
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: climateguard.handlers.api.handler
+      Timeout: 10
+      Policies:
+        - DynamoDBReadPolicy: { TableName: !Ref SnapshotsTable }
+      Events:
+        ListCities:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /cities }
+        GetCity:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Method: GET
+            Path: /cities/{city}
+
+Outputs:
+  ApiUrl:
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com

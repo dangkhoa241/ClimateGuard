@@ -1,0 +1,26 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.aws-sam/
+# sam deploy --guided may store parameter values (e.g. the AirNow key) here
+samconfig.toml
+
+# Local runtime data (usage log, response cache)
+backend/.local/
+
+# Node
+node_modules/
+dist/
+.vercel/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
