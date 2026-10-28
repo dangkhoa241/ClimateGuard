@@ -148,7 +148,7 @@ python scripts/collect_local.py --monitor                   # real data for moni
 
 ## Ask (questions in your language)
 
-`POST /ask {question, lang, zone}` answers in any of the 7 languages with `muse-spark-1.3`, from live data for the person's NWS zone. It runs in its own Lambda (`handlers/ask.py`, 28 s timeout). Each answer is one model call with a 20 s deadline, and the browser gives up after 25 s with a "try again" message.
+`POST /ask {question, lang, zone}` answers in any of the 7 languages with `muse-spark-1.3`, from live data for the person's NWS zone. It runs in its own Lambda (`handlers/ask.py`, 28 s timeout). Each answer is one model call with a 20 s deadline, and the browser gives up after 29 s with a "try again" message (a cooling-center search with its retry can take up to about 24 s).
 
 1. **Symptom guardrail (no model call).** Questions about symptoms, illness, medicine, pregnancy or chronic conditions, in all 7 languages, get a fixed, pre-written answer: call 911 in an emergency, otherwise a doctor or clinic. The model never sees them. Over-matching is the safe direction: "pesticide" in Chinese (农药) contains "medicine" (药) and gets the fixed answer too.
 2. **Grounded context.** The zone's latest snapshot (if under 2 hours old; otherwise a fresh one built on demand, so Ask works in zones nobody has subscribed to yet), the alerts ClimateGuard sent there, and 4 official guidance excerpts (28 in the corpus, including CDC sun safety and CDC/NIOSH layers for cool mornings). The model gets the full 48-hour hourly forecast and a summary for each day: low, high and when, rain, wind and AQI forecast. The guidance corpus is English, so common words in the 7 languages are mapped to English search terms.
@@ -222,8 +222,14 @@ The failures, fixed in the prompt: "66 degrees" instead of "66°F", and an unask
   - The answer is used only if it cites a web source, and the sources are always shown as links.
   - Medical wording replaces it with the fixed 211 sentence.
   - A fixed sentence is always added: "Openings and hours change: call 211 or the place before you go."
-  - If nothing is cited, or the search fails within 20 s, the answer is the fixed 211 sentence.
-- **Measured** (Ask eval, 2 cases): 5.5–10 s, about $0.03 per question (2 searches at $0.0025, plus tokens). It found the City of Stockton's current cooling zones list (updated 08/18/2026).
+  - If nothing is cited after one retry, the answer is the fixed 211 sentence **with three tappable links**: "Call 211" (a `tel:` link), 211.org, and the county website. The county site is known for the demo zones (San Joaquin, Merced); any other area gets USA.gov's directory of local governments, because a county URL is never guessed. Place answers that do have sources show the same links.
+- **What triggers it:** `PLACE_QUESTION` in `ask.py` matches cooling or warming centers/stations/zones/places, shelters, "where can I go / stay / cool off", "somewhere cool", and the same in Spanish, Vietnamese, Chinese, Tagalog, Korean and Arabic. It looks only at the question, never at the weather, so a mild day can't skip it. Over the daily budget there's no search, but the sentence and links still appear.
+- **Measured:** 6–12 s, about $0.02–0.03 per question (2–5 searches at $0.0025, plus tokens). It found the City of Stockton's current cooling zones list (updated 08/18/2026).
+- **Failure found on the live app (2026-10-28):** "Where is the cooling center near me?" returned only the plain 211 sentence. It was not a timeout (the search took under 10 s) and not the trigger. Cause: **the 1,500-token output limit.** About 1 run in 4 made up to 10 searches, used all 1,500 tokens (reasoning included) and stopped with status `incomplete`. Its last message was a note, "I'll open the county page…", with no citation, which the guardrail correctly refused.
+  - **Fix:** at most 3 searches (told in the instructions), 2,500 tokens, and a retry (at most 2 searches, 3,000 tokens, `minimal` reasoning) when the first try times out, runs out of tokens or has no citation.
+  - **Result:** 7 of 8 live runs cited a source, the slowest in 11.9 s.
+  - **Remaining:** the other run finished normally but wrote an uncited answer from search snippets after two page opens failed (its list was from 2024). Both tries did the same, so it fell back to the 211 links. That is the guardrail working, at about 1 run in 8.
+- **Time budget:** the search and its retry get 22 s together (12 s for the first try), inside Ask's 28 s Lambda timeout and API Gateway's hard 30 s limit. The 150 s limit applies only to the alert agent. The app now waits 29 s for an Ask answer.
 - **Stale sources:** one earlier test found the county's 2021 list. That's why the answer states the source date and the check-first sentence is fixed.
 
 ## Supervisor view and pre-shift talk

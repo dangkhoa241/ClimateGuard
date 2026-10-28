@@ -92,6 +92,19 @@ function Answer({ result, lang, t, tz, zoneId }) {
     <article className="answer" aria-live="polite">
       <p className="answer-text">{result.answer}</p>
       <ReadAloud text={result.answer} lang={lang} t={t} options />
+      {result.links?.length > 0 && (
+        <ul className="help-links">
+          {result.links.map((l) => (
+            <li key={l.url}>
+              {/* tel: opens the phone dialer; the others open in a new tab */}
+              <a className={l.kind === 'tel' ? 'help-link call' : 'help-link'} href={l.url}
+                {...(l.kind === 'tel' ? {} : { target: '_blank', rel: 'noreferrer' })}>
+                <span aria-hidden="true">{l.kind === 'tel' ? '📞' : '🔗'}</span> {l.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
       <ShareWhatsApp text={result.answer} zone={zoneId} lang={lang} t={t} />
       {result.data_time_local && (
         <p className="muted small">{t.askDataFrom.replace('{place}', result.place).replace('{time}', dataTime(result, lang, tz))}</p>

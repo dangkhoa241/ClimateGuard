@@ -67,10 +67,11 @@ export async function transcribeAudio(wav, lang) {
   }
 }
 
-// One model call behind it: allow 25 s (API Gateway stops at 30 s), then show a friendly "try again".
+// One model call behind it (a cooling-center search with its retry takes up to ~24 s): allow 29 s,
+// because API Gateway stops at 30 s, then show a friendly "try again".
 export async function askQuestion({ question, lang, zone }) {
   const ctrl = new AbortController()
-  const timer = setTimeout(() => ctrl.abort(), 25000)
+  const timer = setTimeout(() => ctrl.abort(), 29000)
   try {
     return await request('/ask', {
       method: 'POST',

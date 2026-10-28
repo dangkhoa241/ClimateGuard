@@ -298,3 +298,127 @@ def test_search_answer_parsing_keeps_only_the_final_cited_message():
     text, cites = ask.places._final_message(output)
     assert text == "**Library**: 1 Main St" and len(cites) == 2
     assert ask.places.sources(cites) == [{"title": "City", "url": "https://www.stocktonca.gov/a", "source": "stocktonca.gov"}]
+
+
+# --- place questions: the trigger, the retry and the fallback links (2026-10-28 live failure) ---
+
+REAL_FIND = ask.places.find  # the autouse fixture stubs places.find (no web search offline)
+
+PLACE_QUESTIONS = [
+    "Where is the cooling center near me?", "Where is the nearest cooling centre?", "Any warming centers open tonight?",
+    "Is there an emergency shelter nearby?", "Where can I go to cool off?", "Where should my family go if it floods?",
+    "where can we stay tonight", "I need somewhere cool to rest", "Is there a place to sleep tonight?",
+    "Is the library open as a cooling station?", "Where can my kids go to get out of the heat?",
+    "¿Dónde está el centro de enfriamiento?", "¿Hay un refugio cerca?", "¿Dónde puedo ir a refrescarme?",
+    "¿Adónde podemos ir esta noche?", "Necesito un lugar fresco para descansar",
+    "Trung tâm làm mát gần tôi ở đâu?", "Gần đây có chỗ nào mát để nghỉ không?", "Tôi cần nơi trú ẩn tối nay",
+    "Có nơi nào có máy lạnh không?", "附近哪里有避暑中心？", "근처에 무더위 쉼터가 어디 있나요?",
+    "Saan may cooling center?", "أين أقرب مركز تبريد؟",
+]
+NOT_PLACE_QUESTIONS = [
+    "Is it hot today?", "Will it rain on Friday?", "Do I need to repair anything for tomorrow?",
+    "Is it safe to work outside this afternoon?", "What should I wear tomorrow?", "Will it be cool tonight?",
+    "Will it go below freezing?", "Where does the wind come from?", "Chất lượng không khí ngày mai thế nào?",
+    "¿Hace calor hoy?", "明天热吗？",
+]
+
+
+@pytest.mark.parametrize("question", PLACE_QUESTIONS)
+def test_place_trigger_wording(question):
+    assert ask.PLACE_QUESTION.search(question), question
+
+
+@pytest.mark.parametrize("question", NOT_PLACE_QUESTIONS)
+def test_place_trigger_leaves_weather_questions_alone(question):
+    assert not ask.PLACE_QUESTION.search(question), question
+
+
+@pytest.mark.parametrize("scenario", ["calm", "heatwave", "smoke"])
+def test_place_question_always_searches_whatever_the_weather(monkeypatch, scenario):
+    # a mild day used to look like "no need for a cool place": the search must run anyway, no chat model call
+    _store(scenario)
+    calls = []
+    monkeypatch.setattr(ask.places, "find", lambda q, lang, snap: calls.append(q) or {"failed": "no_citation"})
+    monkeypatch.setattr(ask, "chat", lambda *a, **kw: pytest.fail("a place question must not reach the chat model"))
+    r = ask.answer("Where is the cooling center near me?", "en", "CAZ159")
+    assert calls == ["Where is the cooling center near me?"] and r["kind"] == "answer"
+
+
+def test_failed_search_gives_the_211_sentence_with_tappable_links(monkeypatch):
+    _store()
+    monkeypatch.setattr(ask.places, "find", lambda q, lang, snap: {"failed": "incomplete", "cost_usd": 0.03})
+    r = ask.answer("Where is the cooling center near me?", "en", "CAZ159")
+    assert r["answer"] == ask.HELP_211["en"] and r["reason"] == "no_cited_places:incomplete"
+    assert [(l["kind"], l["url"]) for l in r["links"]] == [
+        ("tel", "tel:211"), ("web", "https://www.211.org/"), ("web", "https://www.sjgov.org/")]
+    assert r["links"][0]["label"] == "Call 211" and "San Joaquin County" in r["links"][2]["label"]
+    es = ask.answer("¿Dónde hay un refugio?", "es", "CAZ159")["links"]
+    assert es[0]["label"] == "Llamar al 211" and es[2]["label"] == "Sitio web de San Joaquin County"
+    # a county we have no site for: USA.gov's directory of local governments, never a guessed URL
+    monkeypatch.setattr(ask.zones, "get", lambda z: {"county": "TXC453", "tz": "America/Chicago"})
+    assert ask.answer("Where is a shelter?", "en", "CAZ159")["links"][2]["url"] == places_directory()
+    # over the daily budget: no search, but the sentence and links still help
+    monkeypatch.setattr(ask.budget, "over_budget", lambda: True)
+    over = ask.answer("Where is a shelter?", "en", "CAZ159")
+    assert over["answer"] == ask.HELP_211["en"] and over["links"] and over["reason"] == "budget"
+
+
+def places_directory():
+    return ask.places.GOVERNMENT_DIRECTORY
+
+
+def _search_result(ok, reason="incomplete", searches=2):
+    if ok:
+        return {"ok": True, "answer": "Library: 1 Main St", "sources": [{"title": "t", "url": "u", "source": "s"}],
+                "searches": searches, "cost_usd": 0.02}
+    return {"ok": False, "reason": reason, "searches": searches, "cost_usd": 0.03}
+
+
+def test_search_retries_once_with_a_stricter_attempt(monkeypatch):
+    seen = []
+    results = iter([_search_result(False, "incomplete", 10), _search_result(True, searches=2)])
+    monkeypatch.setattr(ask.places, "_search_once",
+                        lambda q, lang, snap, attempt, deadline: seen.append((attempt["searches"], deadline)) or next(results))
+    found = REAL_FIND("q", "en", {"place": "Stockton, CA"})
+    assert found["answer"] and found["attempts"] == 2 and found["searches"] == 12
+    assert seen[0] == (3, ask.places.FIRST_DEADLINE_S) and seen[1][0] == 2
+    assert ask.places.MIN_RETRY_S <= seen[1][1] <= ask.places.TOTAL_BUDGET_S  # the retry gets what is left
+    assert ask.places.TOTAL_BUDGET_S < 28  # inside Ask's Lambda timeout and API Gateway's 30 s
+
+
+def test_search_stops_when_no_time_is_left_for_a_retry(monkeypatch):
+    clock = iter([0.0, 20.0, 20.0])  # the first try used 20 s of the 22: not enough for a retry
+    monkeypatch.setattr(ask.places.time, "monotonic", lambda: next(clock))
+    calls = []
+    monkeypatch.setattr(ask.places, "_search_once", lambda *a: calls.append(1) or _search_result(False, "timeout", 0))
+    found = REAL_FIND("q", "en", {})
+    assert len(calls) == 1 and found["failed"] == "timeout" and "answer" not in found
+
+
+def test_search_that_ran_out_of_tokens_or_has_no_citation_is_not_used(monkeypatch):
+    class _Responses:
+        def __init__(self, raw):
+            self.raw = raw
+
+        def create(self, **params):
+            return type("R", (), {"model_dump": lambda s: self.raw})()
+
+    def run(raw):
+        client = type("C", (), {"responses": _Responses(raw)})()
+        monkeypatch.setattr(ask.places.llm, "_client", lambda provider: client)
+        return ask.places._search_once("q", "en", {"place": "Stockton, CA"}, ask.places.ATTEMPTS[0], 5)
+
+    note = {"type": "message", "content": [{"text": "I'll open the county page.", "annotations": []}]}
+    usage = {"input_tokens": 100, "output_tokens": 1500}
+    # the live failure: status incomplete (max_output_tokens), the last message a progress note
+    assert run({"status": "incomplete", "incomplete_details": {"reason": "max_output_tokens"},
+                "output": [note], "usage": usage})["reason"] == "incomplete"
+    assert run({"status": "completed", "output": [note], "usage": usage})["reason"] == "no_citation"
+    cited = {"type": "message", "content": [{"text": "Library: 1 Main St", "annotations": [
+        {"type": "url_citation", "url": "https://www.stocktonca.gov/a", "title": "City"}]}]}
+    assert run({"status": "completed", "output": [cited], "usage": usage})["ok"]
+
+    def slow(fn, seconds):
+        raise ask.places.llm.CallTimeout()
+    monkeypatch.setattr(ask.places.llm, "_with_deadline", slow)
+    assert ask.places._search_once("q", "en", {}, ask.places.ATTEMPTS[0], 1)["reason"] == "timeout"

@@ -131,12 +131,33 @@ HELP_211 = {
     "ko": "가까운 무더위 쉼터나 대피소를 찾으려면 211에 전화하거나 카운티(county) 웹사이트를 확인하세요.",
     "ar": "للعثور على مركز تبريد أو مأوى قريب منك، اتصل بالرقم 211 أو راجع الموقع الإلكتروني لمقاطعتك (county).",
 }
+# A question that asks for a PLACE always starts the cited web search, whatever the weather and however it
+# is worded ("cooling center", "warming centre", "where can my family go", "somewhere cool"...). Over-matching
+# is the safe direction here: the worst case is a search and the 211 links. Checked with no model call in
+# tests/test_ask.py (test_place_trigger_wording).
 PLACE_QUESTION = re.compile(
-    r"cooling cent|shelter|where (can|should|do) (i|we) go|where to go|address|phone number|\bclinic|"
-    r"centros? de enfriamiento|refugio|albergue|d[oó]nde (puedo|podemos|ir|hay)|direcci[oó]n|tel[eé]fono|"
-    r"trung tâm làm mát|nơi trú|chỗ trú|trú ẩn|(chỗ|nơi) (nào )?(mát|có máy lạnh)|đi đâu|ở đâu|địa chỉ|số điện thoại|"
-    r"避暑|纳凉|避难|庇护|去哪|哪里|地址|电话|silungan|evacuation cent|saan (ako|kami|pupunta|may)|"
-    r"쉼터|대피소|어디|주소|전화번호|مركز تبريد|ملجأ|مأوى|أين|عنوان|رقم هاتف", re.IGNORECASE)
+    # English
+    r"\b(cooling|warming|cool|warm)[ -]?(cent(er|re)s?|stations?|zones?|locations?|spots?|places?|sites?|areas?|rooms?)\b|"
+    r"shelter|evacuation (cent|site|point)|"
+    r"where\b[^?.!]{0,40}\b(go|stay|sleep|cool (off|down)|warm up|get warm|evacuate|rest)\b|"
+    r"\bplaces? to (go|stay|sleep|cool|warm|rest)|somewhere (cool|warm|safe|to (go|stay|sleep|cool|warm|rest))|"
+    r"(nearest|closest|nearby) (cent(er|re)|library|mall|building|place)|air[- ]?conditioned (place|room|building|space)|"
+    r"address|phone number|\bclinic|"
+    # Spanish
+    r"centros? de (enfriamiento|refrigeraci[oó]n|refresco|calor|calentamiento|descanso|emergencia)|refugio|albergue|"
+    r"(lugar(es)?|sitio(s)?) (fresco|seguro|para (refrescar|enfriar|calentar|dormir|quedar|descansar|ir))|"
+    r"d[oó]nde\b[^?.!]{0,40}\b(ir|puedo|podemos|refresc\w*|enfri\w*|calent\w*|dormir|quedar\w*|descans\w*|evacuar|"
+    r"resguard\w*)|ad[oó]nde|d[oó]nde hay|direcci[oó]n|tel[eé]fono|"
+    # Vietnamese
+    r"trung tâm (làm mát|tránh nóng|sưởi|cứu trợ|trú ẩn)|nơi (trú|tránh|mát|ở tạm|nghỉ|ngủ|sưởi)|chỗ (mát|trú|tránh|ngủ|"
+    r"nghỉ|sưởi)|(chỗ|nơi) (nào )?(mát|có máy lạnh|có điều hòa)|có (chỗ|nơi) nào|trú ẩn|đi đâu|ở đâu|địa chỉ|"
+    r"số điện thoại|"
+    # Chinese, Tagalog, Korean, Arabic
+    r"避暑|纳凉|降温|取暖|避寒|避难|庇护|收容|去哪|哪里|地址|电话|"
+    r"silungan|evacuation cent|saan (ako|kami|pupunta|may|puwede|pwede|maaari)|"
+    r"saan\b[^?.!]{0,30}\b(pumunta|matulog|manatili|magpalamig|magpainit)|lugar na (malamig|ligtas)|"
+    r"쉼터|대피소|시원한 (곳|장소)|따뜻한 (곳|장소)|어디|주소|전화번호|"
+    r"مركز تبريد|مراكز تبريد|مركز تدفئة|ملجأ|ملاجئ|مأوى|مكان (بارد|دافئ|آمن)|أين|عنوان|رقم هاتف", re.IGNORECASE)
 MARK_211 = "[211]"
 _SENTENCE = re.compile(r"[^.!?。！？؟\n]*(?:[.!?。！？؟]+|\n|$)")
 
@@ -346,18 +367,25 @@ def answer(question: str, lang: str, zone_id: str) -> dict:
     lap("data")
     if snap is None:
         return done({"kind": "no_data", "answer": FALLBACK_ANSWER[lang]})
-    if over:
-        return done({"kind": "fallback", "answer": FALLBACK_ANSWER[lang], "reason": "budget"})
+    links = places.help_links((zones.get(zone_id) or {}).get("county"), lang)  # call 211, 211.org, county site
     if PLACE_QUESTION.search(question):  # cooling centers, shelters: a cited web search (places.py)
+        if over:  # no model spend left today: the fixed sentence and links still help
+            return done({"kind": "answer", "answer": HELP_211[lang], "links": links, "place": snap.get("place"),
+                         "sources": [], "reason": "budget"})
         found = places.find(question, lang, snap)
         lap("search")
-        if found and not ANSWER_MEDICAL.search(found["answer"]):
+        if found and found.get("answer") and not ANSWER_MEDICAL.search(found["answer"]):
             text = units.format_temps(found["answer"], lang)
-            return done({"kind": "places", "answer": f"{text}\n{places.CHECK_FIRST[lang]}", "place": snap.get("place"),
-                         "sources": found["sources"], "searches": found["searches"], "cost_usd": found["cost_usd"]})
-        # nothing cited (or the search failed): the fixed 211 sentence, no second model call (time limit)
-        return done({"kind": "answer", "answer": HELP_211[lang], "place": snap.get("place"), "sources": [],
-                     "reason": "no_cited_places"})
+            return done({"kind": "places", "answer": f"{text}\n{places.CHECK_FIRST[lang]}", "links": links,
+                         "place": snap.get("place"), "sources": found["sources"], "searches": found["searches"],
+                         "cost_usd": found["cost_usd"]})
+        # nothing cited after the retry (or the search failed): the fixed 211 sentence with tappable links
+        why = (found or {}).get("failed") or "medical_wording"
+        log.info("place question without a cited answer: %s", why)
+        return done({"kind": "answer", "answer": HELP_211[lang], "links": links, "place": snap.get("place"),
+                     "sources": [], "reason": f"no_cited_places:{why}", "cost_usd": (found or {}).get("cost_usd", 0)})
+    if over:
+        return done({"kind": "fallback", "answer": FALLBACK_ANSWER[lang], "reason": "budget"})
     ref = timeref.resolve(question, datetime.now(_zone_tz(zone_id, snap)))
     context = build_context(snap, sent, ref)
     excerpts = guidance.search(_guidance_query(question, snap), k=4)
@@ -398,6 +426,7 @@ def answer(question: str, lang: str, zone_id: str) -> dict:
                      _zone_tz(zone_id, snap)), lang),  # "12:48 trưa thứ Tư"
                  "place": context["place"], "sources": [{"source": g["source"], "title": g["title"], "url": g["url"]}
                                                         for g in excerpts],
+                 "links": links if wants_211 else [],  # the model marked [211]: tappable links with the fixed sentence
                  "nws_alerts": [a["event"] for a in snap.get("alerts", [])],
                  "not_covered": hazards.EXCLUSION_NOTE if snap.get("excluded_alerts") else None,
                  "cost_usd": round(res.cost_usd, 6),

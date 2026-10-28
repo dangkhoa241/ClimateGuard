@@ -66,6 +66,8 @@ def check(case: dict, r: dict) -> list[str]:
                 fails.append("missing the check-before-you-go sentence")
         elif text != ask.HELP_211[case["lang"]]:
             fails.append(f"kind={r['kind']}, neither cited places nor the 211 sentence")
+        if not any(l["url"] == "tel:211" for l in r.get("links") or []):
+            fails.append("no tappable 'Call 211' link")  # every place answer carries the fallback links
         return fails
     if r["kind"] != "answer":
         fails.append(f"kind={r['kind']}")
