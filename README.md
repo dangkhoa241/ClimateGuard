@@ -403,7 +403,10 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass   # if scripts are bl
 .\deploy.ps1 -Contact you@example.com                         # preflight + sam build + sam deploy
 .\deploy.ps1 -Contact you@example.com -FrontendUrl https://<app>.vercel.app   # once the frontend is live
 ```
-CORS always allows `http://localhost:5173` and `http://localhost:5174` for local dev, plus `FrontendUrl`. `FrontendUrl` is also the link in alert emails, so every later deploy must pass `-FrontendUrl` again; without it, it goes back to localhost.
+CORS always allows `http://localhost:5173` and `http://localhost:5174` for local dev, plus `FrontendUrl`, which is also the link in alert emails.
+- **Saved after a deploy:** a successful deploy that passes `-FrontendUrl` saves it to `deploy.local.json` (untracked), and later deploys reuse it without the flag.
+- **Guarded against resets:** if a deploy would switch the live stack from a real URL back to localhost, the preflight shows a red warning and the deploy waits for you to type `reset`.
+- Live frontend: https://climate-guard-khaki.vercel.app (Vercel, root directory `frontend`, env `VITE_API_URL`).
 The preflight checks three things, without creating anything:
 1. **Every permission the stack needs** in us-east-2: CloudFormation, S3, IAM, Lambda, DynamoDB, SNS, Scheduler, API Gateway, Logs and SSM.
 2. **That both SSM keys exist.**

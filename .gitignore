@@ -11,6 +11,7 @@ __pycache__/
 .aws-sam/
 # local deploy settings (no secrets: API keys live in SSM Parameter Store)
 samconfig.toml
+deploy.local.json
 
 # Local runtime data (usage log, response cache)
 backend/.local/

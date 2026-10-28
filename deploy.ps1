@@ -3,8 +3,12 @@ Deploy the ClimateGuard backend with SAM (Windows PowerShell 5.1+).
 
   .\deploy.ps1 -PreflightOnly                        # dry run: permission + free-tier checks only
   .\deploy.ps1 -Contact you@example.com              # preflight, sam build, then sam deploy (shows the change set first)
-  .\deploy.ps1 -Contact you@example.com -FrontendUrl https://your-app.vercel.app
+  .\deploy.ps1 -Contact you@example.com -FrontendUrl https://your-app.vercel.app   # remembered after a good deploy
   .\deploy.ps1 -Contact you@example.com -SkipBuild   # deploy the existing .aws-sam build as is
+
+FrontendUrl (CORS origin and the link in alert emails) is saved to deploy.local.json (untracked) after a
+successful deploy that passed it, and reused when -FrontendUrl is left out. If a deploy would switch the
+live stack from a real URL back to localhost, the script warns in red and asks you to type "reset".
 
 sam build needs the same Python as the Lambda runtime (3.12). The script finds Python 3.12 itself
 (py launcher, then the usual install folders) and puts it first on PATH for the build only, so it
@@ -19,7 +23,7 @@ Safe to re-run: sam deploy only applies differences.
 #>
 param(
     [string]$Contact = "",                    # NWS asks for contact info in the User-Agent
-    [string]$FrontendUrl = "http://localhost:5173",
+    [string]$FrontendUrl = "",                # empty: the saved one (deploy.local.json), else localhost
     [string]$StackName = "climateguard",
     [string]$Region = "us-east-2",            # this account's SCP denies us-west-2 and us-east-1
     [int]$MaxSubscribers = 500,
@@ -91,6 +95,14 @@ if (-not $who.Ok) { Write-Host "  Not signed in to AWS: $($who.Text)" -Foregroun
 Write-Host ("  as {0}" -f ($who.Text -replace "\d{12}", "<account>"))
 
 Write-Host "`n[1/4] Template parameters"
+# FrontendUrl: -FrontendUrl, else the one saved by the last deploy that passed it, else localhost.
+$LocalConfig = Join-Path $PSScriptRoot "deploy.local.json"
+$urlGiven = $PSBoundParameters.ContainsKey("FrontendUrl") -and $FrontendUrl.Trim()
+if (-not $urlGiven) {
+    $saved = if (Test-Path $LocalConfig) { (Get-Content $LocalConfig -Raw | ConvertFrom-Json).FrontendUrl } else { $null }
+    if ($saved) { $FrontendUrl = $saved; Write-Host "  FrontendUrl $saved (saved in deploy.local.json)" }
+    else { $FrontendUrl = "http://localhost:5173"; Write-Host "  FrontendUrl not given and none saved: using $FrontendUrl" }
+}
 # Origins are compared exactly (API Gateway rejects duplicates), so normalize before deciding.
 $FrontendUrl = $FrontendUrl.Trim().TrimEnd("/").ToLowerInvariant()
 $tpl = Get-Content (Join-Path $PSScriptRoot "template.yaml") -Raw
@@ -108,6 +120,21 @@ else {
     $dupes = $origins | Group-Object | Where-Object { $_.Count -gt 1 } | ForEach-Object { $_.Name }
     if ($dupes) { Report "CORS AllowOrigins" "FAIL" "duplicate origin(s): $($dupes -join ', ')" }
     else { Report "CORS AllowOrigins" "OK" ($origins -join ", ") }
+}
+# Loud warning: this deploy would put the live stack back on localhost (emails would link to localhost,
+# and the Vercel app would be blocked by CORS).
+$liveUrl = Invoke-Aws @("cloudformation", "describe-stacks", "--region", $Region, "--stack-name", $StackName,
+    "--query", "Stacks[0].Parameters[?ParameterKey=='FrontendUrl'].ParameterValue", "--output", "text")
+$liveUrl = if ($liveUrl.Ok) { $liveUrl.Text.Trim().ToLowerInvariant() } else { "" }
+$resetsToLocal = ($FrontendUrl -match "^http://localhost") -and $liveUrl -and ($liveUrl -notmatch "^http://localhost|^none$")
+if ($resetsToLocal) {
+    Write-Host ""
+    Write-Host "  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" -ForegroundColor Red
+    Write-Host "  !! FrontendUrl would RESET from $liveUrl to $FrontendUrl" -ForegroundColor Red
+    Write-Host "  !! The live app would be blocked by CORS and alert emails would link to localhost." -ForegroundColor Red
+    Write-Host "  !! Pass -FrontendUrl $liveUrl to keep it." -ForegroundColor Red
+    Write-Host "  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" -ForegroundColor Red
+    Report "FrontendUrl" "WARN" "resets the live stack from $liveUrl to localhost"
 }
 
 Write-Host "`n[2/4] Permissions (nothing is created)"
@@ -189,6 +216,10 @@ Write-Host "Preflight passed ($($script:warnings) warning(s))." -ForegroundColor
 if ($PreflightOnly) { exit 0 }
 
 if (-not $Contact -or $Contact -match "\s") { throw "Pass -Contact you@example.com (no spaces) for the NWS User-Agent." }
+if ($resetsToLocal) {
+    $answer = Read-Host "Type 'reset' to deploy with FrontendUrl $FrontendUrl anyway (anything else stops)"
+    if ($answer -ne "reset") { Write-Host "Stopped. Nothing was deployed." -ForegroundColor Yellow; exit 1 }
+}
 
 if ($SkipBuild) {
     if (-not (Test-Path (Join-Path $PSScriptRoot ".aws-sam\build\template.yaml"))) { throw "-SkipBuild, but there is no .aws-sam build yet: run without it." }
@@ -252,3 +283,7 @@ if ($code -ne 0) {
 $api = Invoke-Aws @("cloudformation", "describe-stacks", "--region", $Region, "--stack-name", $StackName,
     "--query", "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue", "--output", "text")
 Write-Host "`nDeployed. API URL: $($api.Text)" -ForegroundColor Green
+if ($urlGiven) {
+    @{ FrontendUrl = $FrontendUrl } | ConvertTo-Json | Set-Content -Path $LocalConfig -Encoding ASCII
+    Write-Host "FrontendUrl $FrontendUrl saved to deploy.local.json: later deploys reuse it without -FrontendUrl."
+}

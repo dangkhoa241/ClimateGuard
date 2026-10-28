@@ -234,6 +234,6 @@ export const STRINGS = {
       network: 'Không có kết nối. Hãy kiểm tra internet và thử lại.',
       default: 'Đã có lỗi. Vui lòng thử lại.',
     },
-    severity: { moderate: 'Nguy cơ trung bình', high: 'Nguy cơ cao', extreme: 'Nguy cơ cực cao' },
+    severity: { moderate: 'Nguy cơ trung bình', high: 'Nguy cơ cao', extreme: 'Nguy cơ rất cao' },
   },
 }

@@ -38,7 +38,7 @@ HAZARD_SUBJECT = {
 SUBJECT = {
     "en": "ClimateGuard {sev} {hazard} alert - {place}",
     "es": "ClimateGuard: alerta de {hazard} - {place}",
-    "vi": "ClimateGuard: canh bao {hazard} - {place}",
+    "vi": "ClimateGuard: thong bao {hazard} - {place}",  # "thong bao" (notice): never an NWS level name
     "tl": "ClimateGuard: babala sa {hazard} - {place}",
 }
 FOOTER = {
