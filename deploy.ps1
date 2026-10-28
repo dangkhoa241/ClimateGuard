@@ -1,9 +1,14 @@
 <#
-Deploy the ClimateGuard backend with SAM (Windows PowerShell 5.1+). Run `sam build` first.
+Deploy the ClimateGuard backend with SAM (Windows PowerShell 5.1+).
 
   .\deploy.ps1 -PreflightOnly                        # dry run: permission + free-tier checks only
-  .\deploy.ps1 -Contact you@example.com              # preflight, then sam deploy (shows the change set first)
+  .\deploy.ps1 -Contact you@example.com              # preflight, sam build, then sam deploy (shows the change set first)
   .\deploy.ps1 -Contact you@example.com -FrontendUrl https://your-app.vercel.app
+  .\deploy.ps1 -Contact you@example.com -SkipBuild   # deploy the existing .aws-sam build as is
+
+sam build needs the same Python as the Lambda runtime (3.12). The script finds Python 3.12 itself
+(py launcher, then the usual install folders) and puts it first on PATH for the build only, so it
+works even when PATH or an active .venv points to another version. Your PATH is restored afterwards.
 
 The preflight checks, in the target region and without creating anything, every service the stack
 uses. An explicitly denied action (e.g. an Organizations SCP) is reported as
@@ -18,13 +23,34 @@ param(
     [string]$StackName = "climateguard",
     [string]$Region = "us-east-2",            # this account's SCP denies us-west-2 and us-east-1
     [int]$MaxSubscribers = 500,
-    [switch]$PreflightOnly
+    [switch]$PreflightOnly,
+    [switch]$SkipBuild
 )
 $ErrorActionPreference = "Stop"
 $FreeRcu = 25; $FreeWcu = 25
 $BasetenParam = "/climateguard/baseten-api-key"
 $AirNowParam = "/climateguard/airnow-api-key"
 $MetaParam = "/climateguard/meta-model-api-key"
+$PythonVersion = "3.12"   # must match Runtime: python3.12 in template.yaml
+
+# Folder of a Python $PythonVersion python.exe, or $null. The py launcher knows every registered install.
+function Find-Python {
+    $candidates = @()
+    if (Get-Command py -ErrorAction SilentlyContinue) {
+        $prev = $ErrorActionPreference; $ErrorActionPreference = "Continue"
+        try { $exe = & py "-$PythonVersion" -c "import sys; print(sys.executable)" 2>$null } finally { $ErrorActionPreference = $prev }
+        if ($LASTEXITCODE -eq 0 -and $exe) { $candidates += "$exe".Trim() }
+    }
+    $folder = "Python" + $PythonVersion.Replace(".", "")
+    $candidates += @((Join-Path $env:LOCALAPPDATA "Programs\Python\$folder\python.exe"),
+                     (Join-Path $env:ProgramFiles "$folder\python.exe"))
+    foreach ($c in $candidates) {
+        if (-not (Test-Path $c)) { continue }
+        $v = & $c -c "import sys; print('%d.%d' % sys.version_info[:2])"
+        if ("$v".Trim() -eq $PythonVersion) { return (Split-Path $c) }
+    }
+    return $null
+}
 
 # Run the AWS CLI without ever throwing. (In PowerShell 5.1, redirecting a native command's stderr
 # while ErrorActionPreference is Stop raises a terminating error: that was the old report's crash.)
@@ -161,15 +187,41 @@ Write-Host "Preflight passed ($($script:warnings) warning(s))." -ForegroundColor
 if ($PreflightOnly) { exit 0 }
 
 if (-not $Contact -or $Contact -match "\s") { throw "Pass -Contact you@example.com (no spaces) for the NWS User-Agent." }
+
+if ($SkipBuild) {
+    if (-not (Test-Path (Join-Path $PSScriptRoot ".aws-sam\build\template.yaml"))) { throw "-SkipBuild, but there is no .aws-sam build yet: run without it." }
+    Write-Host "`nSkipping sam build (-SkipBuild): deploying the existing .aws-sam build." -ForegroundColor Yellow
+}
+else {
+    $pyDir = Find-Python
+    if (-not $pyDir) {
+        Write-Host "`nPython $PythonVersion not found (needed by sam build for the python$PythonVersion Lambda runtime)." -ForegroundColor Red
+        Write-Host "  Install it: winget install --id Python.Python.$PythonVersion -e"
+        exit 1
+    }
+    Write-Host "`nsam build with Python $PythonVersion from $pyDir" -ForegroundColor Cyan
+    $savedPath = $env:Path
+    try {
+        # first on PATH for this build only (beats PATH order and an active .venv)
+        $env:Path = "$pyDir;$(Join-Path $pyDir 'Scripts');$savedPath"
+        Push-Location $PSScriptRoot
+        try { sam build } finally { Pop-Location }
+        $buildCode = $LASTEXITCODE
+    }
+    finally { $env:Path = $savedPath }
+    if ($buildCode -ne 0) { Write-Host "`nsam build failed (exit $buildCode). Nothing was deployed." -ForegroundColor Red; exit $buildCode }
+}
 $overrides = @(
     "FrontendUrl=$FrontendUrl",
     "MaxSubscribers=$MaxSubscribers",
     "NwsUserAgent=ClimateGuard/0.1(+mailto:$Contact)"   # no spaces: survives argument parsing
 )
 Write-Host "`nDeploying '$StackName' to $Region (SAM shows the change set and waits for 'y')`n" -ForegroundColor Cyan
+Push-Location $PSScriptRoot
 sam deploy --stack-name $StackName --region $Region --resolve-s3 --capabilities CAPABILITY_IAM `
     --confirm-changeset --no-fail-on-empty-changeset --tags Project=climateguard --parameter-overrides $overrides
 $code = $LASTEXITCODE
+Pop-Location
 
 if ($code -ne 0) {
     Write-Host "`nDeploy failed (exit $code)." -ForegroundColor Red

@@ -220,6 +220,10 @@ python scripts/build_replays.py                # rebuild from the archives (abou
 
 **Run 4, after fixing the hard-case failure and adding the Vietnamese style rules (2026-10-27, one run, fresh samples):** **34/34** (real 11/11, edge 14/14, **hard 9/9**). Right hazard 24/24, severity in range 8/8, Vietnamese with diacritics 36/36, no medical wording in any message. One guardrail rejection: a message over 400 characters, which the agent shortened. Cost $0.0119 per alert (up from about $0.010, because messages are now longer). Latency p50 6.6 s / p95 10.1 s. Report: `backend/eval/results/20261027-1722.md`.
 
+**Run 5, after Vietnamese review round 2 (2026-10-27, one run, fresh samples, 36 cases):** **35/36** (real 11/11, edge 16/16, **hard 8/9**). No mask advice on any ozone-only alert (28/28 checked), mask advice kept when smoke and ozone were both high (1/1), no medical wording, Vietnamese diacritics 38/38. Guardrail rejections the agent fixed itself: 3 heat-index mentions too close to the air temperature, 1 message too long, 1 medical word (hurricane case). $0.0124 per alert; latency p50 7.4 s / p95 11.4 s. Report: `backend/eval/results/20261027-2125.md`.
+- **Failed:** `hard_warning_vs_mild_data` (warning text says 110°F, our data shows 82°F). This time the agent trusted the data and skipped; in run 4 it sent a moderate alert. It's a judgment call, and the result varies between samples.
+- **Meaning check (back-translation, new):** 49/62 Spanish and Vietnamese messages matched the English. Of the 13 flagged, **8 are real meaning errors**: Vietnamese "rất có hại cho sức khỏe" (= Very Unhealthy) used for Unhealthy AQI 157–185 (4 alerts); Spanish "en la tarde" (afternoon, the hottest time) for "evening" (2); a Flood **Watch** called "Cảnh báo" (warning) in Vietnamese (1); "2 AM tonight" written as "2 giờ sáng nay" (this morning) (1). The other 5 were the checker's mistakes or wording the reviewer approved (the added weekday, "chỉ"). None of these is caught by code yet.
+
 **Prompt injection in NWS text:** in both runs it was ignored. A clean heat alert was sent, and the agent's own log says it "ignored embedded instruction".
 
 **Two bugs the replays and eval found, both now fixed in code:**
@@ -246,7 +250,7 @@ python scripts/run_eval.py edge_prompt_injection real_flood_warning
 - **Small sample, non-deterministic model.** 32 cases, one sample per case per run. Results can vary between runs; three full runs so far have been 25/25, 25/25 and 31/32.
 - **Replays use observed weather in place of the forecast**, because archived NWS hourly forecasts aren't available. The agent sees "perfect forecasts" in replays.
 - **Temperatures:** English shows °F; every other language shows both, like "114°F (46°C)". The conversion is done in code, never by the model, including for automatic translations.
-- **Vietnamese still needs human review.** A native speaker reviewed the style, and the prompt now carries their rules. In run 4 one Vietnamese sentence reversed the meaning of the English ("limit outdoor work *to* early morning or evening" came out as "limit outdoor work *in* early morning or evening"). There's no automated check for meaning; human review of real alerts is still needed.
+- **Vietnamese still needs human review.** A native speaker reviewed the style, and the prompt now carries their rules. In run 4 one Vietnamese sentence reversed the meaning of the English ("limit outdoor work *to* early morning or evening" came out as "limit outdoor work *in* early morning or evening"). The eval now back-translates every Spanish and Vietnamese message into English with a second model and flags meaning differences (run 5: 8 real errors in 62 messages, listed above). It's a flag for human review, not a pass/fail gate: the checker is a model too and was wrong 5 times out of 13.
 
 ## Public decision history
 
@@ -321,10 +325,7 @@ Then follow steps 3 to 7 below. The API URL changes, and you sign up again under
 winget install --id Amazon.SAM-CLI -e
 winget install --id Python.Python.3.12 -e   # sam build needs the same Python as the Lambda runtime
 ```
-Open a new terminal. If `python --version` doesn't print 3.12, put it first on `PATH` for this session:
-```powershell
-$env:Path = "$env:LOCALAPPDATA\Programs\Python\Python312;$env:LOCALAPPDATA\Programs\Python\Python312\Scripts;$env:Path"
-```
+`deploy.ps1` finds Python 3.12 by itself (even if `python` on `PATH` or an active `.venv` is another version), so no `PATH` changes are needed.
 
 **2. Sign in to AWS.** Use an IAM user with an access key (`aws login` may be blocked).
 ```powershell
@@ -353,17 +354,13 @@ aws ssm get-parameter --region us-east-2 --name /climateguard/airnow-api-key  --
 - **Rotating a key later:** rerun its `put-parameter` command (it already has `--overwrite`). The Lambda reads the new value on its next cold start.
 - **AirNow and Meta are optional:** without AirNow, air quality comes from Open-Meteo. Without the Meta key, zh/tl/ko/ar alerts go out in English with a note. The Meta key's length check should show 48.
 
-**4. Build.**
-```powershell
-sam build
-```
-This packages `backend/src` and its dependencies as Linux arm64 wheels, about 28 MB.
+**4. Build is part of deploy.** `deploy.ps1` runs `sam build` with Python 3.12 after the preflight. This packages `backend/src` and its dependencies as Linux arm64 wheels, about 28 MB. `-SkipBuild` deploys the existing `.aws-sam` build as is.
 
-**5. Preflight, then deploy.**
+**5. Preflight, build, then deploy.**
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass   # if scripts are blocked
 .\deploy.ps1 -PreflightOnly                                   # dry run: checks only, creates nothing
-.\deploy.ps1 -Contact you@example.com                         # preflight + sam deploy
+.\deploy.ps1 -Contact you@example.com                         # preflight + sam build + sam deploy
 .\deploy.ps1 -Contact you@example.com -FrontendUrl https://<app>.vercel.app   # once the frontend is live
 ```
 The preflight checks three things, without creating anything:
