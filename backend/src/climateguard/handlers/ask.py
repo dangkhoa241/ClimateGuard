@@ -5,13 +5,20 @@ Per-IP rate limit; the daily model budget is checked in ask.answer().
 """
 import logging
 
-from .. import ask, ratelimit
+from .. import ask, llm, ratelimit
 from ..languages import LANGS
 from ..subscriptions import SignupError
 from .api import ZONE_RE, _json_body, _resp, _source_ip
 
 log = logging.getLogger()
 ASK_PER_IP_PER_HOUR = 20
+
+# Cold start: create the model client (OpenAI SDK import + API key from SSM) during Lambda init,
+# which runs once per instance with a full CPU, instead of inside the first person's request.
+try:
+    llm._client("meta")
+except Exception as e:  # no key yet, SSM down...: the request path retries and falls back
+    log.warning("model client not ready at init: %s", e)
 
 
 def post_ask(event) -> dict:

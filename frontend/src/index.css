@@ -138,3 +138,7 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 .sources summary { cursor: pointer; color: var(--muted); }
 .sources ul { margin: 6px 0 0; padding-left: 20px; }
 .sources li { margin: 4px 0; }
+.ask-steps { margin: 4px 0 0; padding-left: 22px; color: var(--muted); }
+.ask-steps li { margin: 2px 0; }
+.ask-steps li.now { color: var(--fg); font-weight: 600; }
+.ask-steps li.done::marker { content: '✓  '; }

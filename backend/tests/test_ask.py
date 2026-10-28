@@ -63,7 +63,7 @@ SAFE_QUESTIONS = [
 def test_symptom_questions_get_the_fixed_answer_without_a_model_call(monkeypatch, lang, question):
     monkeypatch.setattr(ask, "chat", lambda *a, **k: pytest.fail("model must not be called"))
     r = ask.answer(question, lang, "CAZ159")
-    assert r == {"kind": "symptom", "answer": ask.SYMPTOM_ANSWER[lang]}
+    assert (r["kind"], r["answer"]) == ("symptom", ask.SYMPTOM_ANSWER[lang]) and "model" not in r["timings_ms"]
     assert "911" in r["answer"]
 
 
@@ -180,3 +180,43 @@ def test_non_english_questions_find_the_right_guidance(question, topic):
 def test_mask_note_in_every_language():
     from climateguard import guardrails
     assert set(ask.MASK_NOTE) == set(LANGS) and all(guardrails.mentions_mask(t) for t in ask.MASK_NOTE.values())
+
+
+def test_past_time_note_comes_first_and_model_gets_the_target_time(monkeypatch):
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    _store()
+    seen = []
+    _model_says(monkeypatch, "Ngày mai lúc 3 giờ chiều trời mát.", seen)
+    tue_2150 = datetime(2026, 10, 27, 21, 50, tzinfo=ZoneInfo("America/Los_Angeles"))
+    real_resolve = ask.timeref.resolve
+    monkeypatch.setattr(ask.timeref, "resolve", lambda q, now: real_resolve(q, tue_2150))
+    r = ask.answer("Hôm nay ở Stockton làm việc ngoài trời lúc 3 giờ chiều có an toàn không?", "vi", "CAZ159")
+    assert r["answer"].startswith("3 giờ chiều hôm nay đã qua, đây là dự báo cho 3 giờ chiều ngày mai (thứ Tư).\n")
+    user = seen[0]["messages"][1]["content"]
+    assert "TIME ASKED ABOUT: Wednesday 3:00 PM" in user and "forecast_at_time_asked" in user
+
+
+def test_ask_uses_the_standard_model_minimal_effort_and_reports_timings(monkeypatch):
+    _store()
+    calls = []
+
+    def fake(provider, model, messages, **kw):
+        calls.append((model, kw))
+        return ChatResult(text="Hot.", model=model, prompt_tokens=1, completion_tokens=1, reasoning_tokens=0,
+                          cost_usd=0.0, cache_hit=False, raw={})
+    monkeypatch.setattr(ask, "chat", fake)
+    monkeypatch.setattr(config, "USE_CONTRIBUTOR", True)  # dev setting must not leak into user questions
+    r = ask.answer("Is it hot?", "en", "CAZ159")
+    model, kw = calls[0]
+    assert model == "muse-spark-1.3" and kw["reasoning_effort"] == "minimal" and kw["max_tokens"] == ask.MAX_ANSWER_TOKENS
+    assert set(r["timings_ms"]) == {"data", "context", "model", "check", "total"}
+
+
+def test_on_demand_snapshots_are_reused_for_a_while(monkeypatch):
+    built = []
+    snap = scenarios.build("heatwave", "CAZ159")
+    monkeypatch.setattr(ask, "_on_demand", {})
+    monkeypatch.setattr(ask.nws, "get_zone_alerts", lambda rec: [])
+    monkeypatch.setattr(ask.snapshot, "build_snapshot", lambda rec, alerts, prev=None: built.append(1) or snap)
+    assert ask.zone_snapshot("CAZ159") is snap and ask.zone_snapshot("CAZ159") is snap and built == [1]

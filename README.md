@@ -155,7 +155,23 @@ python scripts/collect_local.py --monitor                   # real data for moni
 3. **One model call**, told to answer only from that context in up to 4 short sentences. It never invents cooling centers, shelters, addresses or phone numbers; it suggests 211 instead. Vietnamese and Spanish answers get the reviewed wording rules.
 4. **The answer is checked again.** Medical wording in any language replaces it with the fixed symptom answer. Mask advice when masks wouldn't help (no smoke, dust or ash) replaces it with a fallback. When someone asks about masks on such a day, a fixed sentence is added: "A mask won't help with the air here right now: N95 masks only filter smoke, dust or ash, not ozone."
 
-Every answer shows the place and time of the data it used, and its official sources. Limits: 20 questions per IP per hour; over the $5/day model budget, Ask returns the fallback message. A live answer takes about 11 s and costs about $0.0003.
+Every answer shows the place and time of the data it used, and its official sources. Limits: 20 questions per IP per hour; over the $5/day model budget, Ask returns the fallback message.
+
+**Times in the question are resolved in code** (`timeref.py`), against the zone's local time: "3 giờ chiều", "3 PM", "a las 3 de la tarde", "下午3点", "오후 3시", "alas-3 ng hapon", "الساعة 3 مساءً". If that time has already passed today, the answer is for the same time tomorrow and starts with a note written in code, for example "3 giờ chiều hôm nay đã qua, đây là dự báo cho 3 giờ chiều ngày mai (thứ Tư)." The model gets the target time and the forecast for that hour. "Tomorrow" in the question, or tomorrow's weekday, means tomorrow with no note. Another weekday or a date is left to the model. Number words ("tres", 三) aren't recognized.
+
+**Speed.** Each answer carries a timing breakdown (`timings_ms`), also logged. Measured on 3 questions (EN/ES/VI), standard `muse-spark-1.3`, fresh calls:
+
+| | Before | After |
+|---|---|---|
+| Model call | 3.0–6.5 s (461–1,190 hidden reasoning tokens; `low` effort, 1,500 max) | 2.7–3.8 s (203–405; `minimal` effort, 900 max) |
+| Zone data | 0.5–1.3 s (stale snapshot rebuilt on every question) | ~12 ms (stored or in-memory snapshot; data, alerts and budget read in parallel) |
+| Total | 3.8–7.8 s locally; ~10–11 s on AWS | **2.7–3.8 s locally** |
+
+- `low` effort with a 700-token cap failed 2 times out of 3: reasoning used up the whole limit.
+- The model client (OpenAI SDK import, API key from SSM) is created during Lambda init, not inside the first question.
+- Ask always uses the standard model, never `-contributor`: questions are real user input.
+- Streaming isn't possible behind an API Gateway HTTP API, and Python Lambdas have no native response streaming. So the screen shows progress in steps instead: "Checking today's weather data…" → "Writing your answer…" → "Almost done…" after 6 s.
+- A live answer costs about $0.003.
 
 ## Real-event replays
 
