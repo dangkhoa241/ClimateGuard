@@ -24,19 +24,19 @@ REVIEWED = ("en", "es", "vi")
 # id -> text per language. {t} = today's high (°F), {hours95} = hours at or above 95°F, {aqi} = AQI.
 ITEMS = {
     "water": {
-        "en": "Water: fresh, cool drinking water close to the work, free, enough for about 1 quart per worker per hour for the whole shift. Remind everyone to drink often, even when not thirsty.",
-        "es": "Agua: agua potable fresca y gratis cerca del trabajo, suficiente para cerca de 1 litro por trabajador por hora durante todo el turno. Recuerde a todos tomar agua seguido, aunque no tengan sed.",
-        "vi": "Nước uống: có nước mát, sạch, miễn phí gần chỗ làm, đủ khoảng 1 lít cho mỗi người mỗi giờ trong cả ca. Nhắc mọi người uống nước thường xuyên, kể cả khi chưa khát.",
+        "en": "Water: fresh, cool drinking water close to the work, free, enough for 1 quart (almost 1 liter) per worker per hour for the whole shift. Remind everyone to drink often, even when not thirsty.",
+        "es": "Agua: agua potable fresca y gratis cerca del trabajo, suficiente para 1 cuarto de galón (casi 1 litro) por trabajador por hora durante todo el turno. Recuerde a todos tomar agua seguido, aunque no tengan sed.",
+        "vi": "Nước uống: có nước mát, sạch, miễn phí gần chỗ làm, đủ 1 quart (khoảng 1 lít) cho mỗi người mỗi giờ trong cả ca. Nhắc mọi người uống nước thường xuyên, kể cả khi chưa khát.",
     },
     "shade80": {
         "en": "Shade: today reaches {t}°F. Above 80°F, shade must be up and big enough for everyone on a break. Anyone may take a cool-down rest in the shade when they need it, for at least 5 minutes.",
-        "es": "Sombra: hoy llega a {t}°F. Arriba de 80°F, debe haber sombra para todos los que estén en descanso. Cualquiera puede descansar en la sombra para refrescarse cuando lo necesite, al menos 5 minutos.",
+        "es": "Sombra: hoy llega a {t}°F. Por encima de 80°F, debe haber sombra para todos los que estén en descanso. Cualquiera puede descansar en la sombra para refrescarse cuando lo necesite, al menos 5 minutos.",
         "vi": "Bóng râm: hôm nay lên tới {t}°F. Trên 80°F, phải có chỗ bóng râm đủ cho mọi người đang nghỉ. Ai cũng được nghỉ trong bóng râm để hạ nhiệt khi cần, ít nhất 5 phút.",
     },
     "highheat95": {
         "en": "High heat: {hours95} hours at or above 95°F today. High-heat procedures apply: watch every worker, use a buddy system, keep a way to call for help, and remind everyone to drink water. Farm work: a 10-minute cool-down rest every 2 hours.",
         "es": "Calor alto: {hours95} horas a 95°F o más hoy. Se aplican los procedimientos de calor alto: vigile a cada trabajador, trabajen en parejas, tenga cómo pedir ayuda y recuerde a todos tomar agua. Trabajo agrícola: un descanso de 10 minutos cada 2 horas.",
-        "vi": "Nắng nóng cao: hôm nay có {hours95} giờ từ 95°F trở lên. Áp dụng quy trình nắng nóng cao: theo dõi từng người, làm việc theo cặp, luôn có cách gọi trợ giúp và nhắc mọi người uống nước. Làm nông: nghỉ hạ nhiệt 10 phút mỗi 2 giờ.",
+        "vi": "Nhiệt độ rất cao: hôm nay có {hours95} giờ từ 95°F trở lên. Áp dụng quy trình nhiệt độ rất cao: theo dõi từng người, làm việc theo cặp, luôn có cách gọi trợ giúp và nhắc mọi người uống nước. Làm nông: nghỉ hạ nhiệt 10 phút mỗi 2 giờ.",
     },
     "new_workers": {
         "en": "New workers and heat waves: workers new to the heat, and everyone during a heat wave, need time to adjust. Watch them closely and keep them near you.",
@@ -56,7 +56,7 @@ ITEMS = {
     "federal": {
         "en": "Water, Rest, Shade (OSHA): drink water every 15 to 20 minutes, rest in shade or a cool place, and build up slowly for anyone new to the heat.",
         "es": "Agua, Descanso, Sombra (OSHA): tomar agua cada 15 a 20 minutos, descansar en la sombra o un lugar fresco y aumentar el trabajo poco a poco para quien es nuevo en el calor.",
-        "vi": "Nước, Nghỉ, Bóng râm (OSHA): uống nước mỗi 15 đến 20 phút, nghỉ trong bóng râm hoặc nơi mát, và tăng dần khối lượng việc cho người mới làm trong nắng nóng.",
+        "vi": "Nước, Nghỉ ngơi, Bóng râm (OSHA): uống nước mỗi 15 đến 20 phút, nghỉ trong bóng râm hoặc nơi mát, và tăng dần khối lượng việc cho người mới làm trong nắng nóng.",
     },
     "emergency": {
         "en": "Emergency plan: everyone knows the work site address and how to give directions. Tell the supervisor right away if anyone feels unwell. In an emergency, call 911.",
