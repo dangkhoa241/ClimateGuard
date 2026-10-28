@@ -1,0 +1,36 @@
+[
+ {
+  "effort": "minimal",
+  "id": "vi_field_6am_2pm",
+  "lang": "vi",
+  "question": "Ngày mai tôi làm ngoài đồng từ sáu giờ sáng đến hai giờ chiều, tôi nên chuẩn bị gì?",
+  "answer": "Sáng thứ Năm lúc 6 giờ trời mát khoảng 51°F (11°C), rồi ấm dần lên 66°F (19°C) lúc 2 giờ chiều. Trời có mù nhẹ rồi nhiều mây, gió rất nhẹ và không mưa.\nHãy mặc nhiều lớp áo dài tay, đội mũ và mang găng tay để cởi bớt khi trời ấm lên.\nHãy mang đủ nước uống, nghỉ trong bóng râm, mặc quần áo che tay chân, đội mũ rộng vành, đeo kính mát và bôi kem chống nắng.",
+  "passed": true,
+  "fails": [],
+  "ms": 4399,
+  "model_ms": 2962,
+  "tokens": {
+   "in": 3777,
+   "out": 592,
+   "reasoning": 482
+  },
+  "cost_usd": 0.007237
+ },
+ {
+  "effort": "minimal",
+  "id": "vi_field_style",
+  "lang": "vi",
+  "question": "Sáng mai tôi làm ngoài đồng từ 6 giờ sáng đến 2 giờ chiều, cần mặc gì và mang theo gì?",
+  "answer": "Sáng thứ Năm lúc 6 giờ trời mát khoảng 51°F (11°C), rồi ấm dần lên 66°F (19°C) lúc 2 giờ chiều.\nTrời có mù nhẹ rồi nhiều mây, gió rất nhẹ và không mưa.\nHãy mặc nhiều lớp áo dài tay, đội mũ rộng vành và đeo kính mát.\nHãy mang đủ nước uống, nghỉ trong bóng râm và bôi kem chống nắng.",
+  "passed": true,
+  "fails": [],
+  "ms": 1463,
+  "model_ms": 1450,
+  "tokens": {
+   "in": 3782,
+   "out": 358,
+   "reasoning": 270
+  },
+  "cost_usd": 0.005421
+ }
+]

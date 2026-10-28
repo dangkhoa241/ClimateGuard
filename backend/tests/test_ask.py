@@ -261,3 +261,14 @@ def test_time_range_gets_a_summary_over_the_whole_range(monkeypatch):
     r = ask.answer("Ngày mai từ sáu giờ sáng đến hai giờ chiều tôi nên chuẩn bị gì?", "vi", "CAZ159")
     assert "thứ Năm" in r["answer"] and r["data_time"] == snap["generated_at"]
     assert "time_range_asked" in seen[0]["messages"][1]["content"]
+
+
+def test_vietnamese_answer_style_fixed_in_code(monkeypatch):
+    # Reviewer (2026-10-28): advice starts with "Hãy", °F with °C, weekday names capitalized.
+    _store()
+    _model_says(monkeypatch, "Sáng thứ năm trời mát 51°F. Bạn nên mặc nhiều lớp áo. Bạn có thể nghỉ trưa.")
+    r = ask.answer("Sáng mai thời tiết thế nào?", "vi", "CAZ159")
+    assert r["answer"] == "Sáng thứ Năm trời mát 51°F (11°C). Hãy mặc nhiều lớp áo. Bạn có thể nghỉ trưa."
+    assert r["data_time_text"].endswith(("thứ Hai", "thứ Ba", "thứ Tư", "thứ Năm", "thứ Sáu", "thứ Bảy", "Chủ Nhật"))
+    _model_says(monkeypatch, "Yes. It will reach 69°F.")
+    assert ask.answer("Is it hot today?", "en", "CAZ159")["answer"] == "Yes. It will reach 69°F."

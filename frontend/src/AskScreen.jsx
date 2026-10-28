@@ -73,8 +73,9 @@ function VoiceInput({ lang, t, onText, disabled }) {
   )
 }
 
-// The data time in the reader's language and the zone's timezone ("Th 5, 12:47" in Vietnamese).
+// The data time in the reader's language: written by the server ("12:48 trưa thứ Tư"), else formatted here.
 function dataTime(result, lang, tz) {
+  if (result.data_time_text) return result.data_time_text
   if (!result.data_time) return result.data_time_local
   try {
     return new Date(result.data_time).toLocaleString(lang, { weekday: 'short', hour: 'numeric', minute: '2-digit',

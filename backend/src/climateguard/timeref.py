@@ -190,3 +190,24 @@ def note(ref: TimeRef, lang: str) -> str | None:
         "ko": f"오늘 {c}는 이미 지났습니다. 내일({day}) {c} 예보입니다.",
         "ar": f"لقد مضت الساعة {c} اليوم. هذه توقعات الساعة {c} غدًا ({day}).",
     }[lang]
+
+
+def when(t: datetime, lang: str) -> str:
+    """A data time for the line under an answer, in the reader's language: "12:48 trưa thứ Tư"."""
+    hm, day = f"{_h12(t)}:{t.minute:02d}", WEEKDAYS[lang][t.weekday()]
+    if lang == "vi":
+        part = ("sáng" if 4 <= t.hour <= 10 else "trưa" if t.hour in (11, 12) else "chiều" if 13 <= t.hour <= 17
+                else "tối" if 18 <= t.hour <= 21 else "đêm")
+        return f"{hm} {part} {day}"
+    if lang == "es":
+        part = "de la mañana" if t.hour < 12 else "de la tarde" if t.hour < 20 else "de la noche"
+        return f"{'la' if _h12(t) == 1 else 'las'} {hm} {part} del {day}"
+    if lang == "zh":
+        return f"{day}{'上午' if t.hour < 12 else '下午'}{hm}"
+    if lang == "ko":
+        return f"{day} {'오전' if t.hour < 12 else '오후'} {hm}"
+    if lang == "tl":
+        return f"{day}, {hm} ng {'umaga' if t.hour < 12 else 'hapon' if t.hour < 18 else 'gabi'}"
+    if lang == "ar":
+        return f"{day} {hm} {'صباحًا' if t.hour < 12 else 'مساءً'}"
+    return f"{day} {hm} {'AM' if t.hour < 12 else 'PM'}"

@@ -1,0 +1,121 @@
+[
+ {
+  "effort": "minimal",
+  "id": "vi_field_6am_2pm",
+  "lang": "vi",
+  "question": "Ngày mai tôi làm ngoài đồng từ sáu giờ sáng đến hai giờ chiều, tôi nên chuẩn bị gì?",
+  "answer": "Sáng thứ Năm lúc 6 giờ trời mát khoảng 51°F (11°C), rồi ấm dần lên 66°F (19°C) lúc 2 giờ chiều. Trời có mù nhẹ rồi nhiều mây, gió rất nhẹ và không mưa. Hãy mặc nhiều lớp áo dài tay để cởi bớt khi trời ấm lên, và đội mũ rộng vành. Hãy mang đủ nước uống, nghỉ trong bóng râm, đeo kính mát và bôi kem chống nắng.",
+  "passed": true,
+  "fails": [],
+  "ms": 3426,
+  "model_ms": 2172,
+  "tokens": {
+   "in": 3765,
+   "out": 292,
+   "reasoning": 196
+  },
+  "cost_usd": 0.005947
+ },
+ {
+  "effort": "minimal",
+  "id": "en_work_afternoon",
+  "lang": "en",
+  "question": "Is it safe to work outside this afternoon?",
+  "answer": "Yes, it is safe to work outside this afternoon.\nIt will be sunny and warm near 69°F with light wind and good air.\nDrink water often even if you are not thirsty and rest in shade if you feel hot.",
+  "passed": true,
+  "fails": [],
+  "ms": 2155,
+  "model_ms": 2142,
+  "tokens": {
+   "in": 3075,
+   "out": 412,
+   "reasoning": 356
+  },
+  "cost_usd": 0.005595
+ },
+ {
+  "effort": "minimal",
+  "id": "es_clothes_early",
+  "lang": "es",
+  "question": "¿Qué ropa debo llevar mañana temprano para trabajar en el campo?",
+  "answer": "Mañana temprano hará fresco con 51°F (11°C) y cielo con bruma, sin lluvia y casi sin viento.\nLleve varias capas de ropa suelta que usted se pueda quitar, además de gorro y guantes, y guarde ropa seca para cambiarse.\nUse camisa de manga larga, pantalón largo, sombrero de ala ancha y lentes para el sol, y use protector solar de nuevo después de sudar.",
+  "passed": true,
+  "fails": [],
+  "ms": 2019,
+  "model_ms": 2005,
+  "tokens": {
+   "in": 3174,
+   "out": 349,
+   "reasoning": 251
+  },
+  "cost_usd": 0.005451
+ },
+ {
+  "effort": "minimal",
+  "id": "vi_air_tomorrow",
+  "lang": "vi",
+  "question": "Chất lượng không khí ngày mai thế nào?",
+  "answer": "Tôi không có dự báo chất lượng không khí cho ngày mai.\nHôm nay chất lượng không khí ở mức tốt với chỉ số 44.\nHãy ở trong nhà với cửa sổ và cửa ra vào đóng kín khi thấy có khói.",
+  "passed": true,
+  "fails": [],
+  "ms": 2967,
+  "model_ms": 2954,
+  "tokens": {
+   "in": 3361,
+   "out": 615,
+   "reasoning": 558
+  },
+  "cost_usd": 0.006815
+ },
+ {
+  "effort": "minimal",
+  "id": "en_repair_tomorrow",
+  "lang": "en",
+  "question": "Do I need to repair anything for tomorrow?",
+  "answer": "No, you do not need to repair anything for tomorrow.\nTomorrow will stay cool to mild, from 51°F to 68°F.\nThere will be no rain and very light wind.\nThere is nothing to fix or secure because of the weather.",
+  "passed": true,
+  "fails": [],
+  "ms": 1770,
+  "model_ms": 1757,
+  "tokens": {
+   "in": 3129,
+   "out": 422,
+   "reasoning": 362
+  },
+  "cost_usd": 0.005705
+ },
+ {
+  "effort": "minimal",
+  "id": "vi_field_style",
+  "lang": "vi",
+  "question": "Sáng mai tôi làm ngoài đồng từ 6 giờ sáng đến 2 giờ chiều, cần mặc gì và mang theo gì?",
+  "answer": "Sáng thứ Năm lúc 6 giờ trời mát khoảng 51°F (11°C), rồi ấm lên 66°F (19°C) lúc 2 giờ chiều.\nTrời có mù nhẹ rồi nhiều mây, gió rất nhẹ và không mưa.\nHãy mặc nhiều lớp áo dài tay, đội mũ rộng vành và mang găng tay để cởi bớt khi trời ấm lên.\nHãy mang đủ nước uống, nghỉ trong bóng râm, đeo kính mát và bôi kem chống nắng.",
+  "passed": true,
+  "fails": [],
+  "ms": 1307,
+  "model_ms": 1294,
+  "tokens": {
+   "in": 3770,
+   "out": 440,
+   "reasoning": 340
+  },
+  "cost_usd": 0.006582
+ },
+ {
+  "effort": "minimal",
+  "id": "en_cooling_place",
+  "lang": "en",
+  "question": "Where can I go to cool off today?",
+  "answer": "No, you do not need a place to cool off today because it is not hot.\nToday will reach 69°F with sun, light wind, and good air.\nWear layers you can take off and put back on.\nDrink water through the day even if you are not thirsty.\nTo find a cooling center or shelter near you, call 211 or check your county's website.",
+  "passed": true,
+  "fails": [],
+  "ms": 1834,
+  "model_ms": 1822,
+  "tokens": {
+   "in": 3047,
+   "out": 458,
+   "reasoning": 388
+  },
+  "cost_usd": 0.005755
+ }
+]

@@ -24,7 +24,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from . import alerts_store, budget, guardrails, guidance, hazards, snapshot, timeref, zones
+from . import alerts_store, budget, guardrails, guidance, hazards, snapshot, timeref, units, zones
 from .languages import LANGS
 from .llm import chat
 from .monitor import MEDICAL_TERMS
@@ -165,8 +165,12 @@ TOPICS = {
 SYSTEM_PROMPT = """You are ClimateGuard's assistant for farmworkers, outdoor workers and immigrant families in the United States.
 Answer in {language}, in at most 5 short, simple sentences that a non-expert understands. No abbreviations or jargon.
 Rules:
+- Yes/no and other questions: the first sentence answers the actual question directly. Then the supporting forecast, briefly, then any actions.
+- "What should I wear / bring / prepare / do" questions: the actions are the answer. Give the forecast in 1-2 short sentences, then the actions, each only once (no summary sentence that lists them first).
 - Use ONLY the DATA and GUIDANCE in the user message. Be useful: answer what they can do. Say you don't know only when DATA truly can't answer (for example, a day beyond the 48-hour forecast).
-- For a time range (DATA has time_range_asked), first summarize the whole range in 1-2 sentences: the temperature at the start, the warmest (and when), and at the end, plus sky, wind and air quality. Then give 2-3 practical actions from GUIDANCE that fit those conditions, for example layers for a cool start, water, shade and rest breaks, and sun protection as it warms.
+- Off-topic or unclear questions: answer the weather-safety part of it from DATA, for example "No weather problems are expected tomorrow, so there's nothing to fix or secure because of the weather." Never send people to other professionals (repair workers, lawyers...).
+- For a time range (DATA has time_range_asked), summarize the whole range in 1-2 sentences: the temperature at the start, the warmest (and when), and at the end, plus sky, wind and air quality. Then give 2-3 practical actions from GUIDANCE that fit those conditions, for example layers for a cool start, water, shade and rest breaks, and sun protection as it warms.
+- Each topic once: merge related actions into one sentence (all clothing together, all water/shade/sun together).
 - Don't start with or mention when the data is from ("the data at noon shows..."): the app shows the data time under the answer.
 - Protective actions only. Never give medical advice: no symptoms, diagnoses, treatment or medicines. Only if they ask about health: 911 in an emergency, otherwise a doctor or clinic.
 - Never name places, addresses or phone numbers (cooling centers, shelters, clinics), and never write 211 yourself. If they ask where to go, end with the line [211]: a fixed sentence about 211 replaces it.
@@ -179,8 +183,14 @@ Rules:
 LANG_RULES = {
     "vi": ("Vietnamese wording: NWS Warning = \"Cảnh báo\", Watch = \"Cảnh giác\", Advisory = \"Khuyến cáo\". "
            "Air quality from the AQI value: 101-150 \"có hại cho nhóm nhạy cảm\", 151-200 \"có hại cho sức khỏe\", "
-           "201-300 \"rất có hại cho sức khỏe\", 301+ \"nguy hiểm cho sức khỏe\". Times after midnight: \"rạng sáng [weekday]\"."),
-    "es": "Spanish: use \"usted\". NWS Warning = \"Aviso\", Watch = \"Vigilancia\", Advisory = \"Advertencia\". Outdoor work timing: \"temprano en la mañana o al anochecer\", never \"en la tarde\".",
+           "201-300 \"rất có hại cho sức khỏe\", 301+ \"nguy hiểm cho sức khỏe\". Times after midnight: \"rạng sáng [weekday]\". "
+           "Start every advice sentence with \"Hãy\" (never \"Bạn mặc...\", \"Bạn nên...\"). Example of the style "
+           "(approved by a native speaker; the question was about 6 AM-2 PM tomorrow in a field; its numbers are from "
+           "another day, always use DATA): \"Sáng thứ Bảy lúc 6 giờ "
+           "trời mát, khoảng 47°F, rồi ấm dần lên 72°F lúc 1 giờ chiều. Trời có sương mù nhẹ rồi nhiều mây, gió rất nhẹ "
+           "và không mưa. Hãy mặc nhiều lớp áo dài tay để cởi bớt khi trời ấm lên, và đội mũ rộng vành. Hãy mang đủ nước "
+           "uống, nghỉ ngơi trong bóng râm, đeo kính mát và bôi kem chống nắng.\""),
+    "es": "Spanish: use \"usted\". NWS Warning = \"Aviso\", Watch = \"Vigilancia\", Advisory = \"Advertencia\". Outdoor work timing: \"temprano en la mañana o al anochecer\", never \"en la tarde\". Times like \"las 6 de la mañana\", never \"6:00 AM\".",
 }
 
 
@@ -366,13 +376,16 @@ def answer(question: str, lang: str, zone_id: str) -> dict:
         _drop_211_sentences(text.replace(MARK_211, "")),
         MASK_NOTE[lang] if guardrails.mentions_mask(question) and not context["air"]["masks_help"] else "",
         HELP_211[lang] if wants_211 else "") if p)
+    text = units.format_temps(text, lang)  # "51°F (11°C)" in every language but English, like the alerts
     if lang == "vi":
-        text = guardrails.fix_vi_weekdays(text)
+        text = guardrails.fix_vi_advice(guardrails.fix_vi_weekdays(text))
     if ref and (first := timeref.note(ref, lang)):
         text = f"{first}\n{text}"  # written in code, never by the model
     lap("check")
     return done({"kind": "answer", "answer": text, "data_time_local": context["data_time_local"],
                  "data_time": snap["generated_at"],  # ISO, for the app to show in the reader's language
+                 "data_time_text": timeref.when(datetime.fromisoformat(snap["generated_at"]).astimezone(
+                     _zone_tz(zone_id, snap)), lang),  # "12:48 trưa thứ Tư"
                  "place": context["place"], "sources": [{"source": g["source"], "title": g["title"], "url": g["url"]}
                                                         for g in excerpts],
                  "nws_alerts": [a["event"] for a in snap.get("alerts", [])],

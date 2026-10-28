@@ -39,6 +39,14 @@ CASES = [
      "q": "¿Qué ropa debo llevar mañana temprano para trabajar en el campo?", "min_temps": 1, "actions": True},
     {"id": "vi_air_tomorrow", "lang": "vi", "q": "Chất lượng không khí ngày mai thế nào?", "min_temps": 0,
      "actions": False, "must": re.compile(r"AQI|chất lượng không khí", re.IGNORECASE)},
+    # Off-topic: answer first, the weather-safety part, never "ask a repair worker" (2026-10-28 test).
+    {"id": "en_repair_tomorrow", "lang": "en", "q": "Do I need to repair anything for tomorrow?", "min_temps": 0,
+     "actions": False, "first_answers": True,
+     "must_not": re.compile(r"repair (worker|person|professional)|contractor|handyman|professional", re.IGNORECASE)},
+    # Reviewer's style: "Hãy" advice sentences, °F (°C), clothing once (2026-10-28 test).
+    {"id": "vi_field_style", "lang": "vi",
+     "q": "Sáng mai tôi làm ngoài đồng từ 6 giờ sáng đến 2 giờ chiều, cần mặc gì và mang theo gì?",
+     "min_temps": 2, "actions": True, "vi_style": True},
     {"id": "en_cooling_place", "lang": "en", "q": "Where can I go to cool off today?", "min_temps": 0,
      "actions": False, "must": re.compile(re.escape(ask.HELP_211["en"]))},
 ]
@@ -59,6 +67,18 @@ def check(case: dict, r: dict) -> list[str]:
         fails.append(f"fewer than {case['min_temps']} temperatures")
     if case["actions"] and len(set(m.lower() for m in ACTIONS.findall(text))) < 2:
         fails.append("fewer than 2 practical actions")
+    if case.get("must_not") and case["must_not"].search(text):
+        fails.append(f"says {case['must_not'].search(text).group(0)!r}")
+    if case.get("first_answers") and TEMP.search(text.split(".")[0]):
+        fails.append("starts with the forecast, not the answer")
+    if case["lang"] != "en" and TEMP.search(text) and not re.search(r"°F \(-?\d+°C\)", text):
+        fails.append("no °C next to °F")
+    if case.get("vi_style"):
+        sentences = [s.strip() for s in re.split(r"[.!?\n]", text) if s.strip()]
+        if re.search(r"(^|[.!?\n]\s*)Bạn (mặc|mang|nên|đội|uống)", text):
+            fails.append("advice starts with 'Bạn', not 'Hãy'")
+        if sum(bool(re.search(r"mặc|áo", s)) for s in sentences) > 1:
+            fails.append("clothing in more than one sentence")
     if case.get("must") and not case["must"].search(text):
         fails.append(f"missing {case['must'].pattern[:40]}")
     return fails

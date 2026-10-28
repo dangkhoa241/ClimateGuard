@@ -168,3 +168,11 @@ def fix_vi_weekdays(text: str) -> str:
             return "Chủ Nhật"
         return f"{m.group(1)} {m.group(2).capitalize()}"
     return _VI_WEEKDAY.sub(cap, text)
+
+
+# Vietnamese advice sentences start with "Hãy" (reviewer): "Bạn nên mặc..." -> "Hãy mặc...".
+_VI_ADVICE = re.compile(r"(^|(?<=[.!?\n])\s*)Bạn (?:nên|hãy) ", re.MULTILINE)
+
+
+def fix_vi_advice(text: str) -> str:
+    return _VI_ADVICE.sub(lambda m: m.group(1) + "Hãy ", text)

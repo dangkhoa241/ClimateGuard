@@ -191,6 +191,17 @@ Every answer shows the place and time of the data it used, and its official sour
 
 The failures, fixed in the prompt: "66 degrees" instead of "66°F", and an unasked "see a doctor". Vietnamese weekday names are capitalized in code ("thứ Năm"). Reports: `backend/eval/results/ask-*.md`.
 
+**Second round** (two more tests, reviewer's wording): **7/7**, median about 2.2 s, after splitting the "answer first" rule.
+- **Answer order:**
+  - Yes/no and other questions answer in the first sentence, then the forecast briefly. "Do I need to repair anything for tomorrow?" gets "No, you do not need to repair anything for tomorrow… There is nothing to fix or secure because of the weather."
+  - Off-topic questions get the weather-safety part, never "ask a repair worker".
+  - "What should I wear or bring" questions follow the reviewer's Vietnamese example: forecast first, then each action once. Answering first there made the clothing appear twice.
+- **Fixed in code:**
+  - °F gets °C in every language but English ("51°F (11°C)"), as in the alerts.
+  - Vietnamese "Bạn nên …" becomes "Hãy …".
+  - The data line is written by the server in the reader's language: "Dựa trên dữ liệu cho Stockton, CA lúc 12:48 trưa thứ Tư."
+- **Example numbers:** the example's numbers differ from any real day, so the model can't copy them. It still wrote the real 51°F → 66°F.
+
 **Speed.** Each answer carries a timing breakdown (`timings_ms`), also logged. Measured on 3 questions (EN/ES/VI), standard `muse-spark-1.3`, fresh calls:
 
 | | Before | After |

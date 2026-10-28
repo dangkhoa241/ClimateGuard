@@ -128,3 +128,11 @@ def test_range_already_over_today_moves_to_tomorrow_with_a_range_note():
     assert ref.passed and ref.end.day == 29
     assert timeref.note(ref, "vi") == ("6 giờ sáng–10 giờ sáng hôm nay đã qua, đây là dự báo cho "
                                        "6 giờ sáng–10 giờ sáng ngày mai (thứ Năm).")
+
+
+@pytest.mark.parametrize("lang,text", [
+    ("vi", "12:48 trưa thứ Tư"), ("en", "Wednesday 12:48 PM"), ("es", "las 12:48 de la tarde del miércoles"),
+    ("ko", "수요일 오후 12:48"),
+])
+def test_data_time_line_in_the_readers_language(lang, text):
+    assert timeref.when(datetime(2026, 10, 28, 12, 48, tzinfo=LA), lang) == text
