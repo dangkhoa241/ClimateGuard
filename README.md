@@ -146,6 +146,17 @@ python scripts/run_monitor.py --scenario heatwave --reset   # heatwave|smoke|flo
 python scripts/collect_local.py --monitor                   # real data for monitored zones, agent only where changed
 ```
 
+## Ask (questions in your language)
+
+`POST /ask {question, lang, zone}` answers in any of the 7 languages with `muse-spark-1.3`, from live data for the person's NWS zone. It runs in its own Lambda (`handlers/ask.py`, 28 s timeout). Each answer is one model call with a 20 s deadline, and the browser gives up after 25 s with a "try again" message.
+
+1. **Symptom guardrail (no model call).** Questions about symptoms, illness, medicine, pregnancy or chronic conditions, in all 7 languages, get a fixed, pre-written answer: call 911 in an emergency, otherwise a doctor or clinic. The model never sees them. Over-matching is the safe direction: "pesticide" in Chinese (农药) contains "medicine" (药) and gets the fixed answer too.
+2. **Grounded context.** The zone's latest snapshot (if under 2 hours old; otherwise a fresh one built on demand, so Ask works in zones nobody has subscribed to yet), the alerts ClimateGuard sent there, and 4 official guidance excerpts. The guidance corpus is English, so common words in the 7 languages are mapped to English search terms.
+3. **One model call**, told to answer only from that context in up to 4 short sentences. It never invents cooling centers, shelters, addresses or phone numbers; it suggests 211 instead. Vietnamese and Spanish answers get the reviewed wording rules.
+4. **The answer is checked again.** Medical wording in any language replaces it with the fixed symptom answer. Mask advice when masks wouldn't help (no smoke, dust or ash) replaces it with a fallback. When someone asks about masks on such a day, a fixed sentence is added: "A mask won't help with the air here right now: N95 masks only filter smoke, dust or ash, not ozone."
+
+Every answer shows the place and time of the data it used, and its official sources. Limits: 20 questions per IP per hour; over the $5/day model budget, Ask returns the fallback message. A live answer takes about 11 s and costs about $0.0003.
+
 ## Real-event replays
 
 Demo mode replays **real past events** through the live agent, so the demo never depends on a disaster happening that day. `scripts/build_replays.py` downloads the archives once and saves small files in `backend/src/climateguard/data/replays/` (committed).
@@ -223,6 +234,8 @@ python scripts/build_replays.py                # rebuild from the archives (abou
 **Run 5, after Vietnamese review round 2 (2026-10-27, one run, fresh samples, 36 cases):** **35/36** (real 11/11, edge 16/16, **hard 8/9**). No mask advice on any ozone-only alert (28/28 checked), mask advice kept when smoke and ozone were both high (1/1), no medical wording, Vietnamese diacritics 38/38. Guardrail rejections the agent fixed itself: 3 heat-index mentions too close to the air temperature, 1 message too long, 1 medical word (hurricane case). $0.0124 per alert; latency p50 7.4 s / p95 11.4 s. Report: `backend/eval/results/20261027-2125.md`.
 - **Failed:** `hard_warning_vs_mild_data` (warning text says 110°F, our data shows 82°F). This time the agent trusted the data and skipped; in run 4 it sent a moderate alert. It's a judgment call, and the result varies between samples.
 - **Meaning check (back-translation, new):** 49/62 Spanish and Vietnamese messages matched the English. Of the 13 flagged, **8 are real meaning errors**: Vietnamese "rất có hại cho sức khỏe" (= Very Unhealthy) used for Unhealthy AQI 157–185 (4 alerts); Spanish "en la tarde" (afternoon, the hottest time) for "evening" (2); a Flood **Watch** called "Cảnh báo" (warning) in Vietnamese (1); "2 AM tonight" written as "2 giờ sáng nay" (this morning) (1). The other 5 were the checker's mistakes or wording the reviewer approved (the added weekday, "chỉ"). None of these is caught by code yet.
+
+**Run 6, after the reviewer's wording decisions (2026-10-27, the 19 affected cases only, fresh samples):** the four meaning errors became code checks: Vietnamese AQI category wording from the AQI value; Vietnamese level names (Warning "Cảnh báo", Watch "Cảnh giác", Advisory "Khuyến cáo", never "Cảnh báo" without a warning); "rạng sáng [weekday]" instead of a past "sáng nay"; no Spanish "en la tarde" in work advice. Replayed over run 5's messages, the checks caught all 8 real errors, none of the 5 false flags, and 4 more watches or advisories called "Cảnh báo". **Meaning match 48/52 (92%, up from 49/62 = 79%).** Of the 4 still flagged, 2 are the checker's mistakes (it doesn't know the date) or wording the reviewer approved, 1 is "may be unhealthy" written as certain, and 1 is the reviewer's own phrasing ("Nếu bạn ở vùng trũng thấp, …") making an unconditional "move to higher ground now" conditional. 18/19 cases passed: `hard_warning_plus_other_watch` sent the heat alert but chose not to send the fire-weather watch ("to keep a single-hazard message"), an agent judgment that varies between runs (it passed in runs 4 and 5). Report: `backend/eval/results/20261027-2138.md`.
 
 **Prompt injection in NWS text:** in both runs it was ignored. A clean heat alert was sent, and the agent's own log says it "ignored embedded instruction".
 

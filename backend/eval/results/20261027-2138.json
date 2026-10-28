@@ -1,0 +1,1335 @@
+{
+ "summary": {
+  "cases": {
+   "passed": 18,
+   "total": 19
+  },
+  "by_kind": {
+   "real": {
+    "passed": 8,
+    "total": 8
+   },
+   "edge": {
+    "passed": 8,
+    "total": 8
+   },
+   "hard": {
+    "passed": 2,
+    "total": 3
+   }
+  },
+  "decision_accuracy": {
+   "passed": 20,
+   "total": 20
+  },
+  "hazard_accuracy": {
+   "passed": 19,
+   "total": 20
+  },
+  "severity_in_range": {
+   "passed": 6,
+   "total": 6
+  },
+  "no_repeat": {
+   "passed": 1,
+   "total": 1
+  },
+  "escalation": {
+   "passed": 1,
+   "total": 1
+  },
+  "pre_filter_zero_calls": {
+   "passed": 0,
+   "total": 0
+  },
+  "no_medical_wording": {
+   "passed": 21,
+   "total": 21
+  },
+  "proper_accents": {
+   "passed": 21,
+   "total": 21
+  },
+  "no_mask_without_particles": {
+   "passed": 13,
+   "total": 13
+  },
+  "mask_advised": {
+   "passed": 1,
+   "total": 1
+  },
+  "meaning_backcheck": {
+   "matched": 48,
+   "total": 52,
+   "not_checked": 0,
+   "cost_usd": 0.0066
+  },
+  "guardrail_rejections": {
+   "feels_like_too_close": 2
+  },
+  "alerts_sent": 26,
+  "model_calls": 92,
+  "total_cost_usd": 0.279,
+  "cost_per_alert_usd": 0.0107,
+  "latency_s": {
+   "p50": 8.27,
+   "p95": 11.23
+  },
+  "model": "meta-models/muse-spark-open-1026",
+  "reasoning_effort": "low"
+ },
+ "results": [
+  {
+   "id": "real_heat_record_day",
+   "kind": "real",
+   "desc": "Sept 6 2022 07:00: record-heat day (and AQI 208)",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Excessive Heat Warning active until Friday 8 PM with 11 hours at or above 95°F and max 114°F/heat index 115°F today, and separate Very Unhealthy ozone AQI forecast of 208 today; sent heat alert (extreme) and ozone air-quality alert (extreme) with appropriate protective actions.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Excessive Heat Warning in effect until 8 PM Friday. Today (Tuesday), from 11 AM to 9 PM, temperatures up to 114°F. Stay in air conditioning, drink water often, and rest in shade. If you can, work outdoors only in early morning or evening.",
+       "messages": {
+        "en": "Excessive Heat Warning in effect until 8 PM Friday. Today (Tuesday), from 11 AM to 9 PM, temperatures up to 114°F. Stay in air conditioning, drink water often, and rest in shade. If you can, work outdoors only in early morning or evening.",
+        "es": "Aviso de calor excesivo vigente hasta las 8 PM del viernes. Hoy (martes), de 11 AM a 9 PM, temperaturas de hasta 114°F (46°C). Permanezca en un lugar con aire acondicionado, tome agua con frecuencia y descanse a la sombra. Si puede, trabaje al aire libre solo temprano en la mañana o al anochecer.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 8 giờ tối thứ Sáu. Hôm nay (thứ Ba), từ 11 giờ sáng đến 9 giờ tối, nhiệt độ có thể lên tới 114°F (46°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm. Nếu có thể, hãy chỉ làm việc ngoài trời vào sáng sớm hoặc chiều tối."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Excessive heat warning in effect until 8 PM Friday. Today (Tuesday), from 11 AM to 9 PM, temperatures up to 114°F (46°C). Stay in a place with air conditioning, drink water frequently and rest in the shade. If you can, work outdoors only early in the morning or at nightfall.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Severe heat warning in effect until 8 PM Friday. Today (Tuesday), from 11 AM to 9 PM, temperatures can reach up to 114°F (46°C). Stay in a place with air conditioning, drink water often and rest in the shade. If possible, only work outdoors in the early morning or late afternoon.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.000306526
+       }
+      },
+      {
+       "hazard": "smoke",
+       "severity": "extreme",
+       "en": "Today (Tuesday), ozone is very unhealthy for everyone with AQI up to 208. Limit time outdoors and avoid heavy work. If you can, stay indoors and keep windows closed.",
+       "messages": {
+        "en": "Today (Tuesday), ozone is very unhealthy for everyone with AQI up to 208. Limit time outdoors and avoid heavy work. If you can, stay indoors and keep windows closed.",
+        "es": "Hoy (martes), la calidad del aire es muy perjudicial para todos por el ozono con un índice de hasta 208. Limite el tiempo al aire libre y evite el trabajo pesado. Si puede, permanezca en interiores con las ventanas cerradas.",
+        "vi": "Hôm nay (thứ Ba), khí ôzôn tăng cao khiến không khí rất có hại cho sức khỏe (chỉ số AQI lên tới 208). Hãy hạn chế ra ngoài và tránh vận động mạnh. Nếu có thể, hãy ở trong nhà và đóng kín cửa sổ."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Today (Tuesday), air quality is very harmful to everyone due to ozone with an index of up to 208. Limit time outdoors and avoid heavy work. If you can, stay indoors with the windows closed.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Today (Tuesday), increased ozone makes the air very harmful to health (AQI index up to 208). Limit going outside and avoid strenuous exertion. If possible, stay inside the house and keep windows tightly closed.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.000202726
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true,
+      "no_mask_without_particles": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 6,
+     "cost_usd": 0.018178,
+     "latency_s": 10.6,
+     "signals": [
+      "NWS alerts: Excessive Heat Warning",
+      "11h at or above 95F",
+      "heat index up to 115F",
+      "AQI up to 208 (Very Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_heat_no_repeat",
+   "kind": "real",
+   "desc": "Record day morning, then afternoon: no repeated heat alert",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Sent heat alert for Excessive Heat Warning until Friday 8 p.m. with 11 hours ≥95°F and max 114°F today, and ozone air-quality alert for forecast AQI 208 Very Unhealthy requiring limiting outdoor exertion (no mask for ozone). Both hazards meet alert thresholds and no duplicate existed in last 48h.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Excessive Heat Warning in effect until 8:00 p.m. Friday. Today (Tuesday), from 11:00 a.m. to 9:00 p.m., temperatures up to 114°F. Stay in air conditioning, drink water often, and rest in shade. If possible, only do outdoor work in the early morning or evening.",
+       "messages": {
+        "en": "Excessive Heat Warning in effect until 8:00 p.m. Friday. Today (Tuesday), from 11:00 a.m. to 9:00 p.m., temperatures up to 114°F. Stay in air conditioning, drink water often, and rest in shade. If possible, only do outdoor work in the early morning or evening.",
+        "es": "Aviso de Calor Excesivo vigente hasta las 8:00 p.m. del viernes. Hoy (martes), de 11:00 a.m. a 9:00 p.m., temperaturas de hasta 114°F (46°C). Permanezca en aire acondicionado, tome agua con frecuencia y descanse a la sombra. Si es posible, haga trabajo al aire libre solo temprano en la mañana o al anochecer.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 8 giờ tối thứ Sáu. Hôm nay (thứ Ba), từ 11 giờ sáng đến 9 giờ tối, nhiệt độ có thể lên tới 114°F (46°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm. Nếu có thể, hãy chỉ làm việc ngoài trời vào sáng sớm hoặc chiều tối."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Excessive Heat Warning in effect until 8:00 p.m. Friday. Today (Tuesday), from 11:00 a.m. to 9:00 p.m., temperatures up to 114°F (46°C). Stay in air conditioning, drink water frequently and rest in the shade. If possible, do outdoor work only early in the morning or at nightfall.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Severe heat warning in effect until 8 p.m. Friday. Today (Tuesday), from 11 a.m. to 9 p.m., temperatures may reach up to 114°F (46°C). Stay in a place with air conditioning, drink water regularly and rest in the shade. If possible, only do outdoor work in the early morning or late afternoon.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.00022602600000000002
+       }
+      },
+      {
+       "hazard": "smoke",
+       "severity": "extreme",
+       "en": "Today (Tuesday), ozone is expected to make air quality very unhealthy with AQI up to 208. Limit time outdoors and avoid hard outdoor work. If possible, stay indoors with windows closed.",
+       "messages": {
+        "en": "Today (Tuesday), ozone is expected to make air quality very unhealthy with AQI up to 208. Limit time outdoors and avoid hard outdoor work. If possible, stay indoors with windows closed.",
+        "es": "Hoy (martes), se espera que el ozono haga que la calidad del aire sea muy poco saludable, con AQI de hasta 208. Limite el tiempo al aire libre y evite el trabajo exigente afuera. Si es posible, permanezca bajo techo con las ventanas cerradas.",
+        "vi": "Hôm nay (thứ Ba), khí ôzôn tăng cao khiến không khí rất có hại cho sức khỏe (chỉ số AQI lên tới 208). Hãy hạn chế ra ngoài và tránh vận động mạnh. Nếu có thể, hãy ở trong nhà và đóng kín cửa sổ."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Today (Tuesday), ozone is expected to make air quality very unhealthy, with AQI of up to 208. Limit time outdoors and avoid strenuous work outside. If possible, remain indoors with windows closed.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Today (Tuesday), elevated ozone gas makes the air very harmful to health (AQI index up to 208). Limit going outside and avoid vigorous exertion. If possible, stay inside the house and close windows tightly.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.0001877
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true,
+      "no_mask_without_particles": true
+     },
+     "passed": true,
+     "rejections": [
+      "feels_like_too_close"
+     ],
+     "model_calls": 6,
+     "cost_usd": 0.017334,
+     "latency_s": 11.23,
+     "signals": [
+      "NWS alerts: Excessive Heat Warning",
+      "11h at or above 95F",
+      "heat index up to 115F",
+      "AQI up to 208 (Very Unhealthy)"
+     ]
+    },
+    {
+     "action": "skipped",
+     "reason": "Active Excessive Heat Warning and Very Unhealthy ozone AQI (208) both present extreme risk with 11 hours at or above 95F and heat index up to 115F, but identical extreme heat and smoke alerts for this warning period were already sent in the last 48 hours and no higher severity or new time window is indicated, so no duplicate alert is needed now.",
+     "sent": [],
+     "checks": {
+      "no_repeat": true,
+      "no_medical_wording": true,
+      "proper_accents": true,
+      "no_mask_without_particles": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 2,
+     "cost_usd": 0.006274,
+     "latency_s": 3.53,
+     "signals": [
+      "NWS alerts: Excessive Heat Warning",
+      "11h at or above 95F",
+      "heat index up to 115F",
+      "AQI up to 208 (Very Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_flood_watch",
+   "kind": "real",
+   "desc": "Jan 8 2023: Flood Watch for Merced County",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Flood Watch active through late Tue night (66 hrs) with 90% heavy rain forecast from 9 PM Sun through Mon; sent moderate flood preparedness alert with no duplicate in last 48h and following NWS guidance to monitor and prepare for flooding.",
+     "sent": [
+      {
+       "hazard": "flood",
+       "severity": "moderate",
+       "en": "Flood Watch remains in effect through late Tuesday night until 4:00 AM Wednesday. Heavy rain is expected tonight Sunday starting around 9:00 PM and continuing through Monday morning. Prepare to move to higher ground if needed and never walk or drive through floodwater.",
+       "messages": {
+        "en": "Flood Watch remains in effect through late Tuesday night until 4:00 AM Wednesday. Heavy rain is expected tonight Sunday starting around 9:00 PM and continuing through Monday morning. Prepare to move to higher ground if needed and never walk or drive through floodwater.",
+        "es": "Vigilancia de inundación vigente hasta la noche del martes hasta las 4:00 AM del miércoles. Se espera lluvia fuerte esta noche domingo desde las 9:00 PM y continuará durante la mañana del lunes. Prepárese para moverse a un lugar más alto si es necesario y nunca camine ni maneje por agua de inundación.",
+        "vi": "Cảnh giác lũ lụt có hiệu lực đến đêm muộn thứ Ba, đến 4 giờ sáng thứ Tư. Mưa lớn dự kiến bắt đầu tối nay Chủ Nhật khoảng 9 giờ tối và kéo dài qua sáng thứ Hai. Hãy chuẩn bị di chuyển lên chỗ cao hơn nếu cần. Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Flood watch in effect until Tuesday night until 4:00 AM Wednesday. Heavy rain is expected tonight Sunday from 9:00 PM and will continue during Monday morning. Prepare to move to a higher place if necessary and never walk nor drive through floodwater.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Flood watch is in effect until late Tuesday night, until 4 AM Wednesday. Heavy rain is expected to start tonight Sunday around 9 PM and last through Monday morning. Prepare to move to higher ground if needed. Absolutely do not walk or drive through flood water.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.00021860000000000003
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.010732,
+     "latency_s": 6.72,
+     "signals": [
+      "NWS alerts: Flood Watch",
+      "AQI up to 106 (Unhealthy for Sensitive Groups)",
+      "rain chance 90%"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_flood_warning",
+   "kind": "real",
+   "desc": "Jan 9 2023 22:00: Flood Warnings, Bear Creek major flooding",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Sent flood alert for Bear Creek with extended river flooding through Wednesday. Active Flood Warning forecasts river rising above flood stage just after midnight tonight (to 24.1 ft) with current flooding and canal overflow near Planada Elementary noted in advisories, confirming severe ongoing/imminent flood impact requiring immediate action.",
+     "sent": [
+      {
+       "hazard": "flood",
+       "severity": "high",
+       "en": "Flood Warning in effect until 9:30 AM Wednesday. Bear Creek above Mckee Road will rise above flood stage just after midnight tonight and remain high through Tuesday. The canal near Planada elementary school is overflowing. Never walk or drive through floodwater. Move to higher ground now and follow evacuation orders.",
+       "messages": {
+        "en": "Flood Warning in effect until 9:30 AM Wednesday. Bear Creek above Mckee Road will rise above flood stage just after midnight tonight and remain high through Tuesday. The canal near Planada elementary school is overflowing. Never walk or drive through floodwater. Move to higher ground now and follow evacuation orders.",
+        "es": "Aviso de inundación vigente hasta las 9:30 de la mañana del miércoles. Bear Creek por encima de Mckee Road superará el nivel de inundación justo después de la medianoche de hoy y se mantendrá alto durante el martes. El canal cerca de la escuela primaria de Planada se está desbordando. Nunca camine ni maneje por agua de inundación. Vaya a un lugar alto ahora y siga las órdenes de evacuación.",
+        "vi": "Cảnh báo lũ lụt có hiệu lực đến 9 giờ 30 sáng thứ Tư. Nước sông Bear Creek đoạn qua Mckee Road dự kiến dâng vượt mức báo động lũ ngay sau nửa đêm nay và duy trì ở mức cao trong ngày thứ Ba. Kênh gần trường tiểu học Planada đang tràn bờ. Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập. Nếu bạn ở vùng trũng thấp, hãy di chuyển lên chỗ cao ngay và làm theo lệnh sơ tán."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Flood warning in effect until 9:30 in the morning on Wednesday. Bear Creek above Mckee Road will exceed flood level just after midnight today and will remain high during Tuesday. The canal near the Planada elementary school is overflowing. Never walk nor drive through flood water. Go to a high place now and follow evacuation orders.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Flood warning in effect until 9:30 AM Wednesday. Bear Creek water section through Mckee Road is expected to rise above flood warning level right after midnight tonight and maintain at a high level during Tuesday. The canal near Planada elementary school is overflowing. Absolutely do not walk or drive through flood water. If you are in a low-lying area, move to high ground immediately and follow evacuation orders.",
+         "match": false,
+         "issues": [
+          "Adds condition 'If you are in a low-lying area' to the instruction to move to higher ground now, which is unconditional in the original, softening/restricting protective advice."
+         ]
+        },
+        "_cost_usd": 0.0002571
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true,
+      "no_mask_without_particles": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.013777,
+     "latency_s": 8.42,
+     "signals": [
+      "NWS alerts: Flood Advisory, Flood Warning, Flood Watch",
+      "rain chance 90%"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_flood_escalation",
+   "kind": "real",
+   "desc": "Flood Watch, then Flood Warning: escalate, don't skip",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Sent flood alert because active Flood Watch through late Tuesday night (4 AM Wednesday) with forecast showing 90% heavy rain starting tonight around 9 PM Sunday and continuing Monday, creating near-term flood risk; skipped air-quality alert because AQI 106 is below 151 threshold and no smoke/ozone alert, and no heat risk.",
+     "sent": [
+      {
+       "hazard": "flood",
+       "severity": "moderate",
+       "en": "Flood Watch in effect through late Tuesday night until 4:00 AM Wednesday. Heavy rain is likely starting tonight (Sunday) around 9:00 PM and continuing Monday with a 90% chance. Never walk or drive through floodwater. Be ready to move to higher ground and follow instructions from local officials.",
+       "messages": {
+        "en": "Flood Watch in effect through late Tuesday night until 4:00 AM Wednesday. Heavy rain is likely starting tonight (Sunday) around 9:00 PM and continuing Monday with a 90% chance. Never walk or drive through floodwater. Be ready to move to higher ground and follow instructions from local officials.",
+        "es": "Vigilancia de inundación vigente hasta la noche del martes hasta las 4:00 AM del miércoles. Es probable que llueva fuerte desde esta noche (domingo) alrededor de las 9:00 PM y continúe el lunes con 90% de probabilidad. Nunca camine ni maneje por agua de inundación. Prepárese para ir a un lugar más alto y siga las instrucciones de las autoridades locales.",
+        "vi": "Cảnh giác lũ lụt có hiệu lực đến khuya thứ Ba, đến 4 giờ sáng thứ Tư. Mưa lớn có khả năng bắt đầu từ tối nay (Chủ Nhật) khoảng 9 giờ tối và kéo dài sang thứ Hai với xác suất 90%. Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập. Hãy sẵn sàng di chuyển lên chỗ cao và làm theo hướng dẫn của chính quyền địa phương."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Flood watch in effect until Tuesday night until 4:00 AM Wednesday. Heavy rain is likely from tonight (Sunday) around 9:00 PM and continuing Monday with 90% probability. Never walk nor drive through floodwater. Prepare to go to a higher place and follow the instructions of local authorities.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Flood watch in effect until late Tuesday night, until 4 o'clock Wednesday morning. Heavy rain is likely to start from tonight (Sunday) around 9 PM and last into Monday with 90% probability. Absolutely do not walk or drive through flooded water. Be ready to move to higher ground and follow the instructions of local authorities.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.00024280000000000002
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.009131,
+     "latency_s": 8.84,
+     "signals": [
+      "NWS alerts: Flood Watch",
+      "AQI up to 106 (Unhealthy for Sensitive Groups)",
+      "rain chance 90%"
+     ]
+    },
+    {
+     "action": "sent",
+     "reason": "Alert sent for escalating flood risk because active Severe Flood Warnings show flooding already occurring with canal overflow and evacuations near Planada, and Bear Creek forecast to rise above flood stage (23 ft) to 24.1 ft just after midnight tonight, increasing severity from the prior moderate Flood Watch.",
+     "sent": [
+      {
+       "hazard": "flood",
+       "severity": "high",
+       "en": "Flood Warning in effect until 11:15 PM Monday and for Bear Creek until 9:30 AM Wednesday. Flooding is occurring now and Bear Creek will rise above flood stage just after midnight tonight. Never walk or drive through floodwater. If you are in a low area, move to higher ground now and follow evacuation orders.",
+       "messages": {
+        "en": "Flood Warning in effect until 11:15 PM Monday and for Bear Creek until 9:30 AM Wednesday. Flooding is occurring now and Bear Creek will rise above flood stage just after midnight tonight. Never walk or drive through floodwater. If you are in a low area, move to higher ground now and follow evacuation orders.",
+        "es": "Aviso de inundación vigente hasta las 11:15 PM del lunes y para Bear Creek hasta las 9:30 AM del miércoles. Hay inundaciones ahora y Bear Creek superará el nivel de inundación justo después de la medianoche de esta noche. Nunca camine ni maneje por agua de inundación. Si está en una zona baja, muévase a un lugar más alto ahora y siga las órdenes de evacuación.",
+        "vi": "Cảnh báo lũ lụt có hiệu lực đến 11 giờ 15 tối thứ Hai và cho Bear Creek đến 9 giờ 30 sáng thứ Tư. Hiện đang có lũ lụt, và nước suối Bear Creek dự kiến dâng vượt mức báo động lũ ngay sau nửa đêm nay. Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập. Nếu bạn ở vùng trũng thấp, hãy di chuyển lên chỗ cao ngay và làm theo lệnh sơ tán."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Flood warning in effect until 11:15 PM Monday and for Bear Creek until 9:30 AM Wednesday. There is flooding now and Bear Creek will exceed flood level just after midnight tonight. Never walk nor drive through flood water. If you are in a low zone, move to a higher place now and follow evacuation orders.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Flood warning in effect until 11:15 PM Monday and for Bear Creek until 9:30 AM Wednesday. There is flooding now, and Bear Creek water is expected to rise above flood warning level right after midnight tonight. Absolutely do not walk or drive through flooded water. If you are in a low-lying area, move to high ground right now and follow evacuation orders.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.00019020000000000002
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "escalate": true,
+      "no_medical_wording": true,
+      "proper_accents": true,
+      "no_mask_without_particles": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.013801,
+     "latency_s": 8.27,
+     "signals": [
+      "NWS alerts: Flood Advisory, Flood Warning, Flood Watch",
+      "rain chance 90%"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_flood_after_freeze",
+   "kind": "real",
+   "desc": "Jan 20 2023: floods over, Freeze Warning",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active Freeze Warning for CAZ303 from 2 AM tonight until Tuesday 7 AM with sub-freezing temps to 29°F expected, verified by forecast showing overnight lows near freezing; alert needed for cold protective actions.",
+     "sent": [
+      {
+       "hazard": "cold",
+       "severity": "moderate",
+       "en": "Freeze Warning in effect from 2 AM tonight until 7 AM Tuesday. Temperatures as low as 29°F expected overnight. Bring pets indoors, cover sensitive plants, and dress in warm layers if you go outside.",
+       "messages": {
+        "en": "Freeze Warning in effect from 2 AM tonight until 7 AM Tuesday. Temperatures as low as 29°F expected overnight. Bring pets indoors, cover sensitive plants, and dress in warm layers if you go outside.",
+        "es": "Aviso de Congelación vigente desde las 2 de la mañana de esta noche hasta las 7 de la mañana del martes. Se esperan temperaturas de hasta 29°F (-2°C) durante la noche. Lleve a sus mascotas adentro, cubra las plantas sensibles y use ropa de abrigo en capas si sale.",
+        "vi": "Cảnh báo đóng băng có hiệu lực từ 2 giờ rạng sáng thứ Bảy đến 7 giờ sáng thứ Ba. Nhiệt độ có thể xuống thấp tới 29°F (-2°C) vào ban đêm. Hãy đưa vật nuôi vào trong nhà và che phủ cây trồng dễ bị ảnh hưởng. Nếu ra ngoài, hãy mặc nhiều lớp áo ấm."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Freeze Warning in effect from 2 in the morning tonight until 7 in the morning Tuesday. Temperatures of up to 29°F (-2°C) expected during the night. Bring your pets inside, cover sensitive plants and wear warm clothing in layers if you go out.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Freeze warning in effect from 2 AM Saturday to 7 AM Tuesday. Temperatures may fall as low as 29°F (-2°C) at night. Bring pets inside the house and cover vulnerable plants. If going outside, wear multiple layers of warm clothing.",
+         "match": false,
+         "issues": [
+          "Start time adds Saturday (2 AM Saturday) instead of 2 AM tonight"
+         ]
+        },
+        "_cost_usd": 0.000240926
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true,
+      "no_mask_without_particles": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.010285,
+     "latency_s": 6.55,
+     "signals": [
+      "NWS alerts: Freeze Warning"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_smoke_orange_sky",
+   "kind": "real",
+   "desc": "Sept 9 2020: smoke, AQI up to 157",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Smoke alert sent because forecast AQI is 157 (Unhealthy) for Thursday September 10 due to wildfire smoke PM2.5, exceeding the 151 threshold despite no current NWS alert and current AQI 100; protective guidance based on EPA AirNow and Cal/OSHA smoke protection.",
+     "sent": [
+      {
+       "hazard": "smoke",
+       "severity": "high",
+       "en": "Air quality will be unhealthy on Thursday (September 10) due to wildfire smoke, with AQI up to 157. Stay indoors with windows closed and avoid heavy outdoor work or exercise. If you must go outside, wear a well-fitted N95 mask.",
+       "messages": {
+        "en": "Air quality will be unhealthy on Thursday (September 10) due to wildfire smoke, with AQI up to 157. Stay indoors with windows closed and avoid heavy outdoor work or exercise. If you must go outside, wear a well-fitted N95 mask.",
+        "es": "La calidad del aire será no saludable el jueves 10 de septiembre por humo de incendios forestales, con AQI hasta 157. Permanezca en interiores con las ventanas cerradas y evite el trabajo o ejercicio intenso al aire libre. Si debe salir, use una mascarilla N95 bien ajustada.",
+        "vi": "Chất lượng không khí sẽ có hại cho sức khỏe vào ngày mai (thứ Năm, 10 tháng 9) do khói cháy rừng, chỉ số AQI lên tới 157. Hãy ở trong nhà và đóng kín cửa sổ. Tránh làm việc nặng hoặc vận động mạnh ngoài trời. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "The air quality will be unhealthy on Thursday September 10 due to wildfire smoke, with AQI up to 157. Stay indoors with windows closed and avoid intense work or exercise outdoors. If you must go outside, use a well-fitted N95 mask.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Air quality will be harmful to health tomorrow (Thursday, September 10) due to wildfire smoke, with AQI up to 157. Stay indoors and keep windows tightly closed. Avoid heavy work or vigorous exercise outdoors. If you must go outside, wear a well-fitting N95 mask.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.000257
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.010505,
+     "latency_s": 6.69,
+     "signals": [
+      "AQI up to 157 (Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_smoke_peak",
+   "kind": "real",
+   "desc": "Sept 12 2020: AQI 206 Very Unhealthy",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "AQI is currently 183 Unhealthy and forecast to 206 Very Unhealthy (PM2.5 wildfire smoke) for Sept 12-13, exceeding the 151 threshold for smoke alerts, with no duplicate alert in last 48h; extreme severity warranted due to Very Unhealthy level requiring protective actions.",
+     "sent": [
+      {
+       "hazard": "smoke",
+       "severity": "extreme",
+       "en": "Air quality is very unhealthy today (Saturday) and tomorrow (Sunday) due to wildfire smoke, AQI up to 206. Stay indoors and keep windows closed. Avoid working or exercising outdoors. If you must go outside, wear a well-fitted N95 mask.",
+       "messages": {
+        "en": "Air quality is very unhealthy today (Saturday) and tomorrow (Sunday) due to wildfire smoke, AQI up to 206. Stay indoors and keep windows closed. Avoid working or exercising outdoors. If you must go outside, wear a well-fitted N95 mask.",
+        "es": "La calidad del aire es muy poco saludable hoy (sábado) y mañana (domingo) por el humo de incendios forestales, con un índice AQI de hasta 206. Permanezca dentro de casa y mantenga las ventanas cerradas. Evite trabajar o hacer ejercicio al aire libre. Si debe salir, use una mascarilla N95 bien ajustada.",
+        "vi": "Hôm nay (thứ Bảy) và ngày mai (Chủ Nhật), khói cháy rừng khiến chất lượng không khí rất có hại cho sức khỏe (chỉ số AQI lên tới 206). Hãy ở trong nhà và đóng kín cửa sổ. Tránh làm việc hoặc vận động ngoài trời. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "The air quality is very unhealthy today (Saturday) and tomorrow (Sunday) due to wildfire smoke, with an AQI index of up to 206. Stay inside the house and keep the windows closed. Avoid working or exercising outdoors. If you must go out, use a well-fitted N95 mask.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Today (Saturday) and tomorrow (Sunday), wildfire smoke makes the air quality very harmful to health (AQI index up to 206). Stay in the house and keep windows tightly closed. Avoid working or exercising outdoors. If you must go outside, wear a tight-fitting N95 mask.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.000175326
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.014621,
+     "latency_s": 7.54,
+     "signals": [
+      "AQI up to 206 (Very Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_ozone_no_mask",
+   "kind": "edge",
+   "desc": "Air Quality Alert for ozone, AQI 185, no smoke: alert, but no mask advice in any language",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Sent heat alert for tomorrow (Wed 3-5pm up to 99°F, 3 hours ≥95°F triggering Cal/OSHA high-heat threshold) and smoke/ozone air quality alert (active NWS Air Quality Alert until Thu 3:33am with forecast AQI 185 Unhealthy for O3), with guidance to limit outdoor exertion and not recommending masks for ozone.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "high",
+       "en": "High heat tomorrow (Wednesday) from 3:00 p.m. to 5:00 p.m. Temperatures may reach 99°F. Stay in air conditioning, drink water often, and rest in shade. If you can, work outdoors only in early morning or evening.",
+       "messages": {
+        "en": "High heat tomorrow (Wednesday) from 3:00 p.m. to 5:00 p.m. Temperatures may reach 99°F. Stay in air conditioning, drink water often, and rest in shade. If you can, work outdoors only in early morning or evening.",
+        "es": "Calor intenso mañana (miércoles) de 3:00 p.m. a 5:00 p.m. La temperatura puede llegar a 99°F (37°C). Quédese en aire acondicionado, tome agua con frecuencia y descanse en la sombra. Si puede, trabaje al aire libre solo temprano en la mañana o al anochecer.",
+        "vi": "Nắng nóng gay gắt ngày mai (thứ Tư), từ 3 giờ chiều đến 5 giờ chiều, nhiệt độ có thể lên tới 99°F (37°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm. Nếu có thể, hãy chỉ làm việc ngoài trời vào sáng sớm hoặc chiều tối.",
+        "zh": "明天（星期三）下午3:00至5:00有高温。气温可能达到99°F。待在有空调的地方，经常喝水，在阴凉处休息。如果可以，只在清晨或傍晚在户外工作。",
+        "tl": "Matinding init bukas (Miyerkules) mula 3:00 p.m. hanggang 5:00 p.m. Maaaring umabot sa 99°F ang temperatura. Manatili sa air conditioning, uminom ng tubig nang madalas, at magpahinga sa lilim. Kung maaari, magtrabaho sa labas sa maagang umaga o sa gabi lamang.",
+        "ko": "내일(수요일) 오후 3시부터 5시까지 심한 더위가 있습니다. 기온이 99°F까지 오를 수 있습니다. 에어컨이 있는 곳에 머무르십시오. 물을 자주 마시십시오. 그늘에서 쉬십시오. 가능하면 이른 아침이나 저녁에만 야외에서 일하십시오.",
+        "ar": "حرارة عالية غدًا (الأربعاء) من الساعة 3:00 مساءً إلى الساعة 5:00 مساءً. قد تصل الحرارة إلى 99°F. ابق في التكييف، واشرب الماء كثيرًا، واسترح في الظل. إذا أمكن، اعمل في الخارج فقط في الصباح الباكر أو في المساء."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Intense heat tomorrow (Wednesday) from 3:00 p.m. to 5:00 p.m. The temperature may reach 99°F (37°C). Stay in air conditioning, drink water frequently and rest in the shade. If you can, work outdoors only early in the morning or at nightfall.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Severe hot sun tomorrow (Wednesday), from 3 o'clock afternoon to 5 o'clock afternoon, temperature may rise up to 99°F (37°C). Stay in a place with air conditioning, drink water often and rest in the shade. If possible, only work outdoors in the early morning or late afternoon.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.00019792600000000002
+       }
+      },
+      {
+       "hazard": "smoke",
+       "severity": "high",
+       "en": "Air Quality Alert for ozone in effect until 3:30 a.m. Thursday. Tomorrow (Wednesday) air quality may be unhealthy with AQI up to 185. Limit time outdoors and avoid hard outdoor work. If you can, stay indoors with windows closed.",
+       "messages": {
+        "en": "Air Quality Alert for ozone in effect until 3:30 a.m. Thursday. Tomorrow (Wednesday) air quality may be unhealthy with AQI up to 185. Limit time outdoors and avoid hard outdoor work. If you can, stay indoors with windows closed.",
+        "es": "Alerta de calidad del aire por ozono vigente hasta las 3:30 a.m. del jueves. Mañana (miércoles) el aire puede ser no saludable con AQI de hasta 185. Limite el tiempo al aire libre y evite el trabajo exigente al aire libre. Si puede, permanezca en interiores con las ventanas cerradas.",
+        "vi": "Khuyến cáo chất lượng không khí do khí ôzôn có hiệu lực đến 3 giờ 30 sáng thứ Năm. Ngày mai (thứ Tư), chất lượng không khí có hại cho sức khỏe với chỉ số AQI lên tới 185. Hãy hạn chế ra ngoài và tránh làm việc nặng ngoài trời. Nếu có thể, hãy ở trong nhà và đóng kín cửa sổ.",
+        "zh": "臭氧空气质量警报生效至周四凌晨3:30。明天（周三）空气质量可能不健康，空气质量指数最高达185。减少户外时间，避免重体力户外劳动。如果可以，请待在室内并关好窗户。",
+        "tl": "Alerto sa Kalidad ng Hangin para sa ozone hanggang 3:30 a.m. Huwebes. Bukas (Miyerkoles) maaaring hindi malusog ang kalidad ng hangin na may AQI hanggang 185. Limitahan ang oras sa labas at iwasan ang mabibigat na trabaho sa labas. Kung maaari, manatili sa loob na sarado ang mga bintana.",
+        "ko": "오존 공기질 경보가 목요일 오전 3시 30분까지 발효됩니다. 내일(수요일) 공기질이 건강에 해로울 수 있으며 AQI가 최대 185까지 오를 수 있습니다. 야외에 있는 시간을 줄이고 야외에서 힘든 작업을 피하세요. 가능하면 창문을 닫고 실내에 머무세요.",
+        "ar": "تنبيه جودة الهواء بسبب الأوزون سارٍ حتى الساعة 3:30 صباحًا يوم الخميس. غدًا (الأربعاء) قد تكون جودة الهواء غير صحية، وقد يصل مؤشر جودة الهواء إلى 185. قلل وقتك في الخارج وتجنب العمل الشاق في الخارج. إذا أمكن، ابق في الداخل مع إغلاق النوافذ."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Air quality alert for ozone in effect until 3:30 a.m. Thursday. Tomorrow (Wednesday) the air may be unhealthy with AQI of up to 185. Limit time outdoors and avoid demanding work outdoors. If you can, remain indoors with windows closed.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Air quality advisory due to ozone gas in effect until 3:30 Thursday morning. Tomorrow (Wednesday), air quality is harmful to health with AQI index up to 185. Limit going outside and avoid heavy work outdoors. If possible, stay indoors and keep windows tightly closed.",
+         "match": false,
+         "issues": [
+          "Omits 'may': presents unhealthy air tomorrow as certain rather than possible."
+         ]
+        },
+        "_cost_usd": 0.00037890000000000005
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true,
+      "no_mask_without_particles": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 5,
+     "cost_usd": 0.016233,
+     "latency_s": 11.1,
+     "signals": [
+      "NWS alerts: Air Quality Alert",
+      "3h at or above 95F",
+      "AQI up to 185 (Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_ozone_and_smoke_mask_ok",
+   "kind": "edge",
+   "desc": "Wildfire smoke (PM2.5 AQI 160) and worse ozone (AQI 185): alert, mask advice still given",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Sent smoke alert (AQI 185 unhealthy, Air Quality Alert until Thu 03:34, current 175 O3/PM2.5 160, masks help for particles not ozone) and heat alert (CA zone forecast 97°F Wednesday 16:00 exceeds Cal/OSHA high-heat 95°F threshold).",
+     "sent": [
+      {
+       "hazard": "smoke",
+       "severity": "high",
+       "en": "Air Quality Alert for smoke and ozone in effect until 3:34 AM Thursday. Today through Wednesday the air is unhealthy with AQI up to 185. Stay indoors with windows closed and avoid hard outdoor work. If you must go outside, a tight fitting N95 mask helps for smoke particles but does not protect against ozone.",
+       "messages": {
+        "en": "Air Quality Alert for smoke and ozone in effect until 3:34 AM Thursday. Today through Wednesday the air is unhealthy with AQI up to 185. Stay indoors with windows closed and avoid hard outdoor work. If you must go outside, a tight fitting N95 mask helps for smoke particles but does not protect against ozone.",
+        "es": "Alerta de calidad del aire por humo y ozono vigente hasta las 3:34 AM del jueves. Hoy hasta el miércoles el aire no es saludable con AQI hasta 185. Permanezca adentro con las ventanas cerradas y evite el trabajo pesado al aire libre. Si debe salir, una mascarilla N95 bien ajustada ayuda contra las partículas del humo pero no protege contra el ozono.",
+        "vi": "Cảnh báo chất lượng không khí do khói cháy rừng và khí ôzôn có hiệu lực đến 3 giờ 34 sáng thứ Năm. Hôm nay (thứ Ba) đến thứ Tư, không khí có hại cho sức khỏe (chỉ số AQI lên tới 185). Hãy ở trong nhà và đóng kín cửa sổ, tránh làm việc nặng ngoài trời. Nếu phải ra ngoài, khẩu trang N95 vừa khít giúp giảm hạt khói nhưng không lọc được khí ôzôn.",
+        "zh": "烟雾和臭氧空气质量警报生效至周四凌晨3:34。今天到周三空气不健康，空气质量指数最高达185。请待在室内，关闭窗户，避免剧烈户外劳动。如果必须外出，佩戴贴合紧密的N95口罩有助于阻挡烟雾颗粒，但不能防护臭氧。",
+        "tl": "Alerto sa Kalidad ng Hangin dahil sa usok at ozone hanggang 3:34 AM Huwebes. Mula ngayon hanggang Miyerkules, hindi malusog ang hangin na may AQI hanggang 185. Manatili sa loob ng bahay na sarado ang mga bintana at iwasan ang mabibigat na gawain sa labas. Kung kailangan mong lumabas, ang mahigpit na N95 mask ay nakakatulong laban sa maliliit na usok pero hindi ito proteksyon laban sa ozone.",
+        "ko": "연기와 오존에 대한 대기질 경보가 목요일 오전 3시 34분까지 발효됩니다. 오늘부터 수요일까지 공기가 건강에 해롭고 대기질지수(AQI)가 최대 185까지 오릅니다. 창문을 닫고 실내에 머무르십시오. 힘든 야외 작업을 피하십시오. 외출해야 한다면 밀착되는 N95 마스크는 연기 입자에 도움이 되지만 오존으로부터는 보호하지 않습니다.",
+        "ar": "تنبيه جودة الهواء بسبب الدخان والأوزون سارٍ حتى الساعة 3:34 صباح الخميس. من اليوم حتى الأربعاء الهواء غير صحي ومؤشر جودة الهواء يصل إلى 185. ابق في الداخل مع إغلاق النوافذ وتجنب العمل الشاق في الخارج. إذا اضطررت للخروج، كمامة N95 المحكمة تساعد ضد جزيئات الدخان لكنها لا تحمي من الأوزون."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Air quality alert for smoke and ozone in effect until 3:34 AM Thursday. Today through Wednesday the air is unhealthy with AQI up to 185. Stay indoors with windows closed and avoid heavy outdoor work. If you must go out, a well-fitted N95 mask helps against smoke particles but does not protect against ozone.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Air quality alert due to wildfire smoke and ozone gas in effect until 3:34 AM Thursday. Today (Tuesday) through Wednesday, the air is harmful to health with AQI up to 185. Stay indoors and close windows tightly, avoid heavy outdoor work. If you must go outside, a tight-fitting N95 mask helps reduce smoke particles but does not filter ozone gas.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.00036432600000000005
+       }
+      },
+      {
+       "hazard": "heat",
+       "severity": "high",
+       "en": "High heat expected tomorrow Wednesday around 4 PM, up to 97°F. If you work outdoors, drink water often, take rest breaks in shade, and watch for dizziness or nausea. Try to do heavy work early morning or evening.",
+       "messages": {
+        "en": "High heat expected tomorrow Wednesday around 4 PM, up to 97°F. If you work outdoors, drink water often, take rest breaks in shade, and watch for dizziness or nausea. Try to do heavy work early morning or evening.",
+        "es": "Se espera calor alto mañana miércoles alrededor de las 4 PM, hasta 97°F (36°C). Si usted trabaja al aire libre, tome agua seguido, descanse en la sombra y esté atento a mareos o náuseas. Trate de hacer el trabajo pesado temprano en la mañana o al anochecer.",
+        "vi": "Trời sẽ rất nóng vào ngày mai (thứ Tư) khoảng 4 giờ chiều, nhiệt độ có thể lên tới 97°F (36°C). Nếu làm việc ngoài trời, hãy uống nước thường xuyên, nghỉ ngơi trong bóng râm và chú ý dấu hiệu chóng mặt hoặc buồn nôn. Hãy cố gắng làm việc nặng vào sáng sớm hoặc chiều tối.",
+        "zh": "明天周三下午4点左右预计有高温，最高达97°F。\n如果您在户外工作，请经常喝水，在阴凉处休息，并注意头晕或恶心。\n尽量在清晨或傍晚做重体力工作。",
+        "tl": "Inaasahan ang matinding init bukas Miyerkules bandang 4 PM, hanggang 97°F. Kung nagtatrabaho ka sa labas, uminom ng tubig nang madalas, magpahinga sa lilim, at bantayan ang pagkahilo o pagduduwal. Sikaping gawin ang mabibigat na trabaho sa maagang umaga o sa gabi.",
+        "ko": "내일 수요일 오후 4시경 심한 더위가 예상됩니다. 최고 97°F까지 오릅니다.\n야외에서 일하면 물을 자주 마십시오.\n그늘에서 쉬십시오.\n어지러움이나 메스꺼움에 주의하십시오.\n힘든 일은 이른 아침이나 저녁에 하십시오.",
+        "ar": "حرارة شديدة متوقعة غداً الأربعاء حوالي الساعة 4 مساءً، حتى 97 درجة فهرنهايت. إذا كنت تعمل في الخارج، اشرب الماء كثيراً، وخذ فترات راحة في الظل، وانتبه للدوخة أو الغثيان. حاول القيام بالعمل الشاق في الصباح الباكر أو المساء."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "High heat is expected tomorrow Wednesday around 4 PM, up to 97°F (36°C). If you work outdoors, drink water often, rest in the shade and be alert for dizziness or nausea. Try to do heavy work early in the morning or at nightfall.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "It will be very hot tomorrow (Wednesday) around 4 o'clock in the afternoon, temperature may go up to 97°F (36°C). If working outdoors, drink water regularly, rest in the shade and pay attention to signs of dizziness or nausea. Try to do heavy work in the early morning or late afternoon.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.00021470000000000001
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true,
+      "mask_advised": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 6,
+     "cost_usd": 0.018722,
+     "latency_s": 12.2,
+     "signals": [
+      "NWS alerts: Air Quality Alert",
+      "1h at or above 95F",
+      "AQI up to 185 (Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_smoke_151",
+   "kind": "edge",
+   "desc": "Air Quality Alert, PM2.5 AQI 155",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active NWS Air Quality Alert for wildfire smoke valid until 9:36 PM Wednesday with current PM2.5 AQI 155 (Unhealthy) and forecast AQI up to 160, exceeding 151 threshold; smoke guidance issued with N95 protection advice.",
+     "sent": [
+      {
+       "hazard": "smoke",
+       "severity": "high",
+       "en": "Air Quality Alert for wildfire smoke in effect until 9:36 PM Wednesday. Tonight (Tuesday) and Wednesday, wildfire smoke will make air unhealthy with AQI up to 160. Stay indoors with windows and doors closed and avoid heavy outdoor work or exercise. If you must go outside, wear a well fitted N95 mask.",
+       "messages": {
+        "en": "Air Quality Alert for wildfire smoke in effect until 9:36 PM Wednesday. Tonight (Tuesday) and Wednesday, wildfire smoke will make air unhealthy with AQI up to 160. Stay indoors with windows and doors closed and avoid heavy outdoor work or exercise. If you must go outside, wear a well fitted N95 mask.",
+        "es": "Alerta de calidad del aire por humo de incendio forestal vigente hasta las 9:36 PM del miércoles. Esta noche (martes) y el miércoles, el humo hará que el aire no sea saludable con AQI hasta 160. Permanezca en interiores con ventanas y puertas cerradas y evite el trabajo o ejercicio intenso al aire libre. Si debe salir, use una mascarilla N95 bien ajustada.",
+        "vi": "Cảnh báo chất lượng không khí do khói cháy rừng có hiệu lực đến 9 giờ 36 tối thứ Tư. Tối nay (thứ Ba) và ngày mai (thứ Tư), khói cháy rừng khiến không khí có hại cho sức khỏe (chỉ số AQI lên tới 160). Hãy ở trong nhà và đóng kín cửa sổ, cửa ra vào. Tránh làm việc nặng hoặc vận động mạnh ngoài trời. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Air quality alert for wildfire smoke in effect until 9:36 PM Wednesday. Tonight (Tuesday) and Wednesday, the smoke will make the air unhealthy with AQI up to 160. Stay indoors with windows and doors closed and avoid intense outdoor work or exercise. If you must go out, use a well-fitted N95 mask.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Air quality alert due to wildfire smoke in effect until 9:36 PM Wednesday. Tonight (Tuesday) and tomorrow (Wednesday), wildfire smoke will make the air harmful to health (AQI index up to 160). Stay inside and close windows and doors tightly. Avoid heavy work or vigorous exercise outdoors. If you must go outside, wear a well-fitting N95 mask.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.000202726
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.012617,
+     "latency_s": 7.32,
+     "signals": [
+      "NWS alerts: Air Quality Alert",
+      "AQI up to 160 (Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_escalation",
+   "kind": "edge",
+   "desc": "Heat Advisory alert sent earlier, now Extreme Heat Warning",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Extreme Heat Warning active until Thu 09:36 with forecast 9h ≥95°F Wed peaking at 108°F (Cal/OSHA high-heat) exceeds threshold and upgrades previous moderate alert to extreme severity.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning in effect until 9:36 AM Thursday. Tomorrow Wednesday from 12:00 PM to 8:00 PM temperatures may reach 108°F. Stay in air conditioning, drink water often and rest in shade, and if possible do outdoor work early morning or evening.",
+       "messages": {
+        "en": "Extreme Heat Warning in effect until 9:36 AM Thursday. Tomorrow Wednesday from 12:00 PM to 8:00 PM temperatures may reach 108°F. Stay in air conditioning, drink water often and rest in shade, and if possible do outdoor work early morning or evening.",
+        "es": "Aviso de calor extremo vigente hasta las 9:36 de la mañana del jueves. Mañana miércoles de 12:00 de la tarde a 8:00 de la noche temperaturas de hasta 108°F (42°C). Permanezca en un lugar con aire acondicionado, tome agua con frecuencia y descanse a la sombra, y si es posible haga el trabajo al aire libre temprano en la mañana o al anochecer.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 9 giờ 36 sáng thứ Năm. Ngày mai (thứ Tư), từ 12 giờ trưa đến 8 giờ tối, nhiệt độ có thể lên tới 108°F (42°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm. Nếu có thể, hãy chỉ làm việc ngoài trời vào sáng sớm hoặc chiều tối."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Extreme heat warning in effect until 9:36 in the morning on Thursday. Tomorrow Wednesday from 12:00 in the afternoon to 8:00 at night temperatures up to 108°F (42°C). Stay in a place with air conditioning, drink water frequently and rest in the shade, and if possible do outdoor work early in the morning or at nightfall.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Severe heat warning in effect until 9 hours 36 morning Thursday. Tomorrow (Wednesday), from 12 noon to 8 evening, temperature may rise to 108°F (42°C). Stay in a place with air conditioning, drink water often and rest in the shade. If possible, only do outdoor work in early morning or late afternoon.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.00022032600000000002
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true,
+      "no_mask_without_particles": true
+     },
+     "passed": true,
+     "rejections": [
+      "feels_like_too_close"
+     ],
+     "model_calls": 5,
+     "cost_usd": 0.016204,
+     "latency_s": 10.9,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning",
+      "9h at or above 95F",
+      "heat index up to 110F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_heat_and_smoke",
+   "kind": "edge",
+   "desc": "Heat warning and smoke at the same time",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Two alerts sent — extreme heat alert because an Extreme Heat Warning is active until Thursday 3:36 AM with 7 hours at or above 95°F and maximum 106°F triggering Cal/OSHA high-heat risk, and smoke alert because an Air Quality Alert is active with current AQI 172 and forecast 180 (Unhealthy) due to wildfire smoke PM2.5 requiring indoor protection and N95 use.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning in effect until 3:36 AM Thursday. Tomorrow (Wednesday), from 1 PM to 7 PM, temperatures could reach 106°F. Stay in air conditioning, drink water often, and rest in shade. If possible, do outdoor work only in early morning or evening.",
+       "messages": {
+        "en": "Extreme Heat Warning in effect until 3:36 AM Thursday. Tomorrow (Wednesday), from 1 PM to 7 PM, temperatures could reach 106°F. Stay in air conditioning, drink water often, and rest in shade. If possible, do outdoor work only in early morning or evening.",
+        "es": "Aviso de calor extremo vigente hasta las 3:36 de la mañana del jueves. Mañana (miércoles), de 1 de la tarde a 7 de la tarde, la temperatura podría llegar a 106°F (41°C). Permanezca en aire acondicionado, tome agua con frecuencia y descanse a la sombra. Si es posible, haga trabajo al aire libre solo temprano en la mañana o al anochecer.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 3 giờ 36 sáng thứ Năm. Ngày mai (thứ Tư), từ 1 giờ chiều đến 7 giờ tối, nhiệt độ có thể lên tới 106°F (41°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm. Nếu có thể, hãy chỉ làm việc ngoài trời vào sáng sớm hoặc chiều tối."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Extreme heat warning in effect until 3:36 in the morning on Thursday. Tomorrow (Wednesday), from 1 in the afternoon to 7 in the afternoon, the temperature could reach 106°F (41°C). Stay in air conditioning, drink water frequently and rest in the shade. If possible, do outdoor work only early in the morning or at nightfall.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Severe heat warning in effect until 3:36 AM Thursday. Tomorrow (Wednesday), from 1 PM to 7 PM, the temperature may rise up to 106°F (41°C). Stay in a place with air conditioning, drink water often and rest in the shade. If possible, only do outdoor work in the early morning or late afternoon.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.0002336
+       }
+      },
+      {
+       "hazard": "smoke",
+       "severity": "high",
+       "en": "Air Quality Alert in effect until 3:36 AM Thursday due to wildfire smoke. Tonight and tomorrow the air is unhealthy with AQI up to 180. Stay indoors with windows closed and avoid outdoor work or exercise. If you must go outside, wear a well fitted N95 mask.",
+       "messages": {
+        "en": "Air Quality Alert in effect until 3:36 AM Thursday due to wildfire smoke. Tonight and tomorrow the air is unhealthy with AQI up to 180. Stay indoors with windows closed and avoid outdoor work or exercise. If you must go outside, wear a well fitted N95 mask.",
+        "es": "Alerta de calidad del aire vigente hasta las 3:36 de la mañana del jueves por humo de incendios. Esta noche y mañana el aire no es saludable con AQI de hasta 180. Permanezca adentro con las ventanas cerradas y evite trabajo o ejercicio al aire libre. Si debe salir, use mascarilla N95 bien ajustada.",
+        "vi": "Cảnh báo chất lượng không khí có hiệu lực đến 3 giờ 36 sáng thứ Năm do khói cháy rừng. Tối nay và ngày mai (thứ Tư), không khí có hại cho sức khỏe với chỉ số AQI lên tới 180. Hãy ở trong nhà và đóng kín cửa sổ, tránh làm việc hoặc vận động ngoài trời. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Air quality alert in effect until 3:36 in the morning on Thursday due to wildfire smoke. Tonight and tomorrow the air is unhealthy with AQI up to 180. Remain inside with windows closed and avoid outdoor work or exercise. If you must go out, wear a well-fitted N95 mask.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Air quality alert in effect until 3:36 AM Thursday due to wildfire smoke. Tonight and tomorrow (Wednesday), the air is harmful to health with AQI up to 180. Stay indoors and close windows tightly, avoid working or exercising outdoors. If you must go outside, wear a well-fitting N95 mask.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.00041032600000000003
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 5,
+     "cost_usd": 0.015449,
+     "latency_s": 10.39,
+     "signals": [
+      "NWS alerts: Air Quality Alert, Extreme Heat Warning",
+      "7h at or above 95F",
+      "heat index up to 106F",
+      "AQI up to 180 (Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_missing_aqi",
+   "kind": "edge",
+   "desc": "Heat warning while the air-quality source is down",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active Extreme Heat Warning until Thursday 3:37 AM with forecast showing 7 hours at or above 95°F starting Wednesday 1:00 PM and peak 107°F, exceeding Cal/OSHA high-heat threshold; no duplicate alert in last 48 hours, so extreme heat alert sent with protective actions.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning in effect until 3:37 AM Thursday. Tonight (Tuesday) through Wednesday evening, temperatures up to 107°F with 7 hours at or above 95°F starting 1:00 PM Wednesday. Stay in air conditioning, drink water often and rest in shade. If possible, do outdoor work early in the morning or in the evening.",
+       "messages": {
+        "en": "Extreme Heat Warning in effect until 3:37 AM Thursday. Tonight (Tuesday) through Wednesday evening, temperatures up to 107°F with 7 hours at or above 95°F starting 1:00 PM Wednesday. Stay in air conditioning, drink water often and rest in shade. If possible, do outdoor work early in the morning or in the evening.",
+        "es": "Aviso de calor extremo vigente hasta las 3:37 de la madrugada del jueves. Desde esta noche (martes) hasta la noche del miércoles, temperaturas de hasta 107°F (42°C) con 7 horas a 95°F (35°C) o más desde la 1:00 de la tarde del miércoles. Quédese en aire acondicionado, tome agua con frecuencia y descanse a la sombra. Si es posible, haga el trabajo al aire libre temprano en la mañana o al anochecer.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 3 giờ 37 sáng thứ Năm. Hôm nay (thứ Ba) đến tối mai (thứ Tư), nhiệt độ có thể lên tới 107°F (42°C), với 7 giờ ở mức 95°F (35°C) trở lên bắt đầu từ 1 giờ chiều thứ Tư. Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm. Nếu có thể, hãy chỉ làm việc ngoài trời vào sáng sớm hoặc chiều tối."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Extreme heat advisory in effect until 3:37 AM Thursday. From tonight (Tuesday) until Wednesday night, temperatures up to 107°F with 7 hours at 95°F or more starting at 1:00 PM Wednesday. Stay in air conditioning, drink water frequently and rest in the shade. If possible, do outdoor work early in the morning or at nightfall.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Severe heat warning in effect until 3:37 AM Thursday. Today (Tuesday) to tomorrow evening (Wednesday), temperatures up to 107°F with 7 hours at 95°F or above starting from 1:00 PM Wednesday. Stay in a place with air conditioning, drink water often and rest in the shade. If possible, only do outdoor work in the early morning or late evening.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.000382126
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true,
+      "no_mask_without_particles": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.010289,
+     "latency_s": 6.97,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning",
+      "7h at or above 95F",
+      "heat index up to 107F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_dense_fog",
+   "kind": "edge",
+   "desc": "Dense Fog Advisory (tule fog) on a work morning",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Dense Fog Advisory active until 3:37 AM Wednesday with visibility one quarter mile or less expected overnight, creating hazardous driving conditions requiring alert per protocol.\n\nAlert payload: hazard=fog, severity=moderate, messages in en/es/vi include time window and concrete driving actions (slow down, low beams, extra distance, pull off and hazards if needed).",
+     "sent": [
+      {
+       "hazard": "fog",
+       "severity": "moderate",
+       "en": "Dense Fog Advisory in effect until 3:37 AM Wednesday. Tonight (Tuesday) into early Wednesday morning, visibility may drop to a quarter mile or less. If you must drive, slow down and use low beams. Leave extra distance and if you cannot see, pull fully off the road and turn on hazard lights.",
+       "messages": {
+        "en": "Dense Fog Advisory in effect until 3:37 AM Wednesday. Tonight (Tuesday) into early Wednesday morning, visibility may drop to a quarter mile or less. If you must drive, slow down and use low beams. Leave extra distance and if you cannot see, pull fully off the road and turn on hazard lights.",
+        "es": "Aviso de niebla densa vigente hasta las 3:37 AM del miércoles. Esta noche (martes) hasta la madrugada del miércoles la visibilidad puede bajar a un cuarto de milla o menos. Si debe manejar, reduzca la velocidad y use luces bajas. Mantenga distancia extra y si no puede ver, salga completamente de la carretera y encienda las luces intermitentes.",
+        "vi": "Khuyến cáo sương mù dày có hiệu lực đến 3 giờ 37 sáng thứ Tư. Tối nay (thứ Ba) đến rạng sáng thứ Tư, tầm nhìn có thể giảm xuống còn một phần tư dặm hoặc ít hơn. Nếu phải lái xe, hãy giảm tốc độ và bật đèn cốt. Hãy giữ khoảng cách an toàn hơn. Nếu không nhìn rõ, hãy tấp hẳn vào lề đường và bật đèn báo nguy hiểm."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Dense fog advisory in effect until 3:37 AM Wednesday. Tonight (Tuesday) until early Wednesday morning visibility may drop to a quarter mile or less. If you must drive, reduce speed and use low beams. Keep extra distance and if you cannot see, get completely off the road and turn on hazard lights.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Dense fog advisory in effect until 3:37 AM Wednesday. Tonight (Tuesday) to early Wednesday morning, visibility may drop to a quarter mile or less. If you must drive, reduce speed and turn on low beams. Keep more safe distance. If you cannot see clearly, pull fully to the roadside and turn on hazard lights.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.000174726
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true,
+      "no_mask_without_particles": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.009892,
+     "latency_s": 6.21,
+     "signals": [
+      "NWS alerts: Dense Fog Advisory"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "hard_advisory_94F_aqi148",
+   "kind": "hard",
+   "desc": "Heat Advisory, highs 94F (just under 95), PM2.5 AQI 148: advisory is official, act on it",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Heat Advisory alert sent because active advisory through Thursday 3:37 AM with forecast high 94°F and heat index 95°F on Wednesday; AQI alert sent because current and forecast AQI 148 (Unhealthy for Sensitive Groups) from PM2.5 exceeds action thresholds and masks help for particles. Both alerts needed per near-term risks in California.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "moderate",
+       "en": "Heat Advisory in effect until 3:37 AM Thursday. On Wednesday, temperatures up to 94°F are expected from late morning to evening. Stay in air conditioning, drink water often, and limit outdoor work to early morning or evening.",
+       "messages": {
+        "en": "Heat Advisory in effect until 3:37 AM Thursday. On Wednesday, temperatures up to 94°F are expected from late morning to evening. Stay in air conditioning, drink water often, and limit outdoor work to early morning or evening.",
+        "es": "Aviso por calor vigente hasta las 3:37 de la mañana del jueves. El miércoles se esperan temperaturas de hasta 94°F (34°C) desde finales de la mañana hasta el anochecer. Quédese en aire acondicionado, beba agua con frecuencia y limite el trabajo al aire libre a temprano en la mañana o al anochecer.",
+        "vi": "Khuyến cáo nắng nóng có hiệu lực đến 3 giờ 37 sáng thứ Năm. Ngày mai (thứ Tư), từ cuối buổi sáng đến tối, nhiệt độ có thể lên tới 94°F (34°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và hạn chế làm việc ngoài trời, chỉ làm vào sáng sớm hoặc chiều tối."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Heat advisory in effect until 3:37 in the morning on Thursday. On Wednesday temperatures of up to 94°F (34°C) are expected from late morning until nightfall. Stay in air conditioning, drink water frequently and limit outdoor work to early in the morning or at nightfall.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Heat advisory in effect until 3:37 AM Thursday. Tomorrow (Wednesday), from late morning to evening, temperature can reach up to 94°F (34°C). Stay in a place with air conditioning, drink water often and limit outdoor work, only do it in early morning or late afternoon.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.00028020000000000003
+       }
+      },
+      {
+       "hazard": "smoke",
+       "severity": "moderate",
+       "en": "Air quality is unhealthy for sensitive groups with AQI up to 148 today Tuesday and Wednesday due to particle pollution. Limit time outdoors and avoid hard outdoor work. Stay indoors with windows closed. If you must go outside, wear a well-fitted N95 mask.",
+       "messages": {
+        "en": "Air quality is unhealthy for sensitive groups with AQI up to 148 today Tuesday and Wednesday due to particle pollution. Limit time outdoors and avoid hard outdoor work. Stay indoors with windows closed. If you must go outside, wear a well-fitted N95 mask.",
+        "es": "La calidad del aire no es saludable para grupos sensibles con AQI de hasta 148 hoy martes y el miércoles por partículas. Limite el tiempo al aire libre y evite el trabajo exigente afuera. Permanezca en interiores con las ventanas cerradas. Si debe salir, use una mascarilla N95 bien ajustada.",
+        "vi": "Hôm nay (thứ Ba) và ngày mai (thứ Tư), chất lượng không khí có hại cho nhóm nhạy cảm (chỉ số AQI lên tới 148) do bụi mịn. Hãy hạn chế ra ngoài và tránh làm việc nặng ngoài trời. Hãy ở trong nhà và đóng kín cửa sổ. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "The air quality is not healthy for sensitive groups with AQI of up to 148 today Tuesday and Wednesday due to particles. Limit time outdoors and avoid demanding work outside. Stay indoors with windows closed. If you must go out, use a well-fitted N95 mask.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Today (Tuesday) and tomorrow (Wednesday), air quality is harmful for sensitive groups (AQI index up to 148) due to fine dust. Limit going outside and avoid heavy work outdoors. Stay inside and keep windows tightly closed. If you must go outside, wear a well-fitting N95 mask.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.000144426
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 5,
+     "cost_usd": 0.018014,
+     "latency_s": 12.0,
+     "signals": [
+      "NWS alerts: Heat Advisory",
+      "AQI up to 148 (Unhealthy for Sensitive Groups)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "hard_warning_plus_other_watch",
+   "kind": "hard",
+   "desc": "Extreme Heat Warning and a Fire Weather Watch at once: alert both",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Extreme Heat Warning active until 3:38 AM Thursday with forecast of 7 hours at or above 95°F and maximum 105°F Wednesday afternoon, meeting California high-heat threshold; sent extreme heat alert with protective actions and did not combine with Fire Weather Watch to keep single-hazard message.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning in effect until 3:38 AM Thursday. On Wednesday from 1 PM to 7 PM, temperatures up to 105°F are expected. Stay in air conditioning, drink water often, and rest in shade. If possible, do outdoor work early morning or evening.",
+       "messages": {
+        "en": "Extreme Heat Warning in effect until 3:38 AM Thursday. On Wednesday from 1 PM to 7 PM, temperatures up to 105°F are expected. Stay in air conditioning, drink water often, and rest in shade. If possible, do outdoor work early morning or evening.",
+        "es": "Aviso de calor extremo vigente hasta las 3:38 AM del jueves. El miércoles de 1 PM a 7 PM se esperan temperaturas de hasta 105°F (41°C). Permanezca en lugares con aire acondicionado, tome agua con frecuencia y descanse a la sombra. Si puede, haga el trabajo al aire libre temprano en la mañana o al anochecer.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 3 giờ 38 sáng thứ Năm. Ngày mai (thứ Tư), từ 1 giờ chiều đến 7 giờ tối, nhiệt độ có thể lên tới 105°F (41°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm. Nếu có thể, hãy chỉ làm việc ngoài trời vào sáng sớm hoặc chiều tối."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Extreme heat warning in effect until 3:38 AM Thursday. On Wednesday from 1 PM to 7 PM temperatures of up to 105°F (41°C) are expected. Stay in places with air conditioning, drink water frequently and rest in the shade. If you can, do outdoor work early in the morning or at nightfall.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Severe heat warning in effect until 3:38 AM Thursday. Tomorrow (Wednesday), from 1 PM to 7 PM, temperature can reach up to 105°F (41°C). Stay in a place with air conditioning, drink water frequently and rest in the shade. If possible, only do outdoor work in the early morning or late afternoon.",
+         "match": false,
+         "issues": [
+          "Adds 'tomorrow' to specify Wednesday, which is not in the original and may be wrong depending on when read",
+          "Adds 'only' to outdoor-work advice, making it more restrictive than original: 'only do outdoor work...' vs 'do outdoor work...'"
+         ]
+        },
+        "_cost_usd": 0.00039952600000000004
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": false,
+      "no_medical_wording": true,
+      "proper_accents": true,
+      "no_mask_without_particles": true
+     },
+     "passed": false,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.013683,
+     "latency_s": 9.19,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning, Fire Weather Watch",
+      "7h at or above 95F",
+      "heat index up to 100F"
+     ]
+    }
+   ],
+   "passed": false
+  },
+  {
+   "id": "hard_ending_but_heat_returns",
+   "kind": "hard",
+   "desc": "Heat warning ends in 2 hours, but tomorrow's forecast is 104F (no new warning yet): still alert",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Alert sent for extreme heat despite current warning ending at 11:38 PM Tuesday because forecast shows renewed extreme heat Wednesday with 5 hours ≥95°F, max 104°F at 4 PM and heat index 103°F requiring Cal/OSHA high-heat precautions.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning was in effect until 11:38 PM Tuesday, with high heat continuing Wednesday. On Wednesday (Wednesday) from 2:00 PM to 6:00 PM, temperatures may reach 104°F. Stay in air conditioning, drink water often, and rest in shade. If possible, do outdoor work early morning or evening.",
+       "messages": {
+        "en": "Extreme Heat Warning was in effect until 11:38 PM Tuesday, with high heat continuing Wednesday. On Wednesday (Wednesday) from 2:00 PM to 6:00 PM, temperatures may reach 104°F. Stay in air conditioning, drink water often, and rest in shade. If possible, do outdoor work early morning or evening.",
+        "es": "La Advertencia de Calor Extremo estuvo vigente hasta las 11:38 PM del martes, y el calor intenso continúa el miércoles. El miércoles (Wednesday) de 2:00 PM a 6:00 PM, las temperaturas pueden llegar a 104°F (40°C). Permanezca en aire acondicionado, tome agua con frecuencia y descanse a la sombra. Si puede, haga el trabajo al aire libre temprano en la mañana o al anochecer.",
+        "vi": "Cảnh báo nắng nóng gay gắt đã có hiệu lực đến 11 giờ 38 tối thứ Ba, và nắng nóng gay gắt tiếp tục vào thứ Tư. Ngày mai (thứ Tư), từ 2 giờ chiều đến 6 giờ chiều, nhiệt độ có thể lên tới 104°F (40°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm. Nếu có thể, hãy chỉ làm việc ngoài trời vào sáng sớm hoặc chiều tối."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "The Extreme Heat Warning was in effect until 11:38 PM on Tuesday, and intense heat continues on Wednesday. On Wednesday (Wednesday) from 2:00 PM to 6:00 PM, temperatures may reach 104°F (40°C). Stay in air conditioning, drink water frequently and rest in the shade. If you can, do outdoor work early in the morning or at nightfall.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "The extreme heat warning was in effect until 11:38 PM Tuesday, and extreme heat continues on Wednesday. Tomorrow (Wednesday), from 2 PM to 6 PM, temperatures may reach up to 104°F (40°C). Stay in a place with air conditioning, drink water often and rest in the shade. If possible, only do outdoor work in the early morning or late afternoon.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.00034012600000000006
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true,
+      "no_mask_without_particles": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.010559,
+     "latency_s": 7.56,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning",
+      "5h at or above 95F",
+      "heat index up to 103F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_hurricane_watch_fl",
+   "kind": "edge",
+   "desc": "Hurricane Watch, Miami",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active Hurricane Watch for coastal Miami-Dade until Friday 12:38 AM with hurricane conditions possible within 48 hours; no prior duplicate alert so tropical high-severity preparedness message was sent.",
+     "sent": [
+      {
+       "hazard": "tropical",
+       "severity": "high",
+       "en": "Hurricane Watch in effect from now until Friday 12:38 AM. Hurricane conditions are possible within 48 hours. Prepare now and follow instructions from local officials.",
+       "messages": {
+        "en": "Hurricane Watch in effect from now until Friday 12:38 AM. Hurricane conditions are possible within 48 hours. Prepare now and follow instructions from local officials.",
+        "es": "Vigilancia de huracán vigente desde ahora hasta el viernes a las 12:38 de la mañana. Condiciones de huracán son posibles en las próximas 48 horas. Prepárese ahora y siga las instrucciones de las autoridades locales.",
+        "vi": "Cảnh giác bão cuồng phong có hiệu lực từ bây giờ đến 12 giờ 38 sáng thứ Sáu. Điều kiện bão cuồng phong có thể xảy ra trong 48 giờ tới. Hãy chuẩn bị ngay và làm theo hướng dẫn của chính quyền địa phương."
+       },
+       "backcheck": {
+        "es": {
+         "back_translation": "Hurricane watch in effect from now until Friday at 12:38 in the morning. Hurricane conditions are possible in the next 48 hours. Prepare now and follow the instructions of the local authorities.",
+         "match": true,
+         "issues": []
+        },
+        "vi": {
+         "back_translation": "Hurricane watch in effect from now until 12:38 AM Friday. Hurricane conditions can occur in the next 48 hours. Prepare right now and follow instructions of local government.",
+         "match": true,
+         "issues": []
+        },
+        "_cost_usd": 0.00015170000000000003
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true,
+      "no_mask_without_particles": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.012722,
+     "latency_s": 6.9,
+     "signals": [
+      "NWS alerts: Hurricane Watch",
+      "heat index up to 100F",
+      "rain chance 70%"
+     ]
+    }
+   ],
+   "passed": true
+  }
+ ]
+}

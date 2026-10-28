@@ -103,11 +103,12 @@ def _cache_key(provider: str, params: dict) -> str:
 
 def chat(provider: str, model: str, messages: list[dict], *, max_tokens: int,
          purpose: str = "", use_cache: bool = True, cache_ttl: int | None = None,
-         reasoning_effort: str | None = None, **extra) -> ChatResult:
+         reasoning_effort: str | None = None, deadline_s: float | None = None, **extra) -> ChatResult:
     """Call a chat model. `max_tokens` is required and includes reasoning tokens.
 
     `reasoning_effort` defaults to config.REASONING_EFFORT[provider];
     `cache_ttl` (seconds) defaults to config.CACHE_TTL_SECONDS.
+    `deadline_s` (wall clock) defaults to config.LLM_CALL_DEADLINE_S; user-facing calls pass less.
     """
     effort = reasoning_effort or config.REASONING_EFFORT[provider]
     ttl = config.CACHE_TTL_SECONDS if cache_ttl is None else cache_ttl
@@ -120,7 +121,7 @@ def chat(provider: str, model: str, messages: list[dict], *, max_tokens: int,
     if not cache_hit:
         client = _client(provider)
         raw = _with_deadline(lambda: client.chat.completions.create(**params).model_dump(),
-                             config.LLM_CALL_DEADLINE_S)
+                             deadline_s or config.LLM_CALL_DEADLINE_S)
 
     u = raw.get("usage") or {}
     prompt_tokens = u.get("prompt_tokens") or 0

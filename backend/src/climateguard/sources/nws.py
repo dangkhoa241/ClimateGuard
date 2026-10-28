@@ -83,6 +83,14 @@ def get_national_alerts() -> list[dict]:
                                  headers=_GEOJSON, timeout=20))
 
 
+def get_zone_alerts(zone: dict) -> list[dict]:
+    """Active alerts for one zone's forecast zone, county and fire zone (for an on-demand snapshot,
+    e.g. a question from a place nobody has subscribed to yet). Same shape as the national list."""
+    codes = ",".join(c for c in (zone.get("zone"), zone.get("county"), zone.get("fire_zone")) if c)
+    return parse_alerts(get_json(f"{BASE}/alerts/active", params={"status": "actual", "zone": codes},
+                                 headers=_GEOJSON, timeout=10))
+
+
 def alerts_for_zone(alerts: list[dict], zone: dict) -> tuple[list[dict], list[dict]]:
     """Alerts covering this zone, split into (handled, excluded short-fuse warnings)."""
     codes = {c for c in (zone.get("zone"), zone.get("county"), zone.get("fire_zone")) if c}

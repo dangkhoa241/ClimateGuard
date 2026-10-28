@@ -90,12 +90,20 @@ How to work:
      outdoors, avoid hard work, stay indoors with windows closed.
    - Floods: use strong wording, "Never walk or drive through floodwater" / "Nunca camine ni maneje por
      agua de inundación" / "Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập". Never "avoid"/"evite"/"tránh".
+   - Outdoor work timing: "early morning or evening" = "temprano en la mañana o al anochecer". Never "en la
+     tarde"/"por la tarde" for work advice: the afternoon is the hottest time.
    Vietnamese (vi) style, reviewed by a native speaker:
    - Proper punctuation: commas and periods; never run sentences together.
    - Put the weekday in parentheses after the time word: "Hôm nay (thứ Ba),", "tối nay (thứ Hai)".
      Capitalize "Hôm nay" only at the start of a sentence; mid-sentence write "hôm nay".
    - Put the warning's time window in its own sentence; other details (river flooding, smoke) in separate sentences.
-   - Say "rất có hại cho sức khỏe" (never "rất không tốt cho sức khỏe"); say "khí ôzôn tăng cao", not just "ôzôn".
+   - Air quality category from the AQI value (never "rất không tốt cho sức khỏe"): 101-150 "có hại cho nhóm
+     nhạy cảm", 151-200 "có hại cho sức khỏe", 201-300 "rất có hại cho sức khỏe", 301+ "nguy hiểm cho sức khỏe".
+     Say "khí ôzôn tăng cao", not just "ôzôn".
+   - NWS alert levels: Warning = "Cảnh báo", Watch = "Cảnh giác", Advisory = "Khuyến cáo". Never call a watch
+     or advisory "Cảnh báo"; with no NWS alert, name no alert level.
+   - Times after midnight belong to the next day: "rạng sáng [weekday]" (e.g. 2 AM tonight = "2 giờ rạng sáng
+     thứ Hai"); never "sáng nay" for a time later tonight.
    - Start action sentences with "Hãy" ("Tránh ..." or "Tuyệt đối không ..." for what not to do).
    Vietnamese examples (approved by the reviewer; match their tone and structure):
    - Heat: "Cảnh báo nắng nóng gay gắt có hiệu lực đến 8 giờ tối thứ Sáu. Hôm nay (thứ Ba), từ 11 giờ sáng đến 9 giờ tối, nhiệt độ có thể lên tới 114°F (46°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm. Nếu có thể, hãy chỉ làm việc ngoài trời vào sáng sớm hoặc chiều tối."
@@ -275,7 +283,8 @@ def _ending_without_hazard(run: Run, hazard: str) -> str | None:
             f"({data}): the danger is over, so do not send this alert")
 
 
-WATCH_WORDS = {"en": re.compile(r"\bwatch(es)?\b", re.IGNORECASE), "es": re.compile(r"\bvigilancia", re.IGNORECASE)}
+WATCH_WORDS = {"en": re.compile(r"\bwatch(es)?\b", re.IGNORECASE), "es": re.compile(r"\bvigilancia", re.IGNORECASE),
+               "vi": re.compile(r"Cảnh giác")}  # capitalized: the product name, not "hãy cảnh giác"
 FEELS_LIKE = re.compile(r"heat index|feels like|sensaci[oó]n t[eé]rmica|[ií]ndice de calor|se sienten? como|"
                         r"c[aả]m gi[aá]c|ch[iỉ] s[oố] nhi[eệ]t", re.IGNORECASE)
 FEELS_LIKE_MIN_GAP_F = 5
@@ -301,6 +310,18 @@ def _feels_like_too_close(run: Run, hazard: str, msgs: dict) -> str | None:
         return (f"heat index ({hi}°F) is within {FEELS_LIKE_MIN_GAP_F}°F of the air temperature ({temp}°F): "
                 "remove the feels-like / heat index part and give only the air temperature")
     return None
+
+
+def _wording_issue(run: Run, hazard: str, msgs: dict) -> str | None:
+    """Reviewer's wording decisions for meaning errors the eval's back-translation found."""
+    s = run.snapshot["summary"]
+    data_aqi = max(s.get("aqi_now") or 0, s.get("aqi_forecast_max") or 0) or None
+    events = [a.get("event") or "" for a in run.snapshot.get("alerts", [])
+              if a.get("hazard") == hazard and (run.hours_left(a) is None or run.hours_left(a) > 0)]
+    return (guardrails.vi_aqi_wording_issue(msgs["vi"], data_aqi)
+            or guardrails.vi_level_issue(msgs["vi"], events)
+            or guardrails.vi_past_morning_issue(msgs["vi"], run.now.hour)
+            or guardrails.es_afternoon_work_issue(msgs["es"]))
 
 
 def validate_alert(run: Run, args: dict) -> str | None:
@@ -339,6 +360,8 @@ def validate_alert(run: Run, args: dict) -> str | None:
     if hazard == "flood" and ("tuyệt đối không" not in msgs["vi"].lower() or "nunca" not in msgs["es"].lower()):
         return ('flood messages need firm wording, not "avoid": Spanish "Nunca camine ni maneje por agua de '
                 'inundación" and Vietnamese "Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập"')
+    if wording := _wording_issue(run, hazard, msgs):
+        return wording
     if ending := _ending_without_hazard(run, hazard):
         return ending
     recent = alerts_store.recent_sent(run.key, hours=24)

@@ -40,6 +40,8 @@ REJECTION_KINDS = [  # (phrase in monitor.validate_alert's message, category)
     ("diacritics/accents", "missing_diacritics"), ("Masks do not protect against ozone", "mask_without_particles"),
     ("watch is superseded", "watch_with_warning"), ("feels-like", "feels_like_too_close"),
     ("firm wording", "flood_wording"), ("danger is over", "ending_no_hazard"),
+    ("AQI category wording", "vi_aqi_wording"), ("alert level", "vi_alert_level"),
+    ("rạng sáng", "vi_time_after_midnight"), ("hottest time", "es_afternoon_work"),
 ]
 
 

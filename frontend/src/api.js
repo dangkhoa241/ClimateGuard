@@ -47,3 +47,21 @@ export const subscribe = ({ email, lang, location, website }) =>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, lang, website, ...location }),
   })
+
+// One model call behind it: allow 25 s (API Gateway stops at 30 s), then show a friendly "try again".
+export async function askQuestion({ question, lang, zone }) {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 25000)
+  try {
+    return await request('/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, lang, zone }),
+      signal: ctrl.signal,
+    })
+  } catch (err) {
+    throw ctrl.signal.aborted ? new ApiError('timeout', 0) : err
+  } finally {
+    clearTimeout(timer)
+  }
+}

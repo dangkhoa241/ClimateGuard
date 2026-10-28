@@ -10,6 +10,7 @@ from urllib.parse import parse_qs
 
 import _path  # noqa: F401
 
+from climateguard.handlers import ask
 from climateguard.handlers.api import handler
 
 PORT = 8787
@@ -20,6 +21,7 @@ ROUTES = [  # (method, regex, routeKey)
     ("GET", r"^/zones/(?P<zone>[A-Za-z]{2}[Zz]\d{3})/alerts$", "GET /zones/{zone}/alerts"),
     ("POST", r"^/subscribe$", "POST /subscribe"),
     ("GET", r"^/decisions$", "GET /decisions"),
+    ("POST", r"^/ask$", "POST /ask"),  # its own Lambda in AWS (handlers/ask.py)
 ]
 CORS = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type"}
@@ -46,7 +48,7 @@ class Handler(BaseHTTPRequestHandler):
                          "queryStringParameters": {k: v[0] for k, v in parse_qs(query).items()} or None,
                          "body": self.rfile.read(length).decode("utf-8") if length else None,
                          "requestContext": {"http": {"sourceIp": self.client_address[0]}}}
-                r = handler(event, None)
+                r = (ask.handler if route == "POST /ask" else handler)(event, None)
                 return self._send(r["statusCode"], r["headers"], r["body"])
         self._send(404, {"Content-Type": "application/json"}, json.dumps({"error": "not found"}))
 

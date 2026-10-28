@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { LANGS, STRINGS } from './i18n.js'
 import AlertsScreen from './AlertsScreen.jsx'
+import AskScreen from './AskScreen.jsx'
 
 const ZONE_RE = /^[A-Z]{2}Z\d{3}$/
 
@@ -79,16 +80,20 @@ export default function App() {
           <p className="tagline">{t.tagline}</p>
           <nav className="actions">
             <button className="big" onClick={() => setScreen('alerts')}>{t.alerts}</button>
-            {/* Phases 4–5 */}
-            <button className="big" disabled>{t.ask}</button>
+            <button className="big" onClick={() => setScreen('ask')}>{t.ask}</button>
+            {/* Phase 5 */}
             <button className="big" disabled>{t.recovery}</button>
           </nav>
         </>
       ) : (
         <>
           <button className="back" onClick={() => setScreen('home')}>← {t.back}</button>
-          <h1>{t.alerts}</h1>
-          <AlertsScreen lang={lang} t={t} zone={zone} setZone={setZone} />
+          <h1>{screen === 'ask' ? t.ask : t.alerts}</h1>
+          {screen === 'ask' ? (
+            <AskScreen lang={lang} t={t} zone={zone} setZone={setZone} />
+          ) : (
+            <AlertsScreen lang={lang} t={t} zone={zone} setZone={setZone} />
+          )}
         </>
       )}
     </main>

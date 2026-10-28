@@ -218,3 +218,77 @@ def test_feels_like_only_when_5F_above_air_temperature():
 ])
 def test_vietnamese_time_words_lowercased_mid_sentence(text, expected):
     assert guardrails.fix_vi_case(text) == expected
+
+
+# --- reviewer's wording decisions, round 3 (meaning errors found by back-translation) ---
+
+@pytest.mark.parametrize("aqi,phrase,ok", [
+    (157, "rất có hại cho sức khỏe", False),   # the run-5 error: Unhealthy written as Very Unhealthy
+    (157, "có hại cho sức khỏe", True),
+    (208, "rất có hại cho sức khỏe", True),
+    (208, "có hại cho sức khỏe", False),
+    (148, "có hại cho nhóm nhạy cảm", True),
+    (148, "có hại cho sức khỏe", False),
+    (320, "nguy hiểm cho sức khỏe", True),
+    (320, "rất có hại cho sức khoẻ", False),    # other spelling of khỏe is recognized too
+])
+def test_vi_aqi_wording_matches_the_aqi_value(aqi, phrase, ok):
+    text = f"Hôm nay (thứ Ba), không khí {phrase} (chỉ số AQI lên tới {aqi})."
+    assert (guardrails.vi_aqi_wording_issue(text, None) is None) == ok
+
+
+def test_vi_aqi_wording_two_days_and_fallback():
+    two_days = ("Hôm nay (thứ Ba) chỉ số AQI lên tới 185 ở mức có hại cho sức khỏe, ngày mai (thứ Tư) "
+                "ở mức có hại cho nhóm nhạy cảm.")
+    assert guardrails.vi_aqi_wording_issue(two_days, None) is None
+    no_number = "Khói cháy rừng làm không khí rất có hại cho sức khỏe."
+    assert guardrails.vi_aqi_wording_issue(no_number, 160) and guardrails.vi_aqi_wording_issue(no_number, 230) is None
+    assert guardrails.vi_aqi_wording_issue("Nắng nóng nguy hiểm cho sức khỏe.", 40) is None  # not about air
+
+
+@pytest.mark.parametrize("text,ok", [
+    ("Si trabaja al aire libre, haga el trabajo pesado temprano en la mañana o en la tarde si puede.", False),
+    ("Haga las tareas pesadas por la tarde.", False),
+    ("Si trabaja al aire libre, haga el trabajo pesado temprano en la mañana o al anochecer.", True),
+    ("Calor extremo hoy de 1 de la tarde a 7 de la noche. Tome agua.", True),  # a time, not work advice
+])
+def test_es_afternoon_work_blocked(text, ok):
+    assert (guardrails.es_afternoon_work_issue(text) is None) == ok
+
+
+@pytest.mark.parametrize("events,text,ok", [
+    (["Flood Watch"], "Cảnh báo lũ lụt có hiệu lực đến đêm thứ Ba.", False),
+    (["Flood Watch"], "Cảnh giác lũ lụt có hiệu lực đến đêm thứ Ba.", True),
+    (["Heat Advisory"], "Cảnh báo nắng nóng có hiệu lực.", False),
+    (["Heat Advisory"], "Khuyến cáo nắng nóng có hiệu lực.", True),
+    (["Flood Advisory", "Flood Warning"], "Cảnh báo lũ lụt có hiệu lực.", True),
+    (["Air Quality Alert"], "Cảnh báo chất lượng không khí có hiệu lực.", True),
+    ([], "Cảnh báo khói cháy rừng có hiệu lực.", False),  # no NWS product: claim no level
+    ([], "Hôm nay (thứ Bảy), không khí có hại cho sức khỏe.", True),
+])
+def test_vi_alert_level_names(events, text, ok):
+    assert (guardrails.vi_level_issue(text, events) is None) == ok
+
+
+def test_vi_time_after_midnight():
+    text = "Cảnh báo băng giá có hiệu lực từ 2 giờ sáng nay đến 7 giờ sáng thứ Ba."
+    assert guardrails.vi_past_morning_issue(text, hour_now=19)  # evening: "sáng nay" is past
+    assert guardrails.vi_past_morning_issue(text, hour_now=1) is None  # 1 AM: this morning is still ahead
+    assert guardrails.vi_past_morning_issue("Có hiệu lực từ 2 giờ rạng sáng thứ Hai.", hour_now=19) is None
+
+
+def test_wording_checks_reach_the_agent_with_known_rejection_kinds():
+    from run_eval import rejection_kind
+    snap = replays.snapshot_for("flood_2023", "watch")
+    run = monitor.Run(zone=snap["zone"], snapshot=snap, namespace="EVAL-lvl")
+    msgs = {"en": "Flood Watch through Tuesday night. Never walk or drive through floodwater.",
+            "es": "Vigilancia de inundación hasta el martes. Nunca camine ni maneje por agua de inundación.",
+            "vi": "Cảnh báo lũ lụt có hiệu lực đến đêm thứ Ba. Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập."}
+    args = {"zone": snap["zone"], "hazard": "flood", "severity": "moderate", "reason": "r"}
+    assert rejection_kind(monitor.validate_alert(run, {**args, "messages_by_language": msgs})) == "vi_alert_level"
+    fixed = {**msgs, "vi": msgs["vi"].replace("Cảnh báo", "Cảnh giác")}
+    assert monitor.validate_alert(run, {**args, "messages_by_language": fixed}) is None
+    for reason, kind in ((guardrails.vi_aqi_wording_issue("không khí rất có hại cho sức khỏe (AQI 160)", None), "vi_aqi_wording"),
+                         (guardrails.es_afternoon_work_issue("Trabaje en la tarde."), "es_afternoon_work"),
+                         (guardrails.vi_past_morning_issue("2 giờ sáng nay", 20), "vi_time_after_midnight")):
+        assert rejection_kind(reason) == kind

@@ -237,6 +237,34 @@ Resources:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /decisions }
 
+  AskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: climateguard.handlers.ask.handler
+      # one model call with a 20 s deadline (ask.py), inside API Gateway's 30 s limit
+      Timeout: 28
+      MemorySize: 512  # the OpenAI SDK import is slow at 256 MB
+      LoggingConfig: { LogGroup: !Ref ApiLogGroup }
+      Environment:
+        Variables:
+          MODEL_API_KEY_PARAM: /climateguard/meta-model-api-key
+          AIRNOW_API_KEY_PARAM: /climateguard/airnow-api-key  # on-demand snapshots for unmonitored zones
+          USE_CONTRIBUTOR: "false"
+          DAILY_MODEL_BUDGET_USD: "5"
+      Policies:
+        - DynamoDBReadPolicy: { TableName: !Ref SnapshotsTable }
+        - DynamoDBReadPolicy: { TableName: !Ref AlertsTable }
+        - DynamoDBReadPolicy: { TableName: !Ref ZonesTable }
+        - DynamoDBCrudPolicy: { TableName: !Ref RateLimitTable }
+        - DynamoDBCrudPolicy: { TableName: !Ref UsageTable }   # cost log + daily budget
+        - DynamoDBCrudPolicy: { TableName: !Ref CacheTable }
+        - SSMParameterReadPolicy: { ParameterName: climateguard/meta-model-api-key }
+        - SSMParameterReadPolicy: { ParameterName: climateguard/airnow-api-key }
+      Events:
+        Ask:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /ask }
+
 Outputs:
   ApiUrl:
     Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
