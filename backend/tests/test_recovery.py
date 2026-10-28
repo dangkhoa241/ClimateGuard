@@ -356,3 +356,148 @@ def test_rate_limit_and_budget(monkeypatch):
     monkeypatch.setattr(handler.ratelimit, "hit", lambda *a: True)
     r = handler.handler(_event("POST /recovery", body={"lang": "en"}), None)
     assert r["statusCode"] == 503 and json.loads(r["body"])["error"] == "over_budget"
+
+
+# --- checklist and report (model mocked) ------------------------------------------------------------
+
+from climateguard import recovery_checklist as checklist, recovery_report  # noqa: E402
+from climateguard.llm import ChatResult  # noqa: E402
+
+
+def test_checklist_items_have_reviewed_languages_and_known_ids():
+    for i, item in checklist.ITEMS.items():
+        assert set(checklist.REVIEWED) <= set(item), i
+    for ids in checklist.CLEANUP.values():
+        assert set(ids) <= set(checklist.ITEMS)
+
+
+@pytest.mark.parametrize("disaster,answers,first,has,lacks", [
+    ("flood", {}, "document", {"insurer", "flood_policy", "fema", "call211", "flood_dry"}, {"landlord", "shelter", "gas"}),
+    ("earthquake", {"gas_smell": "yes"}, "gas", {"quake_aftershocks", "inspect"}, {"flood_policy"}),
+    ("storm", {"utilities": "none_off", "own_rent": "rent", "stay": "no", "insurance": "no"}, "utilities",
+     {"landlord", "shelter", "storm_tarp"}, {"insurer"}),
+    ("heat_outage", {"utilities": "none_off"}, "document", {"outage_food", "generator"}, {"utilities"}),
+])
+def test_checklist_picked_by_disaster_and_answers(disaster, answers, first, has, lacks):
+    ids = checklist.pick(disaster, answers)
+    assert ids[0] == first and has <= set(ids) and not lacks & set(ids) and len(ids) == len(set(ids))
+
+
+def test_checklist_languages():
+    vi = checklist.render(["document", "call211"], "vi", {"document": "Chụp vệt nước ở phòng khách.", "call211": "x"})
+    assert vi[0]["detail"] == "Chụp vệt nước ở phòng khách." and vi[1]["detail"] is None  # 211 takes no detail
+    assert checklist.render(["call211"], "ko")[0]["text"] == checklist.ITEMS["call211"]["en"]
+
+
+ANALYSIS_PHOTOS = [{"index": 0, "area": "living room", "damage": ["water line on wall"], "concepts": ["water_line"],
+                    "danger": [], "found": [{"concept": "water_line", "count": 1, "color": "#0072b2"}], "overlay": None},
+                   {"index": 1, "area": "kitchen", "damage": ["mud on floor"], "concepts": [], "danger": [],
+                    "found": [], "overlay": None}]
+
+
+def _report_json(en_extra="", vi_extra=""):
+    return json.dumps({
+        "en": {"summary": "Flood water entered the home. A water line shows on the living room wall." + en_extra,
+               "areas": [{"area": "Living room", "photos": [1, 9], "damage": ["Water line on the wall"]},
+                         {"area": "Kitchen", "photos": [2], "damage": ["Mud on the floor"]}],
+               "details": {"document": "Photograph the water line in the living room.", "call211": "ignored"}},
+        "vi": {"summary": "Nước lũ đã vào nhà. Có vệt nước trên tường phòng khách." + vi_extra,
+               "areas": [{"area": "Phòng khách", "photos": [1], "damage": ["Vệt nước trên tường"]}],
+               "details": {"document": "Bạn nên chụp vệt nước ở phòng khách."}}})
+
+
+def _chat_returns(monkeypatch, *texts):
+    calls = []
+
+    def fake(provider, model, messages, **kw):
+        calls.append(messages)
+        return ChatResult(text=texts[min(len(calls), len(texts)) - 1], model=model, prompt_tokens=1,
+                          completion_tokens=1, reasoning_tokens=0, cost_usd=0.004, cache_hit=False, raw={})
+    monkeypatch.setattr(recovery_report.llm, "chat", fake)
+    return calls
+
+
+def test_report_written_checked_and_bilingual(monkeypatch):
+    calls = _chat_returns(monkeypatch, _report_json())
+    out = recovery_report.write("flood", ANALYSIS_PHOTOS, {"when": "today", "hurt": "no"}, "vi")
+    assert len(calls) == 1 and out["attempts"] == 1 and out["guard_removed"] == []
+    prompt = calls[0][0]["content"]
+    assert "Photo 1: area: living room; damage: water line on wall; outlined: water line or stain x1" in prompt
+    assert "When did the damage happen? Today" in prompt and "Is anyone hurt" not in prompt
+    assert '"vi"' in prompt and "Hãy" in prompt
+    assert out["en"]["areas"][0]["photos"] == [1]                       # photo 9 doesn't exist
+    assert out["en"]["details"] == {"document": "Photograph the water line in the living room."}
+    assert out["vi"]["details"]["document"].startswith("Hãy chụp")      # "Bạn nên" -> "Hãy"
+    assert out["checklist_ids"][0] == "document" and out["cost_usd"] == pytest.approx(0.004)
+
+
+def test_report_retries_once_then_drops_broken_lines(monkeypatch):
+    bad = _report_json(en_extra=" The house is safe to enter.", vi_extra=" Chi phí sửa khoảng 3.000 đô la.")
+    calls = _chat_returns(monkeypatch, bad, bad)
+    out = recovery_report.write("flood", ANALYSIS_PHOTOS, {}, "vi")
+    assert len(calls) == 2 and "safety_verdict" in calls[1][-1]["content"]
+    assert out["guard_removed"] == ["repair_cost", "safety_verdict"]
+    assert "safe" not in out["en"]["summary"] and "đô la" not in out["vi"]["summary"]
+    assert out["en"]["summary"].startswith("Flood water entered the home.")
+
+    calls = _chat_returns(monkeypatch, bad, _report_json())
+    assert recovery_report.write("flood", ANALYSIS_PHOTOS, {}, "vi")["guard_removed"] == []  # fixed on retry
+
+
+def _analyzed_job(monkeypatch, lang="vi"):
+    _vision_says(monkeypatch, {"photos": [{"photo": 1, "area": "living room", "damage": ["water line on wall"],
+                                           "concepts": []}], "disaster": "flood", "questions": ["when"]})
+    job = _job_with_photos(1, lang)
+    recovery.start_analysis(job)
+    recovery.analyze(job)
+    return job
+
+
+def test_answers_validated_then_report_view(monkeypatch):
+    job = _analyzed_job(monkeypatch)
+    for bad in ({"when": "yesterday"}, {"outage": "h_4_24"}, ["when"]):
+        with pytest.raises(recovery.JobError):
+            recovery.submit_answers(job, bad)
+    _chat_returns(monkeypatch, _report_json())
+    recovery.submit_answers(job, {"hurt": "yes", "when": "today"})
+    rec = recovery.report(job)
+    assert rec["status"] == "done"
+    v = recovery.view(rec)
+    vi, en = v["report"]["sides"]
+    assert (vi["lang"], en["lang"]) == ("vi", "en")
+    assert vi["danger_lines"] == [data.HURT_CALL["vi"]] and en["danger_lines"] == [data.HURT_CALL["en"]]
+    assert vi["answers"] == [{"q": "Có ai bị thương không?", "a": "Có"},
+                             {"q": "Thiệt hại xảy ra khi nào?", "a": "Hôm nay"}]
+    assert vi["checklist"][0]["text"] == checklist.ITEMS["document"]["vi"] and vi["disaster_label"] == "Lũ lụt"
+    assert v["danger_lines"] == [data.HURT_CALL["vi"]]
+
+
+def test_empty_translation_falls_back_to_english(monkeypatch):
+    job = _analyzed_job(monkeypatch, "ko")
+    _chat_returns(monkeypatch, json.dumps({"en": json.loads(_report_json())["en"], "ko": {"summary": "안전합니다."}}))
+    recovery.submit_answers(job, {})
+    side = recovery.view(recovery.report(job))["report"]["sides"][0]
+    assert side["fallback_en"] and side["summary"].startswith("Flood water") and side["checklist_lang"] == "en"
+
+
+def test_gas_answer_adds_danger_first(monkeypatch):
+    job = _analyzed_job(monkeypatch, "es")
+    rec = recovery.load(job)
+    rec["analysis"]["questions"] = ["hurt", "gas_smell"]
+    recovery_store.put_job(rec)
+    v = recovery.view(recovery.submit_answers(job, {"gas_smell": "yes"}))
+    assert v["danger_lines"][0] == data.LEAVE_AND_CALL["es"] and "gas" in v["danger_lines"][1]
+
+
+def test_answers_route_starts_report_worker(monkeypatch):
+    job = _analyzed_job(monkeypatch, "en")
+    started = []
+    monkeypatch.setattr(handler, "_start_worker", lambda task, j: started.append((task, j)))
+    r = handler.handler(_event("POST /recovery/{job}/answers", job, body={"answers": {"hurt": "no"}}), None)
+    assert r["statusCode"] == 202 and started == [("report", job)]
+    bad = handler.handler(_event("POST /recovery/{job}/answers", job, body={"answers": {"hurt": "maybe"}}), None)
+    assert bad["statusCode"] == 409  # already reporting
+    _chat_returns(monkeypatch, _report_json())
+    assert handler.handler({"recovery_task": "report", "job": job}, None) == {"status": "done"}
+    v = json.loads(handler.handler(_event("GET /recovery/{job}", job), None)["body"])
+    assert len(v["report"]["sides"]) == 1 and v["report"]["sides"][0]["checklist"][0]["id"] == "document"

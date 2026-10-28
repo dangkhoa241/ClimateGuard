@@ -227,3 +227,18 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 .rec-question { border: none; margin: 14px 0 0; padding: 0; }
 .rec-question legend { font-weight: 600; margin-bottom: 6px; }
 .rec-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.rec-make { width: 100%; margin-top: 16px; }
+.rec-report h2 { margin: 0 0 4px; font-size: 1.3rem; }
+.rec-report h3 { margin: 16px 0 6px; font-size: 1.05rem; }
+.rec-report p { line-height: 1.45; }
+.rec-not-estimate { font-weight: 700; color: #7a1a12; }
+.rec-areas { padding-inline-start: 20px; line-height: 1.45; }
+.rec-areas > li { margin: 6px 0; }
+.rec-areas ul { margin: 2px 0 0; padding-inline-start: 18px; }
+.rec-answers { margin: 0; }
+.rec-answers div { margin: 4px 0; }
+.rec-answers dt { color: var(--muted); font-size: 0.9rem; }
+.rec-answers dd { margin: 0; font-weight: 600; }
+.rec-report .checklist em { color: var(--muted); }
+.rec-english { margin-top: 12px; }
+.rec-english summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }

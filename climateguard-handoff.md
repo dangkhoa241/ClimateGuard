@@ -38,7 +38,12 @@
 - Windows editing trap: never write regexes with `\b` through a Python heredoc (it becomes a backspace character). Use the Edit tool, then scan for `\x08`.
 
 ## Remaining order (deadline Wed Nov 4, 6 PM PT; submit by noon)
-1. **Phase 5, recovery agent (about 3 days):** the user picks the disaster type (nothing flood-specific). Photos with SAM 3.1 highlights, follow-up questions, a report in English plus the user's language marked "Not an official damage estimate", a document checklist, PDF. Runs as an async job (`POST` starts, the app polls `GET /jobs/{id}`), because it passes the 30 s limit.
+1. **Phase 5, recovery agent:** steps 1-6 and 8-9 done (Oct 28), **NOT deployed yet** (run `deploy.ps1`, then `git push`). Left: **step 7, PDF** (approach not chosen), README section.
+   - Code: `recovery.py` (job flow), `recovery_data.py` (fixed lists, 7 languages), `recovery_checklist.py` (EN/ES/VI), `recovery_report.py`, `recovery_guard.py`, `sam.py` + `sam_mask.py` (one_bit decoder ported from meta-sam-parser, LICENSE-SAM), `photos.py`, `recovery_store.py` (S3 `climateguard-recovery-<account>`), `handlers/recovery.py` (own Lambda `climateguard-recovery`, invokes itself async). Frontend `RecoveryScreen.jsx`, `photoPrep.js`.
+   - Routes: `POST /recovery`, `POST /recovery/{job}/photos?i=`, `POST /recovery/{job}/analyze`, `POST /recovery/{job}/answers`, `GET /recovery/{job}`, `DELETE /recovery/{job}`.
+   - SAM masks cover their box, not the frame (measured). Adjective concepts ("damaged drywall") find nothing; use nouns.
+   - Live: analysis of 2 photos 7.4 s, $0.017; report ~5 s, ~$0.007. `scripts/run_recovery_eval.py` 6/6 (Oct 28, $0.04). `scripts/smoke_sam.py` for one photo.
+   - Screen text for the new keys is EN/ES/VI only: rerun `translate_ui.py` for zh/tl/ko/ar (final polish).
 2. **Video walkthrough:** Muse Spark 1.3 video (damage by room) plus SAM 3.1 video tracking on a 2 fps clip made with ffmpeg in Lambda. Fall back to key frames. Photos stay the fallback.
 3. **Phase 6, polish:** demo mode with replay banners (the replays exist in the backend), a final agent eval, README, and the "Recovery" button on the home screen (still disabled).
 4. **Demo video:**

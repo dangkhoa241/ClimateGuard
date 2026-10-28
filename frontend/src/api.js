@@ -126,3 +126,9 @@ export const uploadRecoveryPhoto = (job, index, jpeg) =>
 export const startRecoveryAnalysis = (job) => request(`/recovery/${job}/analyze`, { method: 'POST' })
 export const getRecovery = (job) => request(`/recovery/${job}`)
 export const deleteRecovery = (job) => request(`/recovery/${job}`, { method: 'DELETE' })
+export const sendRecoveryAnswers = (job, answers) =>
+  request(`/recovery/${job}/answers`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ answers }),
+  })

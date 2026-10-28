@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { createRecovery, deleteRecovery, getRecovery, startRecoveryAnalysis, uploadRecoveryPhoto } from './api.js'
+import {
+  createRecovery, deleteRecovery, getRecovery, sendRecoveryAnswers, startRecoveryAnalysis, uploadRecoveryPhoto,
+} from './api.js'
+import { STRINGS } from './i18n.js'
 import { preparePhoto } from './photoPrep.js'
 
 // Recovery agent: pick the disaster (or let the agent decide), add 1-6 photos, see the damage outlined by
@@ -67,11 +70,53 @@ function PhotoResult({ t, photo, url, n, outlines }) {
   )
 }
 
+// One side of the report: the person's language, or the English copy for the insurer.
+function ReportSide({ t, side, created }) {
+  const date = new Date(created * 1000).toLocaleDateString(side.lang, { year: 'numeric', month: 'long', day: 'numeric' })
+  return (
+    <article className="answer rec-report" lang={side.lang} dir={side.lang === 'ar' ? 'rtl' : 'ltr'}>
+      <h2>{t.recReportTitle}</h2>
+      <p className="muted small">{fill(t.recReportDate, { date })} · {side.disaster_label}</p>
+      <p className="rec-not-estimate">{t.recNotEstimate}</p>
+      {side.fallback_en && <p className="muted small">{t.recFallbackEn}</p>}
+      {side.danger_lines.map((l) => <p key={l}><strong>{l}</strong></p>)}
+      <h3>{t.recSummary}</h3>
+      <p>{side.summary}</p>
+      <h3>{t.recAreas}</h3>
+      <ul className="rec-areas">
+        {side.areas.map((a) => (
+          <li key={a.area}>
+            <strong>{a.area}</strong>
+            {a.photos.length > 0 && <span className="muted small"> · {fill(t.recPhotosRef, { list: a.photos.join(', ') })}</span>}
+            <ul>{a.damage.map((d) => <li key={d}>{d}</li>)}</ul>
+          </li>
+        ))}
+      </ul>
+      {side.answers.length > 0 && (
+        <>
+          <h3>{t.recYourAnswers}</h3>
+          <dl className="rec-answers">
+            {side.answers.map((x) => <div key={x.q}><dt>{x.q}</dt><dd>{x.a}</dd></div>)}
+          </dl>
+        </>
+      )}
+      <h3>{t.recNextSteps}</h3>
+      {side.checklist_lang !== side.lang && <p className="muted small">{t.checklistEnglishNote}</p>}
+      <ol className="checklist" lang={side.checklist_lang}>
+        {side.checklist.map((c) => (
+          <li key={c.id}>{c.text}{c.detail && <><br /><em>{c.detail}</em></>}</li>
+        ))}
+      </ol>
+      <p className="muted small">{t.recAiNote}</p>
+    </article>
+  )
+}
+
 function Questions({ t, questions, answers, setAnswer }) {
   return (
     <section className="recent">
       <h2>{t.recQuestionsTitle}</h2>
-      <p className="muted small">{t.recQuestionsIntro}</p>
+      <p className="muted small">{t.recQuestionsIntro} {t.recSkipNote}</p>
       {questions.map((q) => (
         <fieldset key={q.id} className="rec-question">
           <legend>{q.text}</legend>
@@ -128,6 +173,19 @@ export default function RecoveryScreen({ lang, t }) {
     setPhotos((p) => p.filter((_, j) => j !== i))
   }
 
+  // Poll the job while the worker runs `busy` ("analyzing" or "reporting"); throws the job's error.
+  async function waitWhile(job, v, busy, laterStep) {
+    const start = Date.now()
+    while (v.status === busy && alive.current) {
+      await sleep(POLL_MS)
+      if (laterStep && Date.now() - start > 6000) setStep(laterStep)
+      if (Date.now() - start > GIVE_UP_MS) throw Object.assign(new Error(), { code: 'timeout' })
+      v = await getRecovery(job)
+    }
+    if (v.status === 'error') throw Object.assign(new Error(), { code: v.error || 'default' })
+    return v
+  }
+
   async function run() {
     setError(null)
     setPhase('working')
@@ -139,22 +197,29 @@ export default function RecoveryScreen({ lang, t }) {
         await uploadRecoveryPhoto(job, i, photos[i].blob)
       }
       setStep(t.recStepLook)
-      let v = await startRecoveryAnalysis(job)
-      const start = Date.now()
-      while (v.status === 'analyzing' && alive.current) {
-        await sleep(POLL_MS)
-        if (Date.now() - start > 6000) setStep(t.recStepOutline)
-        if (Date.now() - start > GIVE_UP_MS) throw Object.assign(new Error(), { code: 'timeout' })
-        v = await getRecovery(job)
-      }
+      const v = await waitWhile(job, await startRecoveryAnalysis(job), 'analyzing', t.recStepOutline)
       if (!alive.current) return
-      if (v.status === 'error') throw Object.assign(new Error(), { code: v.error || 'analyze_failed' })
       setView(v)
       setPhase('results')
     } catch (err) {
       if (!alive.current) return
       setError(err.code || 'default')
       setPhase('pick')
+    }
+  }
+
+  async function makeReport() {
+    setError(null)
+    setPhase('reporting')
+    try {
+      const v = await waitWhile(view.job, await sendRecoveryAnswers(view.job, answers), 'reporting')
+      if (!alive.current) return
+      setView(v)
+      setPhase('report')
+    } catch (err) {
+      if (!alive.current) return
+      setError(err.code || 'default')
+      setPhase('results')
     }
   }
 
@@ -182,7 +247,7 @@ export default function RecoveryScreen({ lang, t }) {
 
   return (
     <>
-      {phase !== 'results' && <p>{t.recIntro}</p>}
+      {(phase === 'pick' || phase === 'working') && <p>{t.recIntro}</p>}
       <p className="muted small">{t.recPrivacy}</p>
       {error && <p className="notice error" role="alert">{t.errors[error] || t.errors.default}</p>}
 
@@ -232,9 +297,20 @@ export default function RecoveryScreen({ lang, t }) {
         </>
       )}
 
-      {phase === 'results' && view && (
+      {['results', 'reporting', 'report'].includes(phase) && view && (
         <>
           <DangerBanner lines={view.danger_lines} />
+          {phase === 'report' && view.report && (
+            <>
+              <ReportSide t={t} side={view.report.sides[0]} created={view.report.created} />
+              {view.report.sides[1] && (
+                <details className="rec-english">
+                  <summary>{t.recEnglishVersion}</summary>
+                  <ReportSide t={STRINGS.en} side={view.report.sides[1]} created={view.report.created} />
+                </details>
+              )}
+            </>
+          )}
           <p className="rec-disaster">
             <strong>{fill(t.recDisasterSeen, { label: view.disaster_label })}</strong>
             {view.inferred_label && <span className="muted small"> · {fill(t.recInferredNote, { label: view.inferred_label })}</span>}
@@ -245,8 +321,15 @@ export default function RecoveryScreen({ lang, t }) {
           {view.photos.map((p) => (
             <PhotoResult key={p.index} t={t} photo={p} url={photos[p.index]?.url} n={p.index + 1} outlines={outlines} />
           ))}
-          <Questions t={t} questions={view.questions} answers={answers}
-                     setAnswer={(q, a) => setAnswers((x) => ({ ...x, [q]: a }))} />
+          {phase !== 'report' && (
+            <>
+              <Questions t={t} questions={view.questions} answers={answers}
+                         setAnswer={(q, a) => setAnswers((x) => ({ ...x, [q]: a }))} />
+              <button className="big rec-make" onClick={makeReport} disabled={phase === 'reporting'}>
+                {phase === 'reporting' ? t.recStepReport : t.recMakeReport}
+              </button>
+            </>
+          )}
           <p className="muted small">{t.recNotEstimate}</p>
           <p className="muted small">{fill(t.recDeletesAt, { time: expires })}</p>
           <button className="secondary" type="button" onClick={removeAll}>{t.recDeleteNow}</button>

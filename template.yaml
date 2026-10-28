@@ -338,6 +338,9 @@ Resources:
         Analyze:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Method: POST, Path: "/recovery/{job}/analyze" }
+        Answers:  # starts the report (async, like analyze)
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: POST, Path: "/recovery/{job}/answers" }
         Status:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Method: GET, Path: "/recovery/{job}" }

@@ -28,6 +28,7 @@ ROUTES = [  # (method, regex, routeKey)
     ("POST", r"^/recovery$", "POST /recovery"),  # recovery Lambda (handlers/recovery.py)
     ("POST", r"^/recovery/(?P<job>[A-Za-z0-9_-]+)/photos$", "POST /recovery/{job}/photos"),
     ("POST", r"^/recovery/(?P<job>[A-Za-z0-9_-]+)/analyze$", "POST /recovery/{job}/analyze"),
+    ("POST", r"^/recovery/(?P<job>[A-Za-z0-9_-]+)/answers$", "POST /recovery/{job}/answers"),
     ("GET", r"^/recovery/(?P<job>[A-Za-z0-9_-]+)$", "GET /recovery/{job}"),
     ("DELETE", r"^/recovery/(?P<job>[A-Za-z0-9_-]+)$", "DELETE /recovery/{job}"),
 ]

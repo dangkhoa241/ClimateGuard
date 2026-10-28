@@ -37,10 +37,10 @@ def _start_worker(task: str, job: str) -> None:
 
 
 def run_task(event: dict) -> dict:
-    if event["recovery_task"] == "analyze":
-        rec = recovery.analyze(event["job"])
-        return {"status": rec["status"]}
-    return {"error": "unknown task"}
+    task = {"analyze": recovery.analyze, "report": recovery.report}.get(event["recovery_task"])
+    if task is None:
+        return {"error": "unknown task"}
+    return {"status": task(event["job"])["status"]}
 
 
 def post_create(event) -> dict:
@@ -77,6 +77,18 @@ def post_analyze(job: str) -> dict:
     return _resp(202, recovery.view(rec))
 
 
+def post_answers(event, job: str) -> dict:
+    try:
+        body = _json_body(event)
+    except SignupError as e:
+        return _resp(e.status, {"error": e.code})
+    if budget.over_budget():
+        return _resp(503, {"error": "over_budget"})
+    rec = recovery.submit_answers(job, body.get("answers") or {})
+    _start_worker("report", job)
+    return _resp(202, recovery.view(rec))
+
+
 def delete_job(job: str) -> dict:
     recovery.load(job)
     recovery.store.delete(job)
@@ -96,6 +108,8 @@ def handler(event, context):
             return post_photo(event, job)
         if route == "POST /recovery/{job}/analyze":
             return post_analyze(job)
+        if route == "POST /recovery/{job}/answers":
+            return post_answers(event, job)
         if route == "GET /recovery/{job}":
             return _resp(200, recovery.view(recovery.load(job)))
         if route == "DELETE /recovery/{job}":

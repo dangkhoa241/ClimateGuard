@@ -5,6 +5,7 @@ Runs as an async job, because it passes API Gateway's 30 s limit:
   POST /recovery/{job}/photos?i= JPEG body          -> 1 to 6 photos, metadata stripped (photos.py)
   POST /recovery/{job}/analyze                      -> 202; the work runs in a second, async invocation
   GET  /recovery/{job}                              -> status + results (the app polls every 2 s)
+  POST /recovery/{job}/answers   {answers}          -> 202; writes the report (recovery_report.py), async too
   DELETE /recovery/{job}                            -> photos and record deleted now
 Everything is deleted after 24 hours anyway (recovery_store.py).
 
@@ -21,10 +22,10 @@ import secrets
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from . import llm, photos, recovery_store as store, sam
+from . import llm, photos, recovery_checklist as checklist, recovery_report, recovery_store as store, sam
 from .languages import LANGS
 from .recovery_data import (CONCEPTS, CONCEPTS_BY_DISASTER, DANGERS, DISASTER_LABELS, DISASTERS,
-                            MAX_CONCEPTS_PER_PHOTO, QUESTIONS, QUESTIONS_BY_DISASTER, danger_lines,
+                            MAX_CONCEPTS_PER_PHOTO, OPTIONS, QUESTIONS, QUESTIONS_BY_DISASTER, danger_lines,
                             pick_questions, question_view)
 from .recovery_guard import keep_clean
 
@@ -214,12 +215,79 @@ def analyze(job: str) -> dict:
     return rec
 
 
+# --- answers and report --------------------------------------------------------------------------
+
+def submit_answers(job: str, answers: dict) -> dict:
+    """Answers are optional (skipped questions are left out); each must be one of the question's options."""
+    rec = load(job)
+    if rec["status"] not in ("questions", "error", "done") or not rec.get("analysis"):
+        raise JobError("not_ready", 409)
+    asked = rec["analysis"]["questions"]
+    if not isinstance(answers, dict) or any(q not in asked or a not in QUESTIONS[q]["options"]
+                                             for q, a in answers.items()):
+        raise JobError("invalid_answers")
+    rec.update(status="reporting", started=time.time(), error=None, answers=answers)
+    store.put_job(rec)
+    return rec
+
+
+def report(job: str) -> dict:
+    """The async worker for the report. Always ends with status "done" or "error"."""
+    rec = load(job)
+    t0 = time.monotonic()
+    try:
+        out = recovery_report.write(rec["disaster"], rec["analysis"]["photos"], rec.get("answers") or {}, rec["lang"])
+        rec.update(status="done", report=out, cost_usd=round(rec.get("cost_usd", 0) + out["cost_usd"], 5))
+        rec["timings_ms"]["report"] = int((time.monotonic() - t0) * 1000)
+        log.info("recovery report job=%s lang=%s attempts=%d removed=%s report_cost=$%.4f total_cost=$%.4f ms=%s",
+                 job[:6], rec["lang"], out["attempts"], out["guard_removed"], out["cost_usd"], rec["cost_usd"],
+                 rec["timings_ms"])
+    except Exception as e:
+        log.exception("recovery report failed")
+        rec.update(status="error", error="report_failed", error_detail=type(e).__name__)
+    store.put_job(rec)
+    return rec
+
+
+def dangers_of(rec: dict) -> list[str]:
+    """Danger seen in the photos, plus gas the person says they smell."""
+    found = set((rec.get("analysis") or {}).get("dangers") or [])
+    if (rec.get("answers") or {}).get("gas_smell") == "yes":
+        found.add("gas")
+    return sorted(found)
+
+
+def report_view(rec: dict) -> dict:
+    """The finished report as the app and the PDF show it: the person's language plus English."""
+    lang, out = rec["lang"], rec["report"]
+    ids = out["checklist_ids"]
+
+    def part(code: str) -> dict:
+        p = out.get(code) or {}
+        if code != "en" and not (p.get("summary") or p.get("areas")):
+            return {**out["en"], "fallback_en": True}  # the translation was empty or failed its checks
+        return p
+
+    def side(code: str) -> dict:
+        p = part(code)
+        cl_lang = code if code in checklist.REVIEWED else "en"
+        details = (p if cl_lang == code else part("en")).get("details") or {}
+        return {"lang": code, "summary": p.get("summary", ""), "areas": p.get("areas", []),
+                "fallback_en": bool(p.get("fallback_en")), "checklist_lang": cl_lang,
+                "checklist": checklist.render(ids, cl_lang, details),
+                "answers": [{"q": QUESTIONS[q][code], "a": OPTIONS[a][code]} for q, a in (rec.get("answers") or {}).items()],
+                "disaster_label": DISASTER_LABELS[rec["disaster"]][code],
+                "danger_lines": danger_lines(dangers_of(rec), (rec.get("answers") or {}).get("hurt") == "yes", code)}
+    sides = [side(lang)] + ([side("en")] if lang != "en" else [])
+    return {"sides": sides, "created": rec["created"], "photo_count": len(rec["analysis"]["photos"])}
+
+
 # --- what the app sees ---------------------------------------------------------------------------
 
 def view(rec: dict) -> dict:
     lang = rec["lang"]
     status = rec["status"]
-    if status == "analyzing" and time.time() - rec.get("started", 0) > STALE_AFTER_S:
+    if status in ("analyzing", "reporting") and time.time() - rec.get("started", 0) > STALE_AFTER_S:
         status = "error"
     out = {"job": rec["id"], "status": status, "lang": lang, "disaster_choice": rec["disaster_choice"],
            "expires_at": int(rec["created"] + store.TTL_SECONDS), "error": rec.get("error") if status == "error" else None,
@@ -229,9 +297,12 @@ def view(rec: dict) -> dict:
         d = a["disaster"]
         out.update(disaster=d, disaster_label=DISASTER_LABELS[d][lang],
                    inferred_label=DISASTER_LABELS[a["inferred"]][lang] if a["inferred"] != d else None,
-                   danger_lines=danger_lines(a["dangers"], (rec.get("answers") or {}).get("hurt") == "yes", lang),
+                   danger_lines=danger_lines(dangers_of(rec), (rec.get("answers") or {}).get("hurt") == "yes", lang),
+                   answers=rec.get("answers") or {},
                    questions=[question_view(q, lang) for q in a["questions"]],
                    photos=[{"index": p["index"], "overlay": p["overlay"],
                             "found": [{**f, "label": CONCEPTS[f["concept"]][lang]} for f in p["found"]]}
                            for p in a["photos"]])
+    if status == "done" and rec.get("report"):
+        out["report"] = report_view(rec)
     return out
