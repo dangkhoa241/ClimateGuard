@@ -17,7 +17,7 @@ from pathlib import Path
 
 import _path  # noqa: F401
 
-from climateguard import ask, config
+from climateguard import ask, config, places
 
 ZONE = "CAZ159"  # Stockton
 TEMP = re.compile(r"\d{2,3}\s*(°F|°|degrees|grados|độ)", re.IGNORECASE)
@@ -47,14 +47,26 @@ CASES = [
     {"id": "vi_field_style", "lang": "vi",
      "q": "Sáng mai tôi làm ngoài đồng từ 6 giờ sáng đến 2 giờ chiều, cần mặc gì và mang theo gì?",
      "min_temps": 2, "actions": True, "vi_style": True},
+    # Place questions: a cited web search (places.py), or the fixed 211 sentence when nothing is cited.
     {"id": "en_cooling_place", "lang": "en", "q": "Where can I go to cool off today?", "min_temps": 0,
-     "actions": False, "must": re.compile(re.escape(ask.HELP_211["en"]))},
+     "actions": False, "places": True},
+    {"id": "vi_cooling_place", "lang": "vi", "q": "Gần Stockton có trung tâm làm mát nào không?", "min_temps": 0,
+     "actions": False, "places": True},
 ]
 
 
 def check(case: dict, r: dict) -> list[str]:
     text = r["answer"]
     fails = []
+    if case.get("places"):
+        if r["kind"] == "places":
+            if not r.get("sources"):
+                fails.append("places answer without sources")
+            if not text.endswith(places.CHECK_FIRST[case["lang"]]):
+                fails.append("missing the check-before-you-go sentence")
+        elif text != ask.HELP_211[case["lang"]]:
+            fails.append(f"kind={r['kind']}, neither cited places nor the 211 sentence")
+        return fails
     if r["kind"] != "answer":
         fails.append(f"kind={r['kind']}")
     if DONT_KNOW.search(text):

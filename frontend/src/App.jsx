@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react'
 import { LANGS, STRINGS } from './i18n.js'
 import AlertsScreen from './AlertsScreen.jsx'
 import AskScreen from './AskScreen.jsx'
+import HistoryScreen from './HistoryScreen.jsx'
+import SupervisorScreen from './SupervisorScreen.jsx'
+
+const SCREENS = { alerts: 'alerts', ask: 'ask', supervisor: 'supervisor', history: 'history' } // screen -> title key
 
 const ZONE_RE = /^[A-Z]{2}Z\d{3}$/
 
@@ -64,16 +68,19 @@ export default function App() {
     new URLSearchParams(window.location.search).has('zone') ? 'alerts' : 'home',
   )
   const t = STRINGS[lang]
+  const meta = LANGS.find((l) => l.code === lang) || {}
 
   useEffect(() => {
     document.documentElement.lang = lang
+    document.documentElement.dir = meta.rtl ? 'rtl' : 'ltr' // Arabic reads right to left
     save('lang', lang)
-  }, [lang])
+  }, [lang, meta.rtl])
   useEffect(() => save('zone', zone ? JSON.stringify(zone) : null), [zone])
 
   return (
     <main className="app">
       <LanguagePicker lang={lang} setLang={setLang} label={t.language} />
+      {meta.auto && <p className="muted small">{t.autoUiNote}</p>}
       {screen === 'home' ? (
         <>
           <h1>ClimateGuard</h1>
@@ -83,17 +90,18 @@ export default function App() {
             <button className="big" onClick={() => setScreen('ask')}>{t.ask}</button>
             {/* Phase 5 */}
             <button className="big" disabled>{t.recovery}</button>
+            <button className="secondary" onClick={() => setScreen('supervisor')}>{t.supervisor}</button>
+            <button className="secondary" onClick={() => setScreen('history')}>{t.history}</button>
           </nav>
         </>
       ) : (
         <>
-          <button className="back" onClick={() => setScreen('home')}>← {t.back}</button>
-          <h1>{screen === 'ask' ? t.ask : t.alerts}</h1>
-          {screen === 'ask' ? (
-            <AskScreen lang={lang} t={t} zone={zone} setZone={setZone} />
-          ) : (
-            <AlertsScreen lang={lang} t={t} zone={zone} setZone={setZone} />
-          )}
+          <button className="back" onClick={() => setScreen('home')}>{meta.rtl ? '→' : '←'} {t.back}</button>
+          <h1>{t[SCREENS[screen]]}</h1>
+          {screen === 'ask' && <AskScreen lang={lang} t={t} zone={zone} setZone={setZone} />}
+          {screen === 'alerts' && <AlertsScreen lang={lang} t={t} zone={zone} setZone={setZone} />}
+          {screen === 'supervisor' && <SupervisorScreen lang={lang} t={t} zone={zone} setZone={setZone} />}
+          {screen === 'history' && <HistoryScreen lang={lang} t={t} zone={zone} />}
         </>
       )}
     </main>

@@ -24,6 +24,7 @@ ROUTES = [  # (method, regex, routeKey)
     ("GET", r"^/decisions$", "GET /decisions"),
     ("POST", r"^/ask$", "POST /ask"),  # its own Lambda in AWS (handlers/ask.py)
     ("POST", r"^/transcribe$", "POST /transcribe"),  # same Lambda as /ask
+    ("POST", r"^/pretalk$", "POST /pretalk"),  # same Lambda as /ask
 ]
 CORS = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type"}
@@ -53,7 +54,7 @@ class Handler(BaseHTTPRequestHandler):
                          "body": (base64.b64encode(raw).decode() if binary else raw.decode("utf-8")) if raw else None,
                          "isBase64Encoded": binary,
                          "requestContext": {"http": {"sourceIp": self.client_address[0]}}}
-                r = (ask.handler if route in ("POST /ask", "POST /transcribe") else handler)(event, None)
+                r = (ask.handler if route in ("POST /ask", "POST /transcribe", "POST /pretalk") else handler)(event, None)
                 return self._send(r["statusCode"], r["headers"], r["body"])
         self._send(404, {"Content-Type": "application/json"}, json.dumps({"error": "not found"}))
 

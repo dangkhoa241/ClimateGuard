@@ -82,7 +82,20 @@ def log_call(provider: str, model: str, prompt_tokens: int, completion_tokens: i
     return record
 
 
-AUDIO_USD_PER_HOUR = {"muse-voice-transcribe-1.0": 0.18}  # billed on whole seconds of audio
+def log_extra(provider: str, model: str, cost_usd: float, purpose: str = "") -> dict | None:
+    """A cost that isn't tokens, e.g. web search queries ($2.50 per 1,000). Counts toward the daily budget."""
+    if not cost_usd:
+        return None
+    record = {"ts": time.time(), "provider": provider, "model": model, "purpose": purpose, "prompt_tokens": 0,
+              "completion_tokens": 0, "cached_tokens": 0, "cache_hit": False, "cost_usd": cost_usd}
+    try:
+        _write(record)
+    except Exception as e:
+        print(f"usage log write failed: {e}")
+    return record
+
+
+AUDIO_USD_PER_HOUR ={"muse-voice-transcribe-1.0": 0.18}  # billed on whole seconds of audio
 
 
 def log_audio(model: str, audio_ms: int, purpose: str = "") -> dict:

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { askQuestion, transcribeAudio } from './api.js'
 import LocationPicker from './LocationPicker.jsx'
 import ReadAloud from './ReadAloud.jsx'
+import ShareWhatsApp from './ShareWhatsApp.jsx'
 import { canRecord, startRecording } from './voice.js'
 
 const MAX_CHARS = 500
@@ -85,20 +86,22 @@ function dataTime(result, lang, tz) {
   }
 }
 
-function Answer({ result, lang, t, tz }) {
+function Answer({ result, lang, t, tz, zoneId }) {
+  const web = result.kind === 'places' // cooling centers / shelters found by a cited web search
   return (
     <article className="answer" aria-live="polite">
       <p className="answer-text">{result.answer}</p>
       <ReadAloud text={result.answer} lang={lang} t={t} options />
+      <ShareWhatsApp text={result.answer} zone={zoneId} lang={lang} t={t} />
       {result.data_time_local && (
         <p className="muted small">{t.askDataFrom.replace('{place}', result.place).replace('{time}', dataTime(result, lang, tz))}</p>
       )}
       {result.sources?.length > 0 && (
-        <details className="sources">
-          <summary>{t.askSources}</summary>
+        <details className="sources" open={web}>
+          <summary>{web ? t.askWebSources : t.askSources}</summary>
           <ul>
             {result.sources.map((s) => (
-              <li key={s.title}>
+              <li key={s.url}>
                 <a href={s.url} target="_blank" rel="noreferrer">{s.title}</a> <span className="muted">({s.source})</span>
               </li>
             ))}
@@ -165,7 +168,7 @@ export default function AskScreen({ lang, t, zone, setZone }) {
           )}
         </form>
       )}
-      {status === 'done' && result && <Answer result={result} lang={lang} t={t} tz={zone?.tz} />}
+      {status === 'done' && result && <Answer result={result} lang={lang} t={t} tz={zone?.tz} zoneId={zone?.zone} />}
       <p className="muted small">{t.askNotMedical}</p>
     </>
   )

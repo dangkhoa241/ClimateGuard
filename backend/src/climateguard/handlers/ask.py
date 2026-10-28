@@ -7,13 +7,14 @@ Per-IP rate limits; the daily model budget is checked in ask.answer().
 import base64
 import logging
 
-from .. import ask, llm, ratelimit, transcribe
+from .. import ask, budget, llm, pretalk, ratelimit, transcribe
 from ..languages import LANGS
 from ..subscriptions import SignupError
 from .api import ZONE_RE, _json_body, _resp, _source_ip
 
 log = logging.getLogger()
 ASK_PER_IP_PER_HOUR = 20
+PRETALK_PER_IP_PER_HOUR = 10
 TRANSCRIBE_PER_IP_PER_HOUR = 30  # at most 60 s each: under $0.10/hour per IP
 # 60 s of 16 kHz mono 16-bit audio is ~1.9 MB, ~2.6 MB as base64 (HTTP API payloads go up to 10 MB)
 MAX_AUDIO_BODY_CHARS = 2_700_000
@@ -69,9 +70,38 @@ def post_transcribe(event) -> dict:
     return _resp(200, result)
 
 
+def post_pretalk(event) -> dict:
+    """POST /pretalk {zone, lang}: today's crew checklist + an AI pre-shift talk (supervisor view)."""
+    try:
+        body = _json_body(event)
+    except SignupError as e:
+        return _resp(e.status, {"error": e.code})
+    lang, zone = str(body.get("lang") or ""), str(body.get("zone") or "").upper()
+    if lang not in LANGS:
+        return _resp(400, {"error": "invalid_lang"})
+    if not ZONE_RE.match(zone):
+        return _resp(400, {"error": "unknown_zone"})
+    if not ratelimit.hit("pretalk-ip", _source_ip(event), PRETALK_PER_IP_PER_HOUR, 3600):
+        return _resp(429, {"error": "rate_limited"}, headers={"Retry-After": "3600"})
+    snap = ask.zone_snapshot(zone)
+    if snap is None:
+        return _resp(404, {"error": "unknown_zone"})
+    if budget.over_budget():  # the checklist still works without the model
+        items = pretalk.render(pretalk.checklist(snap), lang)
+        return _resp(200, {"today": pretalk.today(snap), "checklist": items, "kind": "checklist_only",
+                           "talk": " ".join(i["text"] for i in items), "reason": "budget",
+                           "checklist_lang": lang if lang in pretalk.REVIEWED else "en",
+                           "automatic": lang not in pretalk.REVIEWED})
+    result = pretalk.build(snap, lang)
+    log.info("pretalk zone=%s lang=%s kind=%s blocked=%s", zone, lang, result["kind"], result.get("blocked"))
+    return _resp(200, result)
+
+
 def handler(event, context):
     if event.get("routeKey") == "POST /ask":
         return post_ask(event)
     if event.get("routeKey") == "POST /transcribe":
         return post_transcribe(event)
+    if event.get("routeKey") == "POST /pretalk":
+        return post_pretalk(event)
     return _resp(404, {"error": "not found"})

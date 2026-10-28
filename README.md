@@ -216,6 +216,40 @@ The failures, fixed in the prompt: "66 degrees" instead of "66°F", and an unask
 - Streaming isn't possible behind an API Gateway HTTP API, and Python Lambdas have no native response streaming. So the screen shows progress in steps instead: "Checking today's weather data…" → "Writing your answer…" → "Almost done…" after 6 s.
 - A live answer costs about $0.003.
 
+**Cooling centers and shelters: web search with sources** (`places.py`). Questions that ask for a place ("Where can I cool off?", "Gần Stockton có trung tâm làm mát nào không?") get a live web search. It uses Muse Spark 1.3 search grounding: the Responses API `web_search` tool, with the zone's city as the location.
+- **Instructions:** official city, county, state, library or Red Cross sources only; at most 3 places as "name: address, hours", exactly as the source states; say how old the source is; never invent places.
+- **Checked in code:**
+  - The answer is used only if it cites a web source, and the sources are always shown as links.
+  - Medical wording replaces it with the fixed 211 sentence.
+  - A fixed sentence is always added: "Openings and hours change: call 211 or the place before you go."
+  - If nothing is cited, or the search fails within 20 s, the answer is the fixed 211 sentence.
+- **Measured** (Ask eval, 2 cases): 5.5–10 s, about $0.03 per question (2 searches at $0.0025, plus tokens). It found the City of Stockton's current cooling zones list (updated 08/18/2026).
+- **Stale sources:** one earlier test found the county's 2021 list. That's why the answer states the source date and the check-first sentence is fixed.
+
+## Supervisor view and pre-shift talk
+
+`POST /pretalk {zone, lang}` (`pretalk.py`, Ask Lambda) gives a crew supervisor today's checklist and a short talk to read aloud before the shift.
+- **The checklist is fixed text in code**, picked by today's data:
+  - **Every day:** water (about 1 quart per worker per hour) and an emergency plan with 911.
+  - **California:** shade at 80°F; high-heat procedures at 95°F, with the 10-minute cool-down every 2 hours for farm work; extra care for new workers in a heat wave (Cal/OSHA T8 §3395).
+  - **Smoke:** reduced exposure and N95 for voluntary use at AQI 151+ wildfire smoke (T8 §5141.1). On ozone days, the item says masks don't help.
+  - **Outside California:** federal OSHA "Water, Rest, Shade".
+- **The talk:** Muse Spark 1.3 writes 5–7 spoken sentences in the crew's language, only from that checklist and today's numbers.
+- **Guardrails:** medical wording, or mask advice without particle pollution, replaces the talk with the checklist itself. Temperatures get °C in code.
+- **Languages:** EN/ES/VI checklists are written in code. For zh/tl/ko/ar the checklist shows in English and the talk is labeled automatic.
+- **In the app:** the talk can be read aloud or shared in the crew's WhatsApp group. It costs about $0.004, with 10 per IP per hour; over the daily budget, the checklist still works.
+- **Live:** a 108°F Spanish talk covered water, shade, the 9 hours at 95°F+, rest every 2 hours, new workers and 911 (3.9 s). A Tagalog talk on today's mild Stockton data (69°F) covered water and the emergency plan only.
+
+## Sharing, decision history and screen languages
+
+- **WhatsApp share:** answers, alerts and pre-shift talks have a "Share on WhatsApp" link (`wa.me`). The text carries a link back to the same area and language (`?zone=…&lang=…`).
+- **Decision history page** ("How ClimateGuard decides"): the public `/decisions` feed for your area or all areas. It shows the 7-day counters, then each decision: sent or no alert, the agent's reason (in English, as written), the alerts in the reader's language, and the steps with cost.
+  - **Bug found while building it:** the collector's IAM role couldn't write the daily counters (`AccessDenied` on `UpdateItem` for the rate-limit table, on every run), so the history showed 0 checks. Fixed in `template.yaml`, with a test.
+- **Screen languages:** EN/ES/VI are written by hand (`strings.js`). Chinese, Tagalog, Korean and Arabic are translated by Muse Spark 1.3 (`scripts/translate_ui.py`, about $0.02 per language) into `i18n.auto.json`. They are labeled "Screen text translated automatically".
+  - Checked in code: every key, every `{placeholder}`, and names and numbers that must not change (911, 211, N95, OSHA…).
+  - The risk badges are told never to use the NWS level words.
+  - Arabic switches the page to right-to-left.
+
 ## Real-event replays
 
 Demo mode replays **real past events** through the live agent, so the demo never depends on a disaster happening that day. `scripts/build_replays.py` downloads the archives once and saves small files in `backend/src/climateguard/data/replays/` (committed).
@@ -336,7 +370,7 @@ python scripts/run_eval.py edge_prompt_injection real_flood_warning
   - agent runs, budget skips and alerts sent
   - errors and model cost
 
-  An example of how a quiet week reads: "2,000 checks · 9 changes · 7 skipped by pre-filter · 2 agent runs · 0 alerts". The page itself comes in Phase 4.
+  An example of how a quiet week reads: "2,000 checks · 9 changes · 7 skipped by pre-filter · 2 agent runs · 0 alerts". The page is "How ClimateGuard decides" in the app.
 
 ## Email alerts (sign-up)
 
@@ -380,6 +414,7 @@ python scripts/run_eval.py edge_prompt_injection real_flood_warning
   | `GET /decisions?zone=&days=&limit=` | The live agent's real decisions + daily counters (public) |
 | `POST /ask {question, lang, zone}` | Answer a question from live data (Ask Lambda) |
 | `POST /transcribe?lang=` (body: WAV) | Spoken question → text (Ask Lambda) |
+| `POST /pretalk {zone, lang}` | Supervisor view: today's crew checklist + AI pre-shift talk (Ask Lambda) |
 
 ## Deploy (AWS SAM), step by step
 

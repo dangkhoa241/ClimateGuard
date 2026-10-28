@@ -1,0 +1,28 @@
+[
+ {
+  "effort": "minimal",
+  "id": "en_cooling_place",
+  "lang": "en",
+  "question": "Where can I go to cool off today?",
+  "answer": "Here are official cooling zones from the City of Stockton.\nArnold Rue Community Center: 5758 Lorraine Ave., during regular business hours\nStribley Community Center: 1760 E. Sonora St., during regular business hours\nVan Buskirk Community Center: 734 Houston Ave., during regular business hours\nSource last updated 08/18/2026.\nOpenings and hours change: call 211 or the place before you go.",
+  "passed": true,
+  "fails": [],
+  "ms": 10190,
+  "model_ms": null,
+  "tokens": null,
+  "cost_usd": 0.030604
+ },
+ {
+  "effort": "minimal",
+  "id": "vi_cooling_place",
+  "lang": "vi",
+  "question": "Gần Stockton có trung tâm làm mát nào không?",
+  "answer": "Theo trang City of Stockton cập nhật ngày 08/18/2026, các trung tâm làm mát gần Stockton gồm:\nArnold Rue Community Center: 5758 Lorraine Ave., during regular business hours\nStribley Community Center: 1760 E. Sonora St., during regular business hours\nVan Buskirk Community Center: 734 Houston Ave., during regular business hours\nGiờ mở cửa có thể thay đổi: hãy gọi 211 hoặc gọi cho nơi đó trước khi đến.",
+  "passed": true,
+  "fails": [],
+  "ms": 5500,
+  "model_ms": null,
+  "tokens": null,
+  "cost_usd": 0.027211
+ }
+]

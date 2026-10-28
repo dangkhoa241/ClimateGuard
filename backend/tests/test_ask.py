@@ -21,6 +21,7 @@ def local(monkeypatch, tmp_path):
     monkeypatch.setattr(config, "CACHE_DIR", tmp_path / "cache")
     monkeypatch.setattr(config, "USAGE_LOG", tmp_path / "usage.jsonl")
     monkeypatch.setattr(config, "STORAGE", "local")
+    monkeypatch.setattr(ask.places, "find", lambda question, lang, snap: None)  # offline: no web search
 
 
 def _store(scenario="heatwave"):
@@ -272,3 +273,28 @@ def test_vietnamese_answer_style_fixed_in_code(monkeypatch):
     assert r["data_time_text"].endswith(("thứ Hai", "thứ Ba", "thứ Tư", "thứ Năm", "thứ Sáu", "thứ Bảy", "Chủ Nhật"))
     _model_says(monkeypatch, "Yes. It will reach 69°F.")
     assert ask.answer("Is it hot today?", "en", "CAZ159")["answer"] == "Yes. It will reach 69°F."
+
+
+def test_place_questions_use_a_cited_web_search(monkeypatch):
+    _store()
+    found = {"answer": "Trung tâm làm mát chính thức của quận (cập nhật 2021):\nBoggs Tract Community Center: 533 S. Los "
+                       "Angeles St, M-F 8am-5pm", "sources": [{"title": "Regular Cooling Locations",
+                       "url": "https://sjready.org/x.pdf", "source": "sjready.org"}], "searches": 2, "cost_usd": 0.018}
+    monkeypatch.setattr(ask.places, "find", lambda question, lang, snap: dict(found))
+    r = ask.answer("Ở đâu có trung tâm làm mát?", "vi", "CAZ159")
+    assert r["kind"] == "places" and r["answer"].endswith(ask.places.CHECK_FIRST["vi"])
+    assert r["sources"][0]["source"] == "sjready.org"
+    # medical wording in a search answer: the fixed 211 sentence instead
+    monkeypatch.setattr(ask.places, "find", lambda question, lang, snap: {**found, "answer": "Take ibuprofen there."})
+    assert ask.answer("Where is a cooling center?", "en", "CAZ159")["answer"] == ask.HELP_211["en"]
+
+
+def test_search_answer_parsing_keeps_only_the_final_cited_message():
+    output = [{"type": "message", "content": [{"text": "I'll search now.", "annotations": []}]},
+              {"type": "web_search_call", "status": "completed"},
+              {"type": "message", "content": [{"text": "**Library**: 1 Main St", "annotations": [
+                  {"type": "url_citation", "url": "https://www.stocktonca.gov/a", "title": "City"},
+                  {"type": "url_citation", "url": "https://www.stocktonca.gov/a", "title": "City"}]}]}]
+    text, cites = ask.places._final_message(output)
+    assert text == "**Library**: 1 Main St" and len(cites) == 2
+    assert ask.places.sources(cites) == [{"title": "City", "url": "https://www.stocktonca.gov/a", "source": "stocktonca.gov"}]

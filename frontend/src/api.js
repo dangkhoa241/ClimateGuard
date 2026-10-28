@@ -84,3 +84,25 @@ export async function askQuestion({ question, lang, zone }) {
     clearTimeout(timer)
   }
 }
+
+// Public decision history of the live agent (last `days` days), optionally for one zone.
+export const getDecisions = ({ zone, days = 7 } = {}) =>
+  request(`/decisions?days=${days}&limit=100${zone ? `&zone=${encodeURIComponent(zone)}` : ''}`)
+
+// Supervisor view: today's checklist + an AI pre-shift talk. One model call: same 25 s budget as Ask.
+export async function getPreTalk({ zone, lang }) {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 25000)
+  try {
+    return await request('/pretalk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ zone, lang }),
+      signal: ctrl.signal,
+    })
+  } catch (err) {
+    throw ctrl.signal.aborted ? new ApiError('timeout', 0) : err
+  } finally {
+    clearTimeout(timer)
+  }
+}

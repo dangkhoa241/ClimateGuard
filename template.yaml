@@ -172,6 +172,9 @@ Resources:
         - SSMParameterReadPolicy: { ParameterName: climateguard/airnow-api-key }
         - SSMParameterReadPolicy: { ParameterName: climateguard/meta-model-api-key }
         - DynamoDBCrudPolicy: { TableName: !Ref ZonesTable }
+        # daily counters for the public decision history (stats.py: k="stats#<day>"); without it every
+        # run logged AccessDenied and the history showed zero checks
+        - DynamoDBCrudPolicy: { TableName: !Ref RateLimitTable }
         - Statement:
             - Effect: Allow
               Action: [sns:CreateTopic, sns:Publish, sns:TagResource, sns:ListSubscriptionsByTopic]
@@ -271,6 +274,9 @@ Resources:
         Transcribe:  # a spoken question (WAV) -> text, Muse Voice Transcribe
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /transcribe }
+        PreTalk:  # supervisor view: today's crew checklist + AI pre-shift talk
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /pretalk }
 
 Outputs:
   ApiUrl:

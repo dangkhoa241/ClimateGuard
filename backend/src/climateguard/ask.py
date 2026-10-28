@@ -24,7 +24,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from . import alerts_store, budget, guardrails, guidance, hazards, snapshot, timeref, units, zones
+from . import alerts_store, budget, guardrails, guidance, hazards, places, snapshot, timeref, units, zones
 from .languages import LANGS
 from .llm import chat
 from .monitor import MEDICAL_TERMS
@@ -348,6 +348,16 @@ def answer(question: str, lang: str, zone_id: str) -> dict:
         return done({"kind": "no_data", "answer": FALLBACK_ANSWER[lang]})
     if over:
         return done({"kind": "fallback", "answer": FALLBACK_ANSWER[lang], "reason": "budget"})
+    if PLACE_QUESTION.search(question):  # cooling centers, shelters: a cited web search (places.py)
+        found = places.find(question, lang, snap)
+        lap("search")
+        if found and not ANSWER_MEDICAL.search(found["answer"]):
+            text = units.format_temps(found["answer"], lang)
+            return done({"kind": "places", "answer": f"{text}\n{places.CHECK_FIRST[lang]}", "place": snap.get("place"),
+                         "sources": found["sources"], "searches": found["searches"], "cost_usd": found["cost_usd"]})
+        # nothing cited (or the search failed): the fixed 211 sentence, no second model call (time limit)
+        return done({"kind": "answer", "answer": HELP_211[lang], "place": snap.get("place"), "sources": [],
+                     "reason": "no_cited_places"})
     ref = timeref.resolve(question, datetime.now(_zone_tz(zone_id, snap)))
     context = build_context(snap, sent, ref)
     excerpts = guidance.search(_guidance_query(question, snap), k=4)

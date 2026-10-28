@@ -59,3 +59,11 @@ def test_cors_origins_never_duplicated(transformed, frontend):
 def test_log_groups_keep_seven_days(transformed):
     groups = [r for r in transformed["Resources"].values() if r["Type"] == "AWS::Logs::LogGroup"]
     assert len(groups) == 2 and all(g["Properties"]["RetentionInDays"] == 7 for g in groups)
+
+
+def test_collector_can_write_daily_counters(transformed):
+    # stats.record() runs UpdateItem on the rate-limit table; the deployed role lacked it (AccessDenied
+    # on every run, so the public history showed zero checks).
+    import json
+    role = json.dumps(transformed["Resources"]["CollectFunctionRole"]["Properties"]["Policies"])
+    assert "RateLimitTable" in role and "dynamodb:UpdateItem" in role
