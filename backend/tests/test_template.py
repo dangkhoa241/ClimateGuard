@@ -53,7 +53,7 @@ def test_cors_origins_never_duplicated(transformed, frontend):
     origins = cors["allowOrigins"]
     assert len(origins) == len(set(origins)) and frontend in origins
     assert {"http://localhost:5173", "http://localhost:5174"} <= set(origins)
-    assert cors["allowMethods"] == ["GET", "POST", "OPTIONS"]  # SAM must not drop the rest of the block
+    assert cors["allowMethods"] == ["GET", "POST", "DELETE", "OPTIONS"]  # SAM must not drop the rest of the block
 
 
 def test_log_groups_keep_seven_days(transformed):
@@ -67,3 +67,18 @@ def test_collector_can_write_daily_counters(transformed):
     import json
     role = json.dumps(transformed["Resources"]["CollectFunctionRole"]["Properties"]["Policies"])
     assert "RateLimitTable" in role and "dynamodb:UpdateItem" in role
+
+
+def test_recovery_photos_private_and_cleaned_up(transformed):
+    import json
+    bucket = transformed["Resources"]["RecoveryBucket"]["Properties"]
+    assert all(bucket["PublicAccessBlockConfiguration"].values())
+    assert bucket["LifecycleConfiguration"]["Rules"][0]["ExpirationInDays"] == 1
+    # the collector deletes photos older than 24 h; the recovery function invokes itself for the worker
+    assert "RecoveryBucket" in json.dumps(transformed["Resources"]["CollectFunctionRole"]["Properties"]["Policies"])
+    role = json.dumps(transformed["Resources"]["RecoveryFunctionRole"]["Properties"]["Policies"])
+    assert "lambda:InvokeFunction" in role and "function:climateguard-recovery" in role
+    fn = transformed["Resources"]["RecoveryFunction"]["Properties"]
+    assert fn["FunctionName"] == "climateguard-recovery" and fn["Environment"]["Variables"]["USE_CONTRIBUTOR"] == "false"
+    retry = next(r for r in transformed["Resources"].values() if r["Type"] == "AWS::Lambda::EventInvokeConfig")
+    assert retry["Properties"]["MaximumRetryAttempts"] == 0

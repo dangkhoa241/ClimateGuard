@@ -43,6 +43,7 @@ Globals:
         ALERTS_TABLE: !Ref AlertsTable
         RATELIMIT_TABLE: !Ref RateLimitTable
         ZONES_TABLE: !Ref ZonesTable
+        RECOVERY_BUCKET: !Ref RecoveryBucket
         NOTIFY_MODE: sns
         FRONTEND_URL: !Ref FrontendUrl
         MAX_SUBSCRIBERS: !Ref MaxSubscribers
@@ -131,6 +132,27 @@ Resources:
         - { AttributeName: k, KeyType: HASH }
       TimeToLiveSpecification: { AttributeName: ttl, Enabled: true }
 
+  # Recovery photos + job records. Private, deleted after 24 hours by the collector (recovery_store.py);
+  # the lifecycle rule is a backstop (S3 runs it once a day).
+  RecoveryBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub climateguard-recovery-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-after-1-day
+            Status: Enabled
+            ExpirationInDays: 1
+            AbortIncompleteMultipartUpload: { DaysAfterInitiation: 1 }
+
   # 7-day retention keeps logs well inside the free 5 GB (Lambda's default groups never expire)
   CollectLogGroup:
     Type: AWS::Logs::LogGroup
@@ -175,6 +197,7 @@ Resources:
         # daily counters for the public decision history (stats.py: k="stats#<day>"); without it every
         # run logged AccessDenied and the history showed zero checks
         - DynamoDBCrudPolicy: { TableName: !Ref RateLimitTable }
+        - S3CrudPolicy: { BucketName: !Ref RecoveryBucket }  # deletes recovery photos older than 24 h
         - Statement:
             - Effect: Allow
               Action: [sns:CreateTopic, sns:Publish, sns:TagResource, sns:ListSubscriptionsByTopic]
@@ -194,10 +217,10 @@ Resources:
       CorsConfiguration: !If
         - FrontendIsLocalDev
         - AllowOrigins: [!Ref LocalDevOrigin, !Ref LocalDevOrigin2]
-          AllowMethods: [GET, POST, OPTIONS]
+          AllowMethods: [GET, POST, DELETE, OPTIONS]
           AllowHeaders: [Content-Type]
         - AllowOrigins: [!Ref FrontendUrl, !Ref LocalDevOrigin, !Ref LocalDevOrigin2]
-          AllowMethods: [GET, POST, OPTIONS]
+          AllowMethods: [GET, POST, DELETE, OPTIONS]
           AllowHeaders: [Content-Type]
       DefaultRouteSettings:  # whole-API safety net; per-IP limits are enforced in code
         ThrottlingBurstLimit: 20
@@ -277,6 +300,50 @@ Resources:
         PreTalk:  # supervisor view: today's crew checklist + AI pre-shift talk
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /pretalk }
+
+  # Recovery agent: routes + its own async worker (POST .../analyze re-invokes this function with
+  # InvocationType=Event). Fixed name so the role can invoke itself without a circular reference.
+  RecoveryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: climateguard-recovery
+      Handler: climateguard.handlers.recovery.handler
+      Timeout: 150      # the worker: one vision call (<= 60 s) + SAM calls in parallel; routes answer in < 1 s
+      MemorySize: 1024  # mask decoding and base64 of 6 photos are CPU-bound
+      LoggingConfig: { LogGroup: !Ref ApiLogGroup }
+      Environment:
+        Variables:
+          MODEL_API_KEY_PARAM: /climateguard/meta-model-api-key
+          USE_CONTRIBUTOR: "false"  # real photos: never contributor mode
+          DAILY_MODEL_BUDGET_USD: "5"
+      EventInvokeConfig:
+        MaximumRetryAttempts: 0  # a failed analysis shows "try again" rather than running (and billing) twice
+      Policies:
+        - S3CrudPolicy: { BucketName: !Ref RecoveryBucket }
+        - DynamoDBCrudPolicy: { TableName: !Ref RateLimitTable }
+        - DynamoDBCrudPolicy: { TableName: !Ref UsageTable }   # cost log + daily budget
+        - DynamoDBCrudPolicy: { TableName: !Ref CacheTable }
+        - SSMParameterReadPolicy: { ParameterName: climateguard/meta-model-api-key }
+        - Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:climateguard-recovery
+      Events:
+        Create:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /recovery }
+        Photo:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: POST, Path: "/recovery/{job}/photos" }
+        Analyze:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: POST, Path: "/recovery/{job}/analyze" }
+        Status:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: GET, Path: "/recovery/{job}" }
+        Delete:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: DELETE, Path: "/recovery/{job}" }
 
 Outputs:
   ApiUrl:

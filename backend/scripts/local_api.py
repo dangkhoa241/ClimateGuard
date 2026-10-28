@@ -11,7 +11,7 @@ from urllib.parse import parse_qs
 
 import _path  # noqa: F401
 
-from climateguard.handlers import ask
+from climateguard.handlers import ask, recovery
 from climateguard.handlers.api import handler
 
 PORT = 8787
@@ -25,8 +25,14 @@ ROUTES = [  # (method, regex, routeKey)
     ("POST", r"^/ask$", "POST /ask"),  # its own Lambda in AWS (handlers/ask.py)
     ("POST", r"^/transcribe$", "POST /transcribe"),  # same Lambda as /ask
     ("POST", r"^/pretalk$", "POST /pretalk"),  # same Lambda as /ask
+    ("POST", r"^/recovery$", "POST /recovery"),  # recovery Lambda (handlers/recovery.py)
+    ("POST", r"^/recovery/(?P<job>[A-Za-z0-9_-]+)/photos$", "POST /recovery/{job}/photos"),
+    ("POST", r"^/recovery/(?P<job>[A-Za-z0-9_-]+)/analyze$", "POST /recovery/{job}/analyze"),
+    ("GET", r"^/recovery/(?P<job>[A-Za-z0-9_-]+)$", "GET /recovery/{job}"),
+    ("DELETE", r"^/recovery/(?P<job>[A-Za-z0-9_-]+)$", "DELETE /recovery/{job}"),
 ]
-CORS = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+BINARY = ("POST /transcribe", "POST /recovery/{job}/photos")  # audio, photos: base64, as API Gateway sends them
+CORS = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type"}
 
 
@@ -48,13 +54,15 @@ class Handler(BaseHTTPRequestHandler):
             if m == method and match:
                 length = int(self.headers.get("Content-Length") or 0)
                 raw = self.rfile.read(length) if length else b""
-                binary = route == "POST /transcribe"  # audio: base64, as API Gateway sends it
+                binary = route in BINARY
                 event = {"routeKey": route, "pathParameters": match.groupdict(),
                          "queryStringParameters": {k: v[0] for k, v in parse_qs(query).items()} or None,
                          "body": (base64.b64encode(raw).decode() if binary else raw.decode("utf-8")) if raw else None,
                          "isBase64Encoded": binary,
                          "requestContext": {"http": {"sourceIp": self.client_address[0]}}}
-                r = (ask.handler if route in ("POST /ask", "POST /transcribe", "POST /pretalk") else handler)(event, None)
+                fn = (ask.handler if route in ("POST /ask", "POST /transcribe", "POST /pretalk")
+                      else recovery.handler if "/recovery" in route else handler)
+                r = fn(event, None)
                 return self._send(r["statusCode"], r["headers"], r["body"])
         self._send(404, {"Content-Type": "application/json"}, json.dumps({"error": "not found"}))
 
@@ -63,6 +71,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         self._dispatch("POST")
+
+    def do_DELETE(self):
+        self._dispatch("DELETE")
 
 
 if __name__ == "__main__":

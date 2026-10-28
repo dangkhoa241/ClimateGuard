@@ -107,3 +107,22 @@ export async function getPreTalk({ zone, lang }) {
     clearTimeout(timer)
   }
 }
+
+// Recovery agent (async job): create, upload 1-6 JPEGs, start the analysis, then poll until it's done.
+export const createRecovery = ({ lang, disaster }) =>
+  request('/recovery', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lang, disaster }),
+  })
+
+export const uploadRecoveryPhoto = (job, index, jpeg) =>
+  request(`/recovery/${job}/photos?i=${index}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'image/jpeg' },
+    body: jpeg,
+  })
+
+export const startRecoveryAnalysis = (job) => request(`/recovery/${job}/analyze`, { method: 'POST' })
+export const getRecovery = (job) => request(`/recovery/${job}`)
+export const deleteRecovery = (job) => request(`/recovery/${job}`, { method: 'DELETE' })

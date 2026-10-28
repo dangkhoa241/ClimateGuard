@@ -62,6 +62,7 @@ CACHE_TABLE = os.getenv("CACHE_TABLE", "climateguard-cache")
 ALERTS_TABLE = os.getenv("ALERTS_TABLE", "climateguard-alerts")  # sent alerts + agent decision log
 RATELIMIT_TABLE = os.getenv("RATELIMIT_TABLE", "climateguard-ratelimit")
 ZONES_TABLE = os.getenv("ZONES_TABLE", "climateguard-zones")  # NWS zones, languages, confirmed counts
+RECOVERY_BUCKET = os.getenv("RECOVERY_BUCKET", "")  # recovery photos + job records, deleted after 24 h
 
 # --- Alerts delivery and sign-up ---
 # "dryrun" = write to backend/.local/outbox.jsonl (dev); "sns" = real email via Amazon SNS (Lambda).

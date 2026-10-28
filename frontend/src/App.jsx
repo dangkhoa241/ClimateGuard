@@ -3,9 +3,10 @@ import { LANGS, STRINGS } from './i18n.js'
 import AlertsScreen from './AlertsScreen.jsx'
 import AskScreen from './AskScreen.jsx'
 import HistoryScreen from './HistoryScreen.jsx'
+import RecoveryScreen from './RecoveryScreen.jsx'
 import SupervisorScreen from './SupervisorScreen.jsx'
 
-const SCREENS = { alerts: 'alerts', ask: 'ask', supervisor: 'supervisor', history: 'history' } // screen -> title key
+const SCREENS = { alerts: 'alerts', ask: 'ask', recovery: 'recovery', supervisor: 'supervisor', history: 'history' } // screen -> title key
 
 const ZONE_RE = /^[A-Z]{2}Z\d{3}$/
 
@@ -88,8 +89,7 @@ export default function App() {
           <nav className="actions">
             <button className="big" onClick={() => setScreen('alerts')}>{t.alerts}</button>
             <button className="big" onClick={() => setScreen('ask')}>{t.ask}</button>
-            {/* Phase 5 */}
-            <button className="big" disabled>{t.recovery}</button>
+            <button className="big" onClick={() => setScreen('recovery')}>{t.recovery}</button>
             <button className="secondary" onClick={() => setScreen('supervisor')}>{t.supervisor}</button>
             <button className="secondary" onClick={() => setScreen('history')}>{t.history}</button>
           </nav>
@@ -101,6 +101,7 @@ export default function App() {
           {screen === 'ask' && <AskScreen lang={lang} t={t} zone={zone} setZone={setZone} />}
           {screen === 'alerts' && <AlertsScreen lang={lang} t={t} zone={zone} setZone={setZone} />}
           {screen === 'supervisor' && <SupervisorScreen lang={lang} t={t} zone={zone} setZone={setZone} />}
+          {screen === 'recovery' && <RecoveryScreen lang={lang} t={t} />}
           {screen === 'history' && <HistoryScreen lang={lang} t={t} zone={zone} />}
         </>
       )}

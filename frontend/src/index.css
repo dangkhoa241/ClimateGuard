@@ -195,3 +195,35 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
   color: var(--accent); font-weight: 600; text-decoration: none; line-height: 1.3;
 }
 .help-link.call { background: var(--accent); color: #fff; }
+
+/* Recovery: disaster picker, photo thumbnails, photos with SAM outlines, questions */
+.rec-disasters { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; padding: 0; border: none; }
+.rec-disasters legend { font-weight: 600; margin-bottom: 8px; }
+.rec-disasters button, .rec-options button {
+  flex: 1 1 45%; min-height: 48px; padding: 6px 10px; border: 2px solid var(--accent); border-radius: 10px;
+  background: #fff; color: var(--fg); font-size: 0.95rem; line-height: 1.2;
+}
+.rec-disasters button:last-of-type { flex-basis: 100%; }
+.rec-disasters button.active, .rec-options button.active { background: var(--accent); color: #fff; }
+.rec-h2 { font-size: 1.1rem; margin: 20px 0 8px; }
+.rec-thumbs { list-style: none; margin: 0 0 8px; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.rec-thumbs li { position: relative; }
+.rec-thumbs img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; display: block; }
+.rec-thumbs button {
+  position: absolute; top: 4px; inset-inline-end: 4px; width: 36px; height: 36px; border-radius: 50%;
+  border: none; background: rgba(0, 0, 0, 0.65); color: #fff; font-size: 1.3rem; line-height: 1;
+}
+.rec-add { width: 100%; margin-bottom: 8px; }
+.rec-danger p { margin: 0 0 6px; line-height: 1.4; }
+.call911 { display: flex; align-items: center; justify-content: center; margin-top: 8px; background: #b42318; text-decoration: none; }
+.rec-disaster { margin: 16px 0 8px; }
+.rec-photo { margin: 16px 0 0; }
+.rec-photo-frame { position: relative; }
+.rec-photo-frame img { display: block; width: 100%; height: auto; border-radius: 10px; }
+.rec-overlay { position: absolute; inset: 0; height: 100% !important; pointer-events: none; }
+.rec-photo figcaption { margin-top: 6px; }
+.rec-legend { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 0.95rem; }
+.swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; margin-inline-end: 6px; vertical-align: -2px; }
+.rec-question { border: none; margin: 14px 0 0; padding: 0; }
+.rec-question legend { font-weight: 600; margin-bottom: 6px; }
+.rec-options { display: flex; flex-wrap: wrap; gap: 8px; }

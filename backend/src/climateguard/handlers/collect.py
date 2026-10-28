@@ -104,5 +104,10 @@ def handler(event, context):
         stats.record(stats.summarize_run(result))
     except Exception:
         log.exception("recording daily stats failed")  # never fail a collection over counters
+    try:  # recovery photos are promised deleted after 24 hours; S3 lifecycle alone can take up to ~48 h
+        from .. import recovery_store
+        result["recovery_deleted"] = recovery_store.delete_expired()
+    except Exception:
+        log.exception("deleting expired recovery photos failed")
     log.info("collect result: %s", result)
     return result
