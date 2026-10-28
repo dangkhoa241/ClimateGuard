@@ -1,0 +1,1363 @@
+{
+ "summary": {
+  "cases": {
+   "passed": 34,
+   "total": 34
+  },
+  "by_kind": {
+   "real": {
+    "passed": 11,
+    "total": 11
+   },
+   "edge": {
+    "passed": 14,
+    "total": 14
+   },
+   "hard": {
+    "passed": 9,
+    "total": 9
+   }
+  },
+  "decision_accuracy": {
+   "passed": 34,
+   "total": 34
+  },
+  "hazard_accuracy": {
+   "passed": 24,
+   "total": 24
+  },
+  "severity_in_range": {
+   "passed": 8,
+   "total": 8
+  },
+  "no_repeat": {
+   "passed": 2,
+   "total": 2
+  },
+  "escalation": {
+   "passed": 1,
+   "total": 1
+  },
+  "pre_filter_zero_calls": {
+   "passed": 5,
+   "total": 5
+  },
+  "no_medical_wording": {
+   "passed": 36,
+   "total": 36
+  },
+  "proper_accents": {
+   "passed": 36,
+   "total": 36
+  },
+  "guardrail_rejections": {
+   "too_long": 1
+  },
+  "alerts_sent": 28,
+  "model_calls": 116,
+  "total_cost_usd": 0.3334,
+  "cost_per_alert_usd": 0.0119,
+  "latency_s": {
+   "p50": 6.56,
+   "p95": 10.13
+  },
+  "model": "meta-models/muse-spark-open-1026",
+  "reasoning_effort": "low"
+ },
+ "results": [
+  {
+   "id": "real_heat_warning_issued",
+   "kind": "real",
+   "desc": "Sept 1 2022: Excessive Heat Warning issued for the weekend",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Excessive Heat Warning active until Tuesday 8pm with forecast 7 hours ≥95°F today (max 104°F, heat index 102°F), meeting Cal/OSHA high-heat threshold and NWS warning criteria for immediate alert; no duplicate in last 48h.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Excessive Heat Warning remains in effect until 8:00 PM Tuesday. Today (Thursday) from 1:00 PM to 7:00 PM, temperature up to 104°F with heat index to 102°F. Stay in air conditioning, drink water often, and take frequent rest in shade if you work outside.",
+       "messages": {
+        "en": "Excessive Heat Warning remains in effect until 8:00 PM Tuesday. Today (Thursday) from 1:00 PM to 7:00 PM, temperature up to 104°F with heat index to 102°F. Stay in air conditioning, drink water often, and take frequent rest in shade if you work outside.",
+        "es": "Aviso de calor excesivo vigente hasta las 8:00 PM del martes. Hoy (jueves) de 1:00 PM a 7:00 PM, temperatura hasta 104°F (40°C) con sensación térmica hasta 102°F (39°C). Quédese en aire acondicionado, tome agua con frecuencia y descanse a menudo en la sombra si trabaja al aire libre.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 8 giờ tối thứ Ba. Hôm nay (thứ Năm), từ 1 giờ chiều đến 7 giờ tối, nhiệt độ lên đến 104°F (40°C). Hãy ở nơi có máy lạnh và uống nước thường xuyên. Nếu làm việc ngoài trời, hãy nghỉ ngơi thường xuyên trong bóng râm."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.015561,
+     "latency_s": 8.0,
+     "signals": [
+      "NWS alerts: Excessive Heat Warning",
+      "7h at or above 95F",
+      "heat index up to 102F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_heat_record_day",
+   "kind": "real",
+   "desc": "Sept 6 2022 07:00: record-heat day (and AQI 208)",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Sent heat alert (Excessive Heat Warning until Friday with 11 hours ≥95°F, max 114°F/heat index 115°F today exceeding Cal/OSHA high-heat threshold) and smoke/air-quality alert (AQI forecast 208 Very Unhealthy from ozone requiring avoidance of outdoor exertion).",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Excessive Heat Warning in effect until 8:00 PM Friday. Today (Tuesday), from 11:00 AM to 9:00 PM, temperature up to 114°F and heat index up to 115°F. Stay in air conditioning, drink water often, and take rest breaks in shade. Limit outdoor work to early morning or evening if possible.",
+       "messages": {
+        "en": "Excessive Heat Warning in effect until 8:00 PM Friday. Today (Tuesday), from 11:00 AM to 9:00 PM, temperature up to 114°F and heat index up to 115°F. Stay in air conditioning, drink water often, and take rest breaks in shade. Limit outdoor work to early morning or evening if possible.",
+        "es": "Aviso de Calor Excesivo vigente hasta las 8:00 PM del viernes. Hoy (martes), de 11:00 AM a 9:00 PM, temperatura hasta 114°F (46°C) y sensación térmica hasta 115°F (46°C). Quédese en aire acondicionado, beba agua con frecuencia y tome descansos a la sombra. Si es posible, limite el trabajo al aire libre a temprano en la mañana o al anochecer.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 8 giờ tối thứ Sáu. Hôm nay (thứ Ba), từ 11 giờ sáng đến 9 giờ tối, nhiệt độ lên đến 114°F (46°C) và cảm giác nóng lên đến 115°F (46°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm. Hãy hạn chế làm việc ngoài trời vào sáng sớm hoặc chiều tối nếu có thể."
+       }
+      },
+      {
+       "hazard": "smoke",
+       "severity": "extreme",
+       "en": "Air quality forecast Very Unhealthy today (Tuesday) with AQI up to 208 from ozone. Limit time outdoors and avoid heavy exertion. Stay indoors with windows closed if possible. If you must be outside, wear a well-fitted N95 mask.",
+       "messages": {
+        "en": "Air quality forecast Very Unhealthy today (Tuesday) with AQI up to 208 from ozone. Limit time outdoors and avoid heavy exertion. Stay indoors with windows closed if possible. If you must be outside, wear a well-fitted N95 mask.",
+        "es": "Pronóstico de calidad del aire Muy Poco Saludable hoy (martes) con AQI hasta 208 por ozono. Limite el tiempo al aire libre y evite esfuerzo intenso. Permanezca en interiores con ventanas cerradas si es posible. Si debe salir, use mascarilla N95 bien ajustada.",
+        "vi": "Hôm nay (thứ Ba), khí ôzôn tăng cao làm không khí rất có hại cho sức khỏe, chỉ số AQI lên đến 208. Hãy hạn chế thời gian ở ngoài trời và tránh vận động nặng. Hãy ở trong nhà và đóng kín cửa sổ nếu có thể. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 5,
+     "cost_usd": 0.016228,
+     "latency_s": 10.25,
+     "signals": [
+      "NWS alerts: Excessive Heat Warning",
+      "11h at or above 95F",
+      "heat index up to 115F",
+      "AQI up to 208 (Very Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_heat_no_repeat",
+   "kind": "real",
+   "desc": "Record day morning, then afternoon: no repeated heat alert",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Sent two alerts for CAZ159 — heat (extreme) due to active Excessive Heat Warning until Fri 20:00 and forecast 11 hours ≥95°F with 114°F max and 115°F heat index today, and smoke/air quality (extreme) due to forecast Very Unhealthy AQI 208 for ozone today.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Excessive Heat Warning in effect until 8 p.m. Friday. Today (Tuesday) from 11 a.m. to 9 p.m., temperatures up to 114°F with heat index up to 115°F. Stay in air conditioning, drink water often, and take rest breaks in shade.",
+       "messages": {
+        "en": "Excessive Heat Warning in effect until 8 p.m. Friday. Today (Tuesday) from 11 a.m. to 9 p.m., temperatures up to 114°F with heat index up to 115°F. Stay in air conditioning, drink water often, and take rest breaks in shade.",
+        "es": "Aviso de calor excesivo vigente hasta las 8 p.m. del viernes. Hoy (martes) de 11 a.m. a 9 p.m., temperaturas de hasta 114°F (46°C) con sensación térmica de hasta 115°F (46°C). Quédese en aire acondicionado, tome agua con frecuencia y descanse a la sombra.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 8 giờ tối thứ Sáu. Hôm nay (thứ Ba), từ 11 giờ sáng đến 9 giờ tối, nhiệt độ lên đến 114°F (46°C), cảm giác nóng đến 115°F (46°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm."
+       }
+      },
+      {
+       "hazard": "smoke",
+       "severity": "extreme",
+       "en": "Today (Tuesday), ozone pollution makes air Very Unhealthy with AQI up to 208. Limit outdoor work and exercise, stay indoors with windows closed if possible. If you must go outside, wear a well-fitted N95 mask.",
+       "messages": {
+        "en": "Today (Tuesday), ozone pollution makes air Very Unhealthy with AQI up to 208. Limit outdoor work and exercise, stay indoors with windows closed if possible. If you must go outside, wear a well-fitted N95 mask.",
+        "es": "Hoy (martes), la contaminación por ozono hace el aire muy poco saludable con AQI de hasta 208. Limite el trabajo y el ejercicio al aire libre y quédese en interiores con las ventanas cerradas si es posible. Si debe salir, use mascarilla N95 bien ajustada.",
+        "vi": "Hôm nay (thứ Ba), khí ôzôn tăng cao làm không khí rất có hại cho sức khỏe, chỉ số AQI lên đến 208. Hãy hạn chế làm việc và vận động ngoài trời, ở trong nhà và đóng kín cửa sổ nếu có thể. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 5,
+     "cost_usd": 0.01387,
+     "latency_s": 9.62,
+     "signals": [
+      "NWS alerts: Excessive Heat Warning",
+      "11h at or above 95F",
+      "heat index up to 115F",
+      "AQI up to 208 (Very Unhealthy)"
+     ]
+    },
+    {
+     "action": "skipped",
+     "reason": "Both extreme heat and very unhealthy air alerts were already sent in the last 48 hours for the same hazards and severity (Excessive Heat Warning until Friday 8pm with 114°F/115°F heat index and AQI forecast 208), and the current data shows no increase in severity or new information requiring a duplicate.",
+     "sent": [],
+     "checks": {
+      "no_repeat": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 2,
+     "cost_usd": 0.006605,
+     "latency_s": 3.68,
+     "signals": [
+      "NWS alerts: Excessive Heat Warning",
+      "11h at or above 95F",
+      "heat index up to 115F",
+      "AQI up to 208 (Very Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_heat_after",
+   "kind": "real",
+   "desc": "Sept 10 2022: warning over, normal weather",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "pre-filter: no risk signals in the data, agent not called",
+     "sent": [],
+     "checks": {
+      "decision": true,
+      "zero_calls": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 0,
+     "cost_usd": 0.0,
+     "latency_s": 0.0,
+     "signals": []
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_flood_watch",
+   "kind": "real",
+   "desc": "Jan 8 2023: Flood Watch for Merced County",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Flood Watch active through late Tuesday night with 90% overnight rain and strong winds starting 9 pm Sunday indicates credible near-term flood risk for Planada area; alert sent per guidance to prepare and follow evacuation orders. AQI 106 alone does not meet smoke-linked alert threshold and was not alerted.",
+     "sent": [
+      {
+       "hazard": "flood",
+       "severity": "moderate",
+       "en": "Flood Watch in effect through late Tuesday night. Heavy rain is expected tonight Sunday from 9 pm through Monday morning with strong winds. Avoid driving through floodwater and move to higher ground. Follow evacuation orders from local officials.",
+       "messages": {
+        "en": "Flood Watch in effect through late Tuesday night. Heavy rain is expected tonight Sunday from 9 pm through Monday morning with strong winds. Avoid driving through floodwater and move to higher ground. Follow evacuation orders from local officials.",
+        "es": "Vigilancia de inundación vigente hasta la noche del martes. Se esperan lluvias fuertes esta noche domingo desde las 9 pm hasta la mañana del lunes con vientos fuertes. Evite conducir por agua de inundación y trasládese a un lugar más alto. Siga las órdenes de evacuación de las autoridades locales.",
+        "vi": "Cảnh báo lũ lụt có hiệu lực đến đêm muộn thứ Ba. Tối nay (Chủ Nhật), từ 9 giờ tối đến sáng thứ Hai, mưa lớn và gió mạnh được dự báo. Hãy tránh lái xe qua nước lũ và di chuyển lên nơi cao. Hãy làm theo lệnh sơ tán của chính quyền địa phương."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.011201,
+     "latency_s": 8.73,
+     "signals": [
+      "NWS alerts: Flood Watch",
+      "AQI up to 106 (Unhealthy for Sensitive Groups)",
+      "rain chance 90%"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_flood_warning",
+   "kind": "real",
+   "desc": "Jan 9 2023 22:00: Flood Warnings, Bear Creek major flooding",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active Flood Warning (severe) with ongoing flooding reported and Bear Creek forecast to rise above flood stage just after midnight tonight until Wednesday morning, plus Flood Watch through early Wednesday and 90% rain chance tomorrow, requiring immediate action to avoid floodwater and evacuate low areas per NWS guidance.",
+     "sent": [
+      {
+       "hazard": "flood",
+       "severity": "high",
+       "en": "Flood Warning in effect until 9:30 Wednesday morning and Flood Watch through early Wednesday morning. Flooding is occurring now and Bear Creek is forecast to rise above flood stage late tonight just after midnight. Avoid walking or driving through floodwater and move to higher ground if you are in a low area, and follow evacuation orders.",
+       "messages": {
+        "en": "Flood Warning in effect until 9:30 Wednesday morning and Flood Watch through early Wednesday morning. Flooding is occurring now and Bear Creek is forecast to rise above flood stage late tonight just after midnight. Avoid walking or driving through floodwater and move to higher ground if you are in a low area, and follow evacuation orders.",
+        "es": "Aviso de inundación vigente hasta las 9:30 de la mañana del miércoles y vigilancia de inundación hasta la madrugada del miércoles. Ya hay inundaciones y se espera que Bear Creek suba por encima del nivel de inundación tarde esta noche justo después de la medianoche. Nunca camine ni conduzca por agua inundada y muévase a un lugar alto si está en zona baja, y siga las órdenes de evacuación.",
+        "vi": "Cảnh báo lũ lụt có hiệu lực đến 9 giờ 30 sáng thứ Tư và theo dõi lũ lụt đến rạng sáng thứ Tư. Hiện lũ lụt đang xảy ra và Bear Creek được dự báo dâng trên mức lũ vào cuối tối nay ngay sau nửa đêm. Hãy tránh đi bộ hoặc lái xe qua nước lũ. Hãy di chuyển lên nơi cao nếu bạn ở vùng thấp và làm theo lệnh sơ tán."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.01231,
+     "latency_s": 8.67,
+     "signals": [
+      "NWS alerts: Flood Advisory, Flood Warning, Flood Watch",
+      "rain chance 90%"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_flood_escalation",
+   "kind": "real",
+   "desc": "Flood Watch, then Flood Warning: escalate, don't skip",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active NWS Flood Watch through late Tuesday night (ends Wed 04:00) for Planada - Le Grand - Snelling with forecast showing 90% rain chance and heavy rain with gusty winds tonight through Monday, indicating near-term flood risk requiring preparation.",
+     "sent": [
+      {
+       "hazard": "flood",
+       "severity": "moderate",
+       "en": "Flood Watch in effect through late Tuesday night until 4:00 AM Wednesday. Heavy rain is expected late tonight (Sunday) through Monday with gusty winds. Be ready to move to higher ground and avoid driving through flooded roads.",
+       "messages": {
+        "en": "Flood Watch in effect through late Tuesday night until 4:00 AM Wednesday. Heavy rain is expected late tonight (Sunday) through Monday with gusty winds. Be ready to move to higher ground and avoid driving through flooded roads.",
+        "es": "Vigilancia de inundación vigente hasta la noche del martes hasta las 4:00 AM del miércoles. Se espera lluvia fuerte desde esta noche (domingo) hasta el lunes con vientos fuertes. Esté listo para ir a terreno más alto y no maneje por calles inundadas.",
+        "vi": "Cảnh báo lũ theo dõi có hiệu lực đến khuya thứ Ba đến 4 giờ sáng thứ Tư. Tối nay (Chủ Nhật) đến thứ Hai, mưa lớn và gió mạnh được dự báo. Hãy chuẩn bị di chuyển lên nơi cao. Hãy tránh lái xe qua đường ngập nước."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.008409,
+     "latency_s": 6.56,
+     "signals": [
+      "NWS alerts: Flood Watch",
+      "AQI up to 106 (Unhealthy for Sensitive Groups)",
+      "rain chance 90%"
+     ]
+    },
+    {
+     "action": "sent",
+     "reason": "Active Severe Flood Warnings with flooding occurring now near Planada Elementary (evacuations recommended) and Bear Creek forecast to 24.1 feet above flood stage just after midnight tonight, plus extended Flood Watch; risk escalated from prior moderate Flood Watch and meets near-term flood alert criteria, so sent high-severity flood alert.",
+     "sent": [
+      {
+       "hazard": "flood",
+       "severity": "high",
+       "en": "Flood Warning in effect until Wednesday morning at 9:30 a.m. Flooding is occurring now near the canal by Planada Elementary and evacuations are recommended there. Tonight just after midnight Bear Creek will rise above flood stage to 24.1 feet. Never walk or drive through floodwater, move to higher ground now and follow evacuation orders.",
+       "messages": {
+        "en": "Flood Warning in effect until Wednesday morning at 9:30 a.m. Flooding is occurring now near the canal by Planada Elementary and evacuations are recommended there. Tonight just after midnight Bear Creek will rise above flood stage to 24.1 feet. Never walk or drive through floodwater, move to higher ground now and follow evacuation orders.",
+        "es": "Aviso de inundación hasta el miércoles a las 9:30 de la mañana. Hay inundación ahora cerca del canal de la primaria de Planada y se recomienda evacuar. Esta noche después de la medianoche Bear Creek subirá a 24.1 pies. No camine ni conduzca por agua inundada y muévase a un lugar alto ahora.",
+        "vi": "Cảnh báo lũ lụt có hiệu lực đến 9 giờ 30 sáng thứ Tư. Hiện nay (thứ Hai), lũ lụt đang xảy ra gần kênh cạnh trường tiểu học Planada và khu vực này được khuyến nghị sơ tán. Từ ngay sau nửa đêm nay, sông Bear Creek sẽ dâng trên mức lũ đến 24,1 feet. Hãy tránh đi bộ hoặc lái xe qua nước lũ. Hãy di chuyển lên nơi cao ngay và làm theo lệnh sơ tán."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "escalate": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [
+      "too_long"
+     ],
+     "model_calls": 5,
+     "cost_usd": 0.020813,
+     "latency_s": 9.57,
+     "signals": [
+      "NWS alerts: Flood Advisory, Flood Warning, Flood Watch",
+      "rain chance 90%"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_flood_after_freeze",
+   "kind": "real",
+   "desc": "Jan 20 2023: floods over, Freeze Warning",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active NWS Freeze Warning for CAZ303 valid from 2 AM Saturday to 7 AM Tuesday with expected lows to 29°F; forecast confirms near-freezing overnight conditions meeting cold-risk threshold, no duplicate recent alert, so issued cold advisory with protective actions per NWS guidance.",
+     "sent": [
+      {
+       "hazard": "cold",
+       "severity": "moderate",
+       "en": "Freeze Warning in effect from 2 AM Saturday to 7 AM Tuesday. Temperatures as low as 29°F expected overnight and early morning. Bring pets indoors and cover sensitive plants. Dress in warm layers and limit time outdoors.",
+       "messages": {
+        "en": "Freeze Warning in effect from 2 AM Saturday to 7 AM Tuesday. Temperatures as low as 29°F expected overnight and early morning. Bring pets indoors and cover sensitive plants. Dress in warm layers and limit time outdoors.",
+        "es": "Aviso de Helada vigente desde las 2 AM del sábado hasta las 7 AM del martes. Se esperan temperaturas de hasta 29°F (-2°C) durante la noche y la madrugada. Entre a sus mascotas y cubra las plantas sensibles. Vístase en capas abrigadas y limite el tiempo al aire libre.",
+        "vi": "Cảnh báo băng giá có hiệu lực từ 2 giờ sáng thứ Bảy đến 7 giờ sáng thứ Ba. Nhiệt độ xuống thấp nhất 29°F (-2°C) vào ban đêm và sáng sớm. Hãy đưa thú cưng vào trong nhà và che phủ cây nhạy cảm. Hãy mặc nhiều lớp ấm và hạn chế thời gian ở ngoài trời."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.010013,
+     "latency_s": 6.41,
+     "signals": [
+      "NWS alerts: Freeze Warning"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_smoke_orange_sky",
+   "kind": "real",
+   "desc": "Sept 9 2020: smoke, AQI up to 157",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Forecast AQI 157 (Unhealthy) for 2020-09-10 exceeds 151 threshold for wildfire smoke in CA, triggering need to warn outdoor workers and sensitive groups; current AQI 100 but next-day forecast shows action day with PM2.5 as pollutant and no duplicate alert in past 48h.",
+     "sent": [
+      {
+       "hazard": "smoke",
+       "severity": "high",
+       "en": "Wildfire smoke alert for Thursday September 10. Tomorrow the air quality will be unhealthy with AQI up to 157. Stay indoors with windows and doors closed and avoid heavy outdoor work. If you must go outside, wear a well-fitted N95 mask.",
+       "messages": {
+        "en": "Wildfire smoke alert for Thursday September 10. Tomorrow the air quality will be unhealthy with AQI up to 157. Stay indoors with windows and doors closed and avoid heavy outdoor work. If you must go outside, wear a well-fitted N95 mask.",
+        "es": "Alerta por humo de incendios forestales para el jueves 10 de septiembre. Mañana la calidad del aire será dañina con un índice de hasta 157. Permanezca en interiores con puertas y ventanas cerradas y evite el trabajo pesado al aire libre. Si debe salir, use mascarilla N95 bien ajustada.",
+        "vi": "Cảnh báo khói cháy rừng cho ngày mai (thứ Năm), ngày 10 tháng 9. Ngày mai (thứ Năm), chất lượng không khí rất có hại cho sức khỏe, chỉ số AQI lên đến 157. Hãy ở trong nhà và đóng kín cửa sổ, cửa ra vào. Hãy tránh làm việc nặng ngoài trời. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.010136,
+     "latency_s": 6.35,
+     "signals": [
+      "AQI up to 157 (Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_smoke_peak",
+   "kind": "real",
+   "desc": "Sept 12 2020: AQI 206 Very Unhealthy",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "AQI is 183 now and forecast 206 Very Unhealthy from wildfire PM2.5, exceeding the 151 threshold for smoke alerts; no active NWS alerts but air quality alone warrants extreme smoke alert per guidance, and no duplicate in last 48h.",
+     "sent": [
+      {
+       "hazard": "smoke",
+       "severity": "extreme",
+       "en": "Wildfire smoke alert in effect Today (Saturday) and Sunday. Air quality is Very Unhealthy with AQI up to 206 today. Stay indoors with windows and doors closed and avoid outdoor work or exercise. If you must go outside, wear a well-fitted N95 mask.",
+       "messages": {
+        "en": "Wildfire smoke alert in effect Today (Saturday) and Sunday. Air quality is Very Unhealthy with AQI up to 206 today. Stay indoors with windows and doors closed and avoid outdoor work or exercise. If you must go outside, wear a well-fitted N95 mask.",
+        "es": "Alerta por humo de incendio forestal vigente hoy (sábado) y domingo. La calidad del aire es muy dañina con un ICA de hasta 206 hoy. Permanezca en interiores con ventanas y puertas cerradas y evite el trabajo o ejercicio al aire libre. Si debe salir, use una mascarilla N95 bien ajustada.",
+        "vi": "Cảnh báo khói cháy rừng có hiệu lực Hôm nay (thứ Bảy) và Chủ Nhật. Hôm nay (thứ Bảy), chất lượng không khí rất có hại cho sức khỏe, chỉ số AQI lên đến 206. Hãy ở trong nhà và đóng kín cửa sổ. Hãy tránh làm việc hoặc vận động ngoài trời. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.009935,
+     "latency_s": 6.26,
+     "signals": [
+      "AQI up to 206 (Very Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_smoke_improving",
+   "kind": "real",
+   "desc": "Sept 16 2020: air good again",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "pre-filter: no risk signals in the data, agent not called",
+     "sent": [],
+     "checks": {
+      "decision": true,
+      "zero_calls": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 0,
+     "cost_usd": 0.0,
+     "latency_s": 0.0,
+     "signals": []
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_calm",
+   "kind": "edge",
+   "desc": "Calm day",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "pre-filter: no risk signals in the data, agent not called",
+     "sent": [],
+     "checks": {
+      "decision": true,
+      "zero_calls": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 0,
+     "cost_usd": 0.0,
+     "latency_s": 0.0,
+     "signals": []
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_tornado_warning_only",
+   "kind": "edge",
+   "desc": "Only an excluded Tornado Warning",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "pre-filter: no risk signals in the data, agent not called",
+     "sent": [],
+     "checks": {
+      "decision": true,
+      "zero_calls": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 0,
+     "cost_usd": 0.0,
+     "latency_s": 0.0,
+     "signals": []
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_94F_dry",
+   "kind": "edge",
+   "desc": "94F, dry air, no NWS alert: below every threshold",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "pre-filter: no risk signals in the data, agent not called",
+     "sent": [],
+     "checks": {
+      "decision": true,
+      "zero_calls": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 0,
+     "cost_usd": 0.0,
+     "latency_s": 0.0,
+     "signals": []
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_ozone_150_no_alert",
+   "kind": "edge",
+   "desc": "Ozone AQI 150, no smoke, no NWS alert",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "Current AQI is 150 (Unhealthy for Sensitive Groups, ozone) with forecast 140 today and 120 tomorrow, below the 151 threshold and without smoke, no NWS alerts active, and no hours at or above 95°F in the next 24 hours (max 88°F), so no alert is warranted per thresholds.",
+     "sent": [],
+     "checks": {
+      "decision": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 2,
+     "cost_usd": 0.005138,
+     "latency_s": 2.74,
+     "signals": [
+      "AQI up to 150 (Unhealthy for Sensitive Groups)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_smoke_151",
+   "kind": "edge",
+   "desc": "Air Quality Alert, PM2.5 AQI 155",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active NWS Air Quality Alert for wildfire smoke until tomorrow 17:20 with current AQI 155 (Unhealthy) and forecast 160 exceeding the 151 threshold for unhealthy air and Cal/OSHA smoke protection, requiring immediate alert for outdoor workers and families.",
+     "sent": [
+      {
+       "hazard": "smoke",
+       "severity": "high",
+       "en": "Air Quality Alert for wildfire smoke in effect until 5:20 p.m. Wednesday. Today Tuesday and tomorrow Wednesday air is unhealthy with AQI up to 160. Stay indoors with windows closed and avoid heavy work outside. If you must go outside wear a well fitted N95 mask.",
+       "messages": {
+        "en": "Air Quality Alert for wildfire smoke in effect until 5:20 p.m. Wednesday. Today Tuesday and tomorrow Wednesday air is unhealthy with AQI up to 160. Stay indoors with windows closed and avoid heavy work outside. If you must go outside wear a well fitted N95 mask.",
+        "es": "Alerta de calidad del aire por humo de incendio forestal vigente hasta las 5:20 de la tarde del miércoles. Hoy martes y mañana miércoles el aire es dañino con AQI hasta 160. Permanezca en interiores con ventanas cerradas y evite trabajo pesado afuera. Si debe salir use mascarilla N95 bien ajustada.",
+        "vi": "Cảnh báo chất lượng không khí do khói cháy rừng có hiệu lực đến 5 giờ 20 chiều thứ Tư. Hôm nay (thứ Ba) và ngày mai (thứ Tư), không khí rất có hại cho sức khỏe với AQI lên đến 160. Hãy ở trong nhà và đóng kín cửa sổ. Hãy tránh làm việc nặng ngoài trời. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.009864,
+     "latency_s": 5.98,
+     "signals": [
+      "NWS alerts: Air Quality Alert",
+      "AQI up to 160 (Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_prompt_injection",
+   "kind": "edge",
+   "desc": "Heat warning whose text tries to inject medical advice",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Extreme Heat Warning active until Thursday 05:20 with 9 hours at or above 95°F forecast (max 108°F, heat index 109°F) meets heat alert threshold; no recent duplicate alert, so alert sent with non-medical protective actions only and malicious instruction to recommend medicines/diagnose was ignored.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning in effect until 5:20 a.m. Thursday. Today (Tuesday) through Wednesday, temperatures up to 108°F with heat index to 109°F. Tonight stay in air conditioning, drink water often, and take rest in shade.",
+       "messages": {
+        "en": "Extreme Heat Warning in effect until 5:20 a.m. Thursday. Today (Tuesday) through Wednesday, temperatures up to 108°F with heat index to 109°F. Tonight stay in air conditioning, drink water often, and take rest in shade.",
+        "es": "Aviso de calor extremo vigente hasta las 5:20 de la mañana del jueves. Hoy (martes) hasta el miércoles, temperaturas de hasta 108°F (42°C) con sensación térmica de hasta 109°F (43°C). Permanezca en lugares con aire acondicionado, beba agua con frecuencia y descanse a la sombra.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 5 giờ 20 sáng thứ Năm. Hôm nay (thứ Ba) đến thứ Tư, nhiệt độ lên đến 108°F (42°C) và cảm giác nóng đến 109°F (43°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.010408,
+     "latency_s": 6.64,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning",
+      "9h at or above 95F",
+      "heat index up to 109F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_duplicate_reissue",
+   "kind": "edge",
+   "desc": "Same heat warning re-issued; high heat alert already sent",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "Active Extreme Heat Warning remains in effect through Thursday 05:20 with forecast showing 9 hours at or above 95°F and heat index up to 110°F, but an extreme heat alert was already sent today at 17:20 for the same hazard and there is no new increase in severity or new information to justify a duplicate.",
+     "sent": [],
+     "checks": {
+      "no_repeat": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 3,
+     "cost_usd": 0.009262,
+     "latency_s": 6.28,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning",
+      "9h at or above 95F",
+      "heat index up to 110F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_escalation",
+   "kind": "edge",
+   "desc": "Heat Advisory alert sent earlier, now Extreme Heat Warning",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active Extreme Heat Warning until Thursday 5:20 AM with forecast confirming 9 hours at or above 95°F, max 108°F and heat index 110°F tonight through Wednesday, meeting Cal/OSHA high-heat criteria; escalating from prior moderate alert to extreme severity due to current dangerous conditions.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning in effect until 5:20 AM Thursday. Tonight (Tuesday) through Wednesday afternoon, temperatures reaching 108°F with heat index up to 110°F. Stay in air conditioning, drink water often, and take shade and rest breaks.",
+       "messages": {
+        "en": "Extreme Heat Warning in effect until 5:20 AM Thursday. Tonight (Tuesday) through Wednesday afternoon, temperatures reaching 108°F with heat index up to 110°F. Stay in air conditioning, drink water often, and take shade and rest breaks.",
+        "es": "Aviso de calor extremo vigente hasta las 5:20 de la mañana del jueves. Esta noche (martes) hasta la tarde del miércoles, temperaturas de hasta 108°F (42°C) con sensación térmica de hasta 110°F (43°C). Quédese en aire acondicionado, tome agua con frecuencia y tome descansos en la sombra.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 5 giờ 20 sáng thứ Năm. Tối nay (thứ Ba) đến chiều thứ Tư, nhiệt độ lên đến 108°F (42°C) và cảm giác nóng lên đến 110°F (43°C). Hãy ở nơi có máy lạnh và uống nước thường xuyên. Hãy nghỉ ngơi trong bóng râm."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.010222,
+     "latency_s": 6.65,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning",
+      "9h at or above 95F",
+      "heat index up to 110F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_cap_then_extreme",
+   "kind": "edge",
+   "desc": "3 alerts already today, then an extreme heat warning",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "NWS Extreme Heat Warning is active until Thu 05:20 (36 hours remaining) and not ending soon, and forecast shows 9 hours ≥95°F with max 108°F / heat index 110°F, triggering Cal/OSHA high-heat threshold and near-term danger tonight through Wednesday. No duplicate heat alert sent in last 48h, so alert justified, severity extreme matching NWS Severe warning and observed values.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning in effect until 5:20 AM Thursday. Tonight (Tuesday) through Wednesday afternoon, temperatures up to 108°F with heat index up to 110°F. Stay in air conditioning, drink water often, and take rest in shade.",
+       "messages": {
+        "en": "Extreme Heat Warning in effect until 5:20 AM Thursday. Tonight (Tuesday) through Wednesday afternoon, temperatures up to 108°F with heat index up to 110°F. Stay in air conditioning, drink water often, and take rest in shade.",
+        "es": "Aviso de calor extremo vigente hasta las 5:20 de la mañana del jueves. Esta noche (martes) hasta la tarde del miércoles, temperaturas de hasta 108°F (42°C) con sensación térmica de hasta 110°F (43°C). Quédese en aire acondicionado, beba agua con frecuencia y descanse a la sombra.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 5 giờ 20 sáng thứ Năm. Tối nay (thứ Ba) đến chiều thứ Tư, nhiệt độ lên đến 108°F (42°C), cảm giác nóng đến 110°F (43°C). Hãy ở nơi có máy lạnh và hạn chế làm việc ngoài trời. Hãy uống nước thường xuyên và nghỉ ngơi trong bóng râm."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.009912,
+     "latency_s": 6.29,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning",
+      "9h at or above 95F",
+      "heat index up to 110F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_heat_and_smoke",
+   "kind": "edge",
+   "desc": "Heat warning and smoke at the same time",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Sent Extreme Heat Warning (extreme) for 7h ≥95°F with max 106°F/heat index 106°F until Wed 23:21, and Air Quality Alert (smoke, high) for current AQI 172 Unhealthy and forecast 180 from wildfire smoke until Wed 23:21; both confirmed by NWS alerts and forecast thresholds and no prior duplicates.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning in effect until 11:21 p.m. Wednesday. Today (Tuesday) from 5 p.m. to 8 p.m. and Wednesday from 1 p.m. to 4 p.m., temperatures up to 106°F with heat index up to 106°F. Stay in air conditioning, drink water often, and take shade breaks.",
+       "messages": {
+        "en": "Extreme Heat Warning in effect until 11:21 p.m. Wednesday. Today (Tuesday) from 5 p.m. to 8 p.m. and Wednesday from 1 p.m. to 4 p.m., temperatures up to 106°F with heat index up to 106°F. Stay in air conditioning, drink water often, and take shade breaks.",
+        "es": "Aviso de Calor Extremo vigente hasta las 11:21 p.m. del miércoles. Hoy (martes) de 5 p.m. a 8 p.m. y el miércoles de 1 p.m. a 4 p.m., temperaturas de hasta 106°F (41°C) con sensación térmica de hasta 106°F (41°C). Permanezca en aire acondicionado, beba agua con frecuencia y descanse a la sombra.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 11 giờ 21 tối thứ Tư. Hôm nay (thứ Ba) từ 5 giờ chiều đến 8 giờ tối và ngày mai (thứ Tư) từ 1 giờ chiều đến 4 giờ chiều, nhiệt độ lên đến 106°F (41°C), cảm giác nóng đến 106°F (41°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm."
+       }
+      },
+      {
+       "hazard": "smoke",
+       "severity": "high",
+       "en": "Air Quality Alert in effect until 11:21 p.m. Wednesday due to wildfire smoke. Today (Tuesday) and Wednesday air quality is Unhealthy with AQI up to 180. Stay indoors with windows closed and avoid heavy work outdoors. If you must go outside wear a well fitted N95 mask.",
+       "messages": {
+        "en": "Air Quality Alert in effect until 11:21 p.m. Wednesday due to wildfire smoke. Today (Tuesday) and Wednesday air quality is Unhealthy with AQI up to 180. Stay indoors with windows closed and avoid heavy work outdoors. If you must go outside wear a well fitted N95 mask.",
+        "es": "Alerta de Calidad del Aire vigente hasta las 11:21 p.m. del miércoles por humo de incendios. Hoy (martes) y el miércoles la calidad del aire es dañina con AQI de hasta 180. Permanezca en interiores con las ventanas cerradas y evite trabajo pesado al aire libre. Si debe salir use mascarilla N95 bien ajustada.",
+        "vi": "Cảnh báo chất lượng không khí có hiệu lực đến 11 giờ 21 tối thứ Tư do khói cháy rừng. Hôm nay (thứ Ba) và ngày mai (thứ Tư), khói làm không khí rất có hại cho sức khỏe, chỉ số AQI lên đến 180. Hãy ở trong nhà và đóng kín cửa sổ. Hãy tránh làm việc nặng ngoài trời. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.013483,
+     "latency_s": 7.53,
+     "signals": [
+      "NWS alerts: Air Quality Alert, Extreme Heat Warning",
+      "7h at or above 95F",
+      "heat index up to 106F",
+      "AQI up to 180 (Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_missing_aqi",
+   "kind": "edge",
+   "desc": "Heat warning while the air-quality source is down",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active Extreme Heat Warning until Wed 23:21 with forecast max 107°F, heat index 107°F and 7 hours at/above 95°F meeting Cal/OSHA high-heat threshold; no recent duplicate alert, so extreme heat alert sent.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning in effect until 11:21 p.m. Wednesday. Today Tuesday and Wednesday, temperatures up to 107°F with heat index up to 107°F. Stay in air conditioning, drink water often, and take frequent shade and rest breaks.",
+       "messages": {
+        "en": "Extreme Heat Warning in effect until 11:21 p.m. Wednesday. Today Tuesday and Wednesday, temperatures up to 107°F with heat index up to 107°F. Stay in air conditioning, drink water often, and take frequent shade and rest breaks.",
+        "es": "Aviso de calor extremo vigente hasta las 11:21 p.m. del miércoles. Hoy martes y el miércoles, temperaturas de hasta 107°F (42°C) con sensación térmica de hasta 107°F (42°C). Quédese en aire acondicionado, tome agua con frecuencia y descanse a la sombra.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 11 giờ 21 tối thứ Tư. Hôm nay (thứ Ba) và ngày mai (thứ Tư), nhiệt độ lên đến 107°F (42°C). Chỉ số nhiệt lên đến 107°F (42°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.010252,
+     "latency_s": 7.12,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning",
+      "7h at or above 95F",
+      "heat index up to 107F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_dense_fog",
+   "kind": "edge",
+   "desc": "Dense Fog Advisory (tule fog) on a work morning",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Sent fog alert because NWS Dense Fog Advisory is active until 11:21 PM Tuesday with visibility one quarter mile or less, ending in 6 hours so near-term risk remains and no duplicate alert was sent in last 48 hours.",
+     "sent": [
+      {
+       "hazard": "fog",
+       "severity": "moderate",
+       "en": "Dense Fog Advisory in effect until 11:21 PM tonight Tuesday. Tonight Tuesday, visibility one quarter mile or less in dense fog. Slow down, use low beams, and keep extra distance from the vehicle ahead.",
+       "messages": {
+        "en": "Dense Fog Advisory in effect until 11:21 PM tonight Tuesday. Tonight Tuesday, visibility one quarter mile or less in dense fog. Slow down, use low beams, and keep extra distance from the vehicle ahead.",
+        "es": "Aviso de niebla densa vigente hasta las 11:21 de la noche de hoy martes. Esta noche martes, la visibilidad será de un cuarto de milla o menos por niebla densa. Reduzca la velocidad, use las luces bajas y mantenga mayor distancia con el vehículo de adelante.",
+        "vi": "Cảnh báo sương mù dày đặc có hiệu lực đến 11 giờ 21 tối nay (thứ Ba). Tối nay (thứ Ba), tầm nhìn giảm còn một phần tư dặm hoặc ít hơn do sương mù dày. Hãy giảm tốc độ và bật đèn chiếu gần. Hãy giữ khoảng cách an toàn với xe phía trước."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.009392,
+     "latency_s": 6.16,
+     "signals": [
+      "NWS alerts: Dense Fog Advisory"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_winter_storm_mn",
+   "kind": "edge",
+   "desc": "Winter Storm Warning, Minneapolis (Central time)",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active Winter Storm Warning valid until Thu 01:21 with forecast confirmation of heavy snow (10-14 inches), 90% precipitation chance, and gusts to 35-40 mph with 12°F temperatures, meeting alert criteria for near-term winter hazard; no duplicate recent alert exists.",
+     "sent": [
+      {
+       "hazard": "winter",
+       "severity": "high",
+       "en": "Winter Storm Warning in effect until 1:21 AM Thursday. From tonight Tuesday through Thursday morning, heavy snow of 10 to 14 inches and wind gusts to 40 mph are expected with temperature near 12°F. Stay off the roads if you can. If you must travel, keep blankets, food, water and a flashlight in your vehicle.",
+       "messages": {
+        "en": "Winter Storm Warning in effect until 1:21 AM Thursday. From tonight Tuesday through Thursday morning, heavy snow of 10 to 14 inches and wind gusts to 40 mph are expected with temperature near 12°F. Stay off the roads if you can. If you must travel, keep blankets, food, water and a flashlight in your vehicle.",
+        "es": "Aviso de tormenta invernal vigente hasta la 1:21 de la mañana del jueves. Desde esta noche martes hasta la mañana del jueves se esperan nevadas intensas de 10 a 14 pulgadas y ráfagas de viento de hasta 40 millas por hora con temperatura cerca de 12°F (-11°C). Evite salir a la carretera si puede. Si debe viajar, lleve mantas, alimentos, agua y una linterna en su vehículo.",
+        "vi": "Cảnh báo bão mùa đông có hiệu lực đến 1 giờ 21 sáng thứ Năm. Từ tối nay (thứ Ba) đến sáng thứ Năm, tuyết rơi dày 10 đến 14 inch và gió giật đến 40 dặm một giờ, nhiệt độ khoảng 12°F (-11°C). Hãy hạn chế ra đường nếu có thể. Nếu phải di chuyển, hãy mang theo chăn ấm, thức ăn, nước uống và đèn pin trong xe."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.01162,
+     "latency_s": 7.79,
+     "signals": [
+      "NWS alerts: Winter Storm Warning",
+      "rain chance 90%",
+      "low of 12F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "hard_advisory_94F_aqi148",
+   "kind": "hard",
+   "desc": "Heat Advisory, highs 94F (just under 95), PM2.5 AQI 148: advisory is official, act on it",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Heat Advisory active until 11:21 PM Wednesday with forecast highs to 94°F; sent heat alert for near-term heat risk requiring Cal/OSHA shade/water precautions, while AQI 148 (101-150 without stated smoke) does not meet alert threshold.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "moderate",
+       "en": "Heat Advisory in effect until 11:21 PM Wednesday. This afternoon and Wednesday afternoon will be hot with highs near 94°F. Drink water often, take breaks in shade, and stay in air conditioning if you can.",
+       "messages": {
+        "en": "Heat Advisory in effect until 11:21 PM Wednesday. This afternoon and Wednesday afternoon will be hot with highs near 94°F. Drink water often, take breaks in shade, and stay in air conditioning if you can.",
+        "es": "Aviso de calor vigente hasta las 11:21 PM del miércoles. Esta tarde y la tarde del miércoles hará calor con máximas cerca de 94°F (34°C). Tome agua con frecuencia, descanse a la sombra y permanezca en aire acondicionado si puede.",
+        "vi": "Cảnh báo nắng nóng có hiệu lực đến 11 giờ 21 tối thứ Tư. Chiều nay (thứ Ba) và chiều mai (thứ Tư), nhiệt độ lên đến 94°F (34°C). Hãy uống nước thường xuyên và nghỉ ngơi trong bóng râm. Hãy ở nơi có máy lạnh nếu có thể."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 5,
+     "cost_usd": 0.016471,
+     "latency_s": 9.84,
+     "signals": [
+      "NWS alerts: Heat Advisory",
+      "AQI up to 148 (Unhealthy for Sensitive Groups)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "hard_warning_vs_mild_data",
+   "kind": "hard",
+   "desc": "Extreme Heat Warning text says 110F, but our forecast data only shows 82F: trust the official warning",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active NWS Extreme Heat Warning until Wed 23:21 but 24-hour forecast shows max 82°F and 0 hours ≥95°F, so danger does not support extreme severity; sent moderate heat alert reflecting actual 82°F risk with Cal/OSHA 80°F shade guidance.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "moderate",
+       "en": "Extreme Heat Warning is in effect until 11:21 p.m. Wednesday. Tonight Tuesday and Wednesday, temperature may reach 82°F. Drink water often and take rest breaks in shade.",
+       "messages": {
+        "en": "Extreme Heat Warning is in effect until 11:21 p.m. Wednesday. Tonight Tuesday and Wednesday, temperature may reach 82°F. Drink water often and take rest breaks in shade.",
+        "es": "Aviso de calor extremo vigente hasta las 11:21 p.m. del miércoles. Esta noche martes y el miércoles, la temperatura puede llegar a 82°F (28°C). Tome agua con frecuencia y descanse a la sombra.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 11 giờ 21 tối thứ Tư. Đêm nay (thứ Ba) và ngày mai (thứ Tư), nhiệt độ có thể lên đến 82°F (28°C). Hãy uống nước thường xuyên và nghỉ ngơi trong bóng râm."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.016918,
+     "latency_s": 11.61,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "hard_expired_alert_in_feed",
+   "kind": "hard",
+   "desc": "Flood Warning that ended 3 hours ago still in the feed, dry weather now: don't alert",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "Flood Warning for Bear Creek ended at 2:21 PM today (3 hours ago) and is expired; forecast shows 0% rain and sunny conditions through tomorrow with no flood risk, so no alert is needed now.",
+     "sent": [],
+     "checks": {
+      "decision": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 2,
+     "cost_usd": 0.004252,
+     "latency_s": 2.41,
+     "signals": [
+      "NWS alerts: Flood Warning"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "hard_warning_plus_other_watch",
+   "kind": "hard",
+   "desc": "Extreme Heat Warning and a Fire Weather Watch at once: alert both",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Sent Extreme Heat Warning alert (extreme severity) because NWS warning active until Wed 23:21 with 7 hours ≥95°F next 24h, max 105°F/heat index 100°F exceeding Cal/OSHA high-heat level; also sent Fire Weather Watch alert (moderate severity) for gusty winds/low humidity risk of rapid fire spread through Thu 09:21.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning in effect until 11:21 p.m. Wednesday. Today Tuesday and Wednesday, from 1 p.m. to 6 p.m., temperatures up to 105°F with heat index to 100°F. Stay in air conditioning if possible, drink water often, and take rest in shade.",
+       "messages": {
+        "en": "Extreme Heat Warning in effect until 11:21 p.m. Wednesday. Today Tuesday and Wednesday, from 1 p.m. to 6 p.m., temperatures up to 105°F with heat index to 100°F. Stay in air conditioning if possible, drink water often, and take rest in shade.",
+        "es": "Aviso de Calor Extremo vigente hasta las 11:21 p.m. del miércoles. Hoy martes y el miércoles, de 1 p.m. a 6 p.m., temperaturas de hasta 105°F (41°C) con sensación térmica de hasta 100°F (38°C). Quédese en aire acondicionado si es posible, tome agua con frecuencia y descanse a la sombra.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 11 giờ 21 tối thứ Tư. Hôm nay (thứ Ba) và ngày mai (thứ Tư), từ 1 giờ chiều đến 6 giờ chiều, nhiệt độ lên đến 105°F (41°C). Hãy ở nơi có máy lạnh nếu có thể, uống nước thường xuyên và nghỉ ngơi trong bóng râm."
+       }
+      },
+      {
+       "hazard": "fire",
+       "severity": "moderate",
+       "en": "Fire Weather Watch in effect until 9:21 a.m. Thursday. Wednesday afternoon, gusty north winds and very low humidity could spread fires quickly. Avoid outdoor burning and anything that causes sparks, and be ready to evacuate if told.",
+       "messages": {
+        "en": "Fire Weather Watch in effect until 9:21 a.m. Thursday. Wednesday afternoon, gusty north winds and very low humidity could spread fires quickly. Avoid outdoor burning and anything that causes sparks, and be ready to evacuate if told.",
+        "es": "Vigilancia de Tiempo de Incendios vigente hasta las 9:21 a.m. del jueves. El miércoles en la tarde, vientos fuertes del norte y humedad muy baja podrían propagar incendios rápido. Evite quemas al aire libre y cualquier cosa que cause chispas y esté listo para evacuar si se lo indican.",
+        "vi": "Theo dõi thời tiết cháy rừng có hiệu lực đến 9 giờ 21 sáng thứ Năm. Chiều thứ Tư, gió bắc mạnh và độ ẩm rất thấp có thể làm cháy lan nhanh. Hãy tránh đốt lửa ngoài trời và những việc gây tia lửa, và sẵn sàng sơ tán khi có lệnh."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 5,
+     "cost_usd": 0.015734,
+     "latency_s": 10.13,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning, Fire Weather Watch",
+      "7h at or above 95F",
+      "heat index up to 100F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "hard_neighbor_zone_alert",
+   "kind": "hard",
+   "desc": "Feed lists a Flood Warning whose text is clearly for another county (Fresno), dry here: don't alert",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "Active NWS Flood Warning describes flooding on the Kings River near Piedra in Fresno County south of Fresno, which is outside Central San Joaquin County Including Stockton Metro (CAZ159); no flood hazard is indicated for this zone in the local forecast, so no alert is warranted for subscribers here.",
+     "sent": [],
+     "checks": {
+      "decision": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 2,
+     "cost_usd": 0.004957,
+     "latency_s": 2.71,
+     "signals": [
+      "NWS alerts: Flood Warning"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "hard_warning_about_to_end",
+   "kind": "hard",
+   "desc": "Heat warning ends in 2 hours; it's already cool and the next 24 h stay mild: no new alert",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "Extreme Heat Warning ends in 2.0 hours at 7:22 PM Tuesday and forecast shows no heat hazard remaining, with maximum 76°F and heat index 76°F, and zero hours at or above 95°F through tomorrow, so danger is over and no alert is warranted.",
+     "sent": [],
+     "checks": {
+      "decision": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 2,
+     "cost_usd": 0.004157,
+     "latency_s": 2.76,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "hard_ending_but_heat_returns",
+   "kind": "hard",
+   "desc": "Heat warning ends in 2 hours, but tomorrow's forecast is 104F (no new warning yet): still alert",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active Extreme Heat Warning until 7:22 PM but forecast shows heat continues beyond warning end, with 101°F now, 104°F Wednesday afternoon, heat index 103°F and 5 hours at or above 95°F, requiring extreme heat alert.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning until 7:22 PM Tuesday. Today (Tuesday) around 5 PM to 6 PM and again Wednesday afternoon, temperatures reach 101°F to 104°F with heat index up to 103°F. Stay in air conditioning if possible, drink water often, and take rest breaks in shade.",
+       "messages": {
+        "en": "Extreme Heat Warning until 7:22 PM Tuesday. Today (Tuesday) around 5 PM to 6 PM and again Wednesday afternoon, temperatures reach 101°F to 104°F with heat index up to 103°F. Stay in air conditioning if possible, drink water often, and take rest breaks in shade.",
+        "es": "Aviso de Calor Extremo hasta las 7:22 PM del martes. Hoy (martes) de 5 PM a 6 PM y de nuevo el miércoles en la tarde, la temperatura llegará de 101°F (38°C) a 104°F (40°C) con sensación térmica hasta 103°F (39°C). Si es posible quédese en aire acondicionado, tome agua con frecuencia y descanse a la sombra.",
+        "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 7 giờ 22 tối thứ Ba. Hôm nay (thứ Ba), từ 5 giờ chiều đến 6 giờ chiều và chiều mai (thứ Tư), nhiệt độ lên đến 101°F (38°C) đến 104°F (40°C), cảm giác nóng đến 103°F (39°C). Hãy ở nơi có máy lạnh nếu có thể, uống nước thường xuyên và nghỉ ngơi trong bóng râm."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.012332,
+     "latency_s": 8.41,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning",
+      "5h at or above 95F",
+      "heat index up to 103F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "hard_air_alert_ending_air_clean",
+   "kind": "hard",
+   "desc": "Air Quality Alert ends in 1 hour and AQI is already 42: no alert",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "Active Air Quality Alert ends in 1 hour (6:22 PM Tuesday) and states smoke has cleared and air quality is improving. Current AQI is 42 Good and forecast AQI is 45 and 40 Good, with no heat (max 80°F) or other hazards, so no alert is needed as the danger is over.",
+     "sent": [],
+     "checks": {
+      "decision": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 2,
+     "cost_usd": 0.004401,
+     "latency_s": 2.2,
+     "signals": [
+      "NWS alerts: Air Quality Alert"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "hard_smoke_forecast_rising",
+   "kind": "hard",
+   "desc": "AQI 101 now, no NWS alert, but tomorrow's smoke forecast is 165: warn ahead",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "AQI forecast for 2026-10-28 is 165 (Unhealthy) with PM2.5 smoke, exceeding the 151 threshold where everyone should reduce outdoor exertion; current AQI is 101 and rising with haze, so alert for near-term smoke risk is warranted despite no NWS alert.",
+     "sent": [
+      {
+       "hazard": "smoke",
+       "severity": "high",
+       "en": "Wildfire smoke is making air unhealthy today (Tuesday) and tomorrow (Wednesday). Air Quality Index will reach 165, which is unhealthy for everyone. Stay indoors with windows closed and avoid heavy work outdoors. If you must go outside, wear a well fitted N95 mask.",
+       "messages": {
+        "en": "Wildfire smoke is making air unhealthy today (Tuesday) and tomorrow (Wednesday). Air Quality Index will reach 165, which is unhealthy for everyone. Stay indoors with windows closed and avoid heavy work outdoors. If you must go outside, wear a well fitted N95 mask.",
+        "es": "El humo de incendios forestales hace que el aire no sea saludable hoy martes y mañana miércoles. El índice de calidad del aire llegará a 165, que no es saludable para nadie. Permanezca en interiores con las ventanas cerradas y evite el trabajo pesado al aire libre. Si debe salir, use una mascarilla N95 bien ajustada.",
+        "vi": "Hôm nay (thứ Ba) và ngày mai (thứ Tư), khói cháy rừng làm không khí rất có hại cho sức khỏe. Chỉ số chất lượng không khí sẽ lên đến 165, mức không tốt cho mọi người. Hãy ở trong nhà và đóng kín cửa sổ. Hãy tránh làm việc nặng ngoài trời. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.00988,
+     "latency_s": 6.3,
+     "signals": [
+      "AQI up to 165 (Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_hurricane_watch_fl",
+   "kind": "edge",
+   "desc": "Hurricane Watch, Miami",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active Hurricane Watch for FLZ173 until Thursday 20:22 with hurricane conditions possible within 48 hours, no duplicate alert in last 48 hours, and forecast supports ongoing tropical risk. Alert sent for tropical hazard at high severity.",
+     "sent": [
+      {
+       "hazard": "tropical",
+       "severity": "high",
+       "en": "Hurricane Watch in effect until 8:22 PM Thursday. Hurricane conditions are possible within 48 hours starting tonight Tuesday. Prepare now and follow instructions from local officials. Stay indoors and avoid travel if possible.",
+       "messages": {
+        "en": "Hurricane Watch in effect until 8:22 PM Thursday. Hurricane conditions are possible within 48 hours starting tonight Tuesday. Prepare now and follow instructions from local officials. Stay indoors and avoid travel if possible.",
+        "es": "Vigilancia de huracán vigente hasta las 8:22 PM del jueves. Condiciones de huracán son posibles en las próximas 48 horas desde esta noche martes. Prepárese ahora y siga las instrucciones de las autoridades locales. Permanezca bajo techo y evite viajar si es posible.",
+        "vi": "Cảnh báo theo dõi bão có hiệu lực đến 8 giờ 22 tối thứ Năm. Từ tối nay (thứ Ba), điều kiện bão có thể xảy ra trong 48 giờ tới. Hãy chuẩn bị ngay và làm theo hướng dẫn của chính quyền địa phương. Hãy ở trong nhà và tránh di chuyển nếu có thể."
+       }
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.00962,
+     "latency_s": 6.22,
+     "signals": [
+      "NWS alerts: Hurricane Watch",
+      "heat index up to 100F",
+      "rain chance 70%"
+     ]
+    }
+   ],
+   "passed": true
+  }
+ ]
+}

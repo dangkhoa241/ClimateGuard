@@ -73,7 +73,8 @@ def run_case(case: dict) -> dict:
         checks = score_step(expect, d, prev)
         rejections = [rejection_kind(t["rejected"]) for t in d.get("tools", []) if t.get("rejected")]
         steps.append({"action": d["action"], "reason": d["reason"], "sent": [
-            {"hazard": s["hazard"], "severity": s["severity"], "en": s["messages"]["en"]} for s in d.get("sent", [])],
+            {"hazard": s["hazard"], "severity": s["severity"], "en": s["messages"]["en"],
+             "messages": s["messages"]} for s in d.get("sent", [])],
             "checks": checks, "passed": all(checks.values()), "rejections": rejections,
             "model_calls": d.get("model_calls") or 0, "cost_usd": d.get("cost_usd") or 0.0,
             "latency_s": round(latency, 2), "signals": d.get("signals", [])})
@@ -96,7 +97,7 @@ def summarize(results: list[dict]) -> dict:
             rej[k] = rej.get(k, 0) + 1
     return {"cases": {"passed": sum(r["passed"] for r in results), "total": len(results)},
             "by_kind": {k: {"passed": sum(r["passed"] for r in results if r["kind"] == k),
-                            "total": sum(r["kind"] == k for r in results)} for k in ("real", "edge")},
+                            "total": sum(r["kind"] == k for r in results)} for k in ("real", "edge", "hard")},
             "decision_accuracy": rate("decision"), "hazard_accuracy": rate("hazards"),
             "severity_in_range": rate("severity"), "no_repeat": rate("no_repeat"), "escalation": rate("escalate"),
             "pre_filter_zero_calls": rate("zero_calls"), "no_medical_wording": rate("no_medical_wording"),
@@ -113,7 +114,8 @@ def markdown(summary: dict, results: list[dict]) -> str:
     lines = [f"# Monitoring agent eval: {datetime.now():%Y-%m-%d %H:%M}", "",
              f"Model `{summary['model']}`, reasoning effort `{summary['reasoning_effort']}`.", "",
              "| Metric | Result |", "|---|---|",
-             f"| Cases passed | **{f(summary['cases'])}** (real {f(summary['by_kind']['real'])}, edge {f(summary['by_kind']['edge'])}) |",
+             f"| Cases passed | **{f(summary['cases'])}** (real {f(summary['by_kind']['real'])}, "
+             f"edge {f(summary['by_kind']['edge'])}, hard {f(summary['by_kind']['hard'])}) |",
              f"| Decision accuracy (send vs. skip) | {f(summary['decision_accuracy'])} |",
              f"| Right hazard | {f(summary['hazard_accuracy'])} |",
              f"| Severity in expected range | {f(summary['severity_in_range'])} |",

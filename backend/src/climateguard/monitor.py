@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from . import alerts_store, config, guidance, hazards, notify, risk, zones
+from . import alerts_store, config, guidance, hazards, notify, risk, units, zones
 from .languages import REVIEWED
 from .llm import chat
 from .store import get_store
@@ -63,15 +63,31 @@ How to work:
    - high chance of heavy rain with flood risk.
    Do not alert for normal conditions. Do not repeat an alert already sent for the same hazard unless the
    risk got worse (higher severity) or there is important new information.
+   Check each alert's end time ("ends_in_hours") against the forecast. If a warning ends within about 2-3
+   hours and the forecast for the rest of today and tomorrow no longer shows that hazard (for heat: no hour
+   near 95F and heat index below 100F), do NOT alert: the danger is over. Severity must match what the data
+   shows, not only the warning's name. Never write "dangerous now" unless current values support it.
    ClimateGuard does NOT send Tornado, Flash Flood, Severe Thunderstorm or Extreme Wind WARNINGS (they need
    minutes of lead time); never claim to cover them.
 3. Before writing, call search_safety_guidance to ground the protective actions in official guidance.
 4. To alert, call send_alert once per hazard. Messages in English (en), Spanish (es, natural, use "usted"),
-   and Vietnamese (vi, natural). Each message: at most 2 short sentences, simple words, say WHEN
+   and Vietnamese (vi). Each message: short, simple sentences (up to 3; Vietnamese up to 4), say WHEN
    (time window, local time) and 1-2 concrete actions (water, shade, rest, stay indoors, avoid floodwater...).
    Write each language the way a native speaker would say it, not word-for-word from English.
    No abbreviations, slashes, or jargon (write "air conditioning"/"aire acondicionado"/"máy lạnh", full day names).
+   Write temperatures in Fahrenheit with a degree sign, like 114°F; Celsius is added automatically.
    Hazard: one of {", ".join(HAZARDS)}. Severity: moderate, high, or extreme.
+   Vietnamese (vi) style, reviewed by a native speaker:
+   - Proper punctuation: commas and periods; never run sentences together.
+   - Put the weekday in parentheses after the time word: "Hôm nay (thứ Ba),", "Tối nay (thứ Hai),".
+   - Put the warning's time window in its own sentence; other details (river flooding, smoke) in separate sentences.
+   - Say "rất có hại cho sức khỏe" (never "rất không tốt cho sức khỏe"); say "khí ôzôn tăng cao", not just "ôzôn".
+   - Start each action sentence with "Hãy".
+   Examples:
+   - "Cảnh báo nắng nóng gay gắt có hiệu lực đến 8 giờ tối thứ Sáu. Hôm nay (thứ Ba), từ 11 giờ sáng đến 9 giờ tối, nhiệt độ lên đến 114°F. Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm."
+   - "Cảnh báo lũ lụt có hiệu lực đến 11 giờ 15 tối nay (thứ Hai). Sau nửa đêm, nước sông dâng cao và gây lũ đến sáng thứ Tư. Hãy tránh đi bộ hoặc lái xe qua nước lũ. Hãy di chuyển lên nơi cao ngay và làm theo lệnh sơ tán."
+   - "Hôm nay (thứ Bảy) và Chủ Nhật, khói cháy rừng làm không khí rất có hại cho sức khỏe. Hãy ở trong nhà và đóng kín cửa sổ. Hãy tránh làm việc hoặc vận động ngoài trời. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
+   - "Hôm nay (thứ Ba), khí ôzôn tăng cao làm không khí rất có hại cho sức khỏe. Hãy hạn chế làm việc nặng ngoài trời."
 5. Never give medical advice: no symptoms, diagnoses, or medicines. Protective actions only.
 6. Finish with a plain-text explanation of 1-3 sentences that starts with "SENT:" or "SKIPPED:" and says why."""
 
@@ -141,6 +157,16 @@ class Run:
     def local(self, iso: str) -> str:
         return datetime.fromisoformat(iso).astimezone(self.tz).strftime("%a %H:%M")
 
+    @property
+    def now(self) -> datetime:
+        """The moment being decided: the replay time for replays, otherwise the real clock."""
+        replay = self.snapshot.get("replay")
+        return datetime.fromisoformat(replay["at_local"]) if replay else datetime.now(self.tz)
+
+    def hours_left(self, alert: dict) -> float | None:
+        end = alert.get("ends") or alert.get("expires")
+        return round((datetime.fromisoformat(end) - self.now).total_seconds() / 3600, 1) if end else None
+
 
 # --- tools -----------------------------------------------------------------
 
@@ -182,7 +208,9 @@ def tool_get_nws_alerts(run: Run, args: dict) -> dict:
         return err
     keep = ("event", "hazard", "message_type", "severity", "urgency", "headline", "onset", "ends", "expires",
             "description", "instruction")
-    out = {"active_alerts": [{k: a.get(k) for k in keep} for a in run.snapshot.get("alerts", [])]}
+    out = {"local_time_now": run.now.strftime("%a %Y-%m-%d %H:%M"),
+           "active_alerts": [{**{k: a.get(k) for k in keep}, "ends_local": run.local(a["ends"]) if a.get("ends") else None,
+                              "ends_in_hours": run.hours_left(a)} for a in run.snapshot.get("alerts", [])]}
     if run.snapshot.get("excluded_alerts"):
         out["not_covered_by_climateguard"] = {"warnings": run.snapshot["excluded_alerts"],
                                               "note": hazards.EXCLUSION_NOTE}
@@ -200,6 +228,33 @@ def tool_get_recent_alerts_sent(run: Run, args: dict) -> dict:
 
 def tool_search_safety_guidance(run: Run, args: dict) -> dict:
     return {"results": guidance.search(str(args.get("query", "")), k=3)}
+
+
+ENDING_SOON_HOURS = 3
+
+
+def _ending_without_hazard(run: Run, hazard: str) -> str | None:
+    """Reject heat/smoke alerts when every NWS alert for that hazard ends within ~3 hours AND the
+    next 24 hours of data meet no threshold for it: the danger is over. (Found by the eval case
+    hard_warning_about_to_end: the agent sent "extreme, dangerous now" at 76°F, 2 hours before the end.)"""
+    if hazard not in ("heat", "smoke"):
+        return None
+    related = [a for a in run.snapshot.get("alerts", []) if a.get("hazard") == hazard]
+    left = [run.hours_left(a) for a in related]
+    if not related or any(h is None or h > ENDING_SOON_HOURS for h in left):
+        return None  # no NWS alert for it (other signals decide), or one still has time to run
+    s = run.snapshot["summary"]
+    if hazard == "heat":
+        if (s.get("hours_ge_95f") or 0) > 0 or (s.get("max_heat_index_f") or 0) >= 100:
+            return None
+        data = f"max {s.get('max_temp_f')}°F, heat index {s.get('max_heat_index_f')}°F over the next 24 hours"
+    else:
+        aqi = max(s.get("aqi_now") or 0, s.get("aqi_forecast_max") or 0)
+        if aqi > 100:
+            return None
+        data = f"AQI at most {aqi} now and forecast"
+    return (f"the {hazard} alert(s) end within {max(left):.1f} hours and the data no longer shows the hazard "
+            f"({data}): the danger is over, so do not send this alert")
 
 
 def validate_alert(run: Run, args: dict) -> str | None:
@@ -227,6 +282,8 @@ def validate_alert(run: Run, args: dict) -> str | None:
             name = {"vi": "Vietnamese (dấu: ă â đ ê ô ơ ư and tone marks)", "es": "Spanish (á é í ó ú ñ)"}[lang]
             return (f"message '{lang}' is missing diacritics/accents; rewrite it in proper {name} "
                     "with every accent mark")
+    if ending := _ending_without_hazard(run, hazard):
+        return ending
     recent = alerts_store.recent_sent(run.key, hours=24)
     if len(recent) >= MAX_ALERTS_PER_DAY:
         # An alert more severe than everything sent in the last 24h always goes through.
@@ -244,6 +301,9 @@ def validate_alert(run: Run, args: dict) -> str | None:
 def tool_send_alert(run: Run, args: dict) -> dict:
     if err := _check_zone(run, args):
         return err
+    # Temperatures: degree sign everywhere, Celsius added in code for non-English (before the length check)
+    raw = args.get("messages_by_language") or {}
+    args = {**args, "messages_by_language": {k: units.format_temps(str(v), k) for k, v in raw.items()}}
     if rejection := validate_alert(run, args):
         return {"sent": False, "rejected": rejection}
     msgs = {lang: args["messages_by_language"][lang].strip() for lang in LANGS}

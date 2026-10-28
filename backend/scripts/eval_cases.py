@@ -12,6 +12,7 @@ Expectations per step:
   escalate  the hazard must be re-sent at a higher severity than in the previous step
   zero_calls  the model must not be called at all (pre-filter cases)
 """
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import _path  # noqa: F401
@@ -21,6 +22,11 @@ from climateguard import replays, scenarios as sc
 
 def real(event, moment):
     return lambda: replays.snapshot_for(event, moment)
+
+
+def _in(tz, hours: float) -> str:
+    """Clock time `hours` from now, for headlines that must agree with the alert's end time."""
+    return (datetime.now(tz) + timedelta(hours=hours)).strftime("%I:%M %p").lstrip("0")
 
 
 def edge(zone, parts_fn, name):
@@ -123,6 +129,95 @@ CASES = [
                 {"send": True, "hazards": {"fog"}})]},
     {"id": "edge_winter_storm_mn", "kind": "edge", "desc": "Winter Storm Warning, Minneapolis (Central time)",
      "steps": [(lambda: sc.build("winter_storm"), {"send": True, "hazards": {"winter"}})]},
+    # ---------------- hard / ambiguous (written after the rules, NOT to match them) ----------------
+    # Expectations are what a careful human duty forecaster would want, fixed before any run.
+    {"id": "hard_advisory_94F_aqi148", "kind": "hard",
+     "desc": "Heat Advisory, highs 94F (just under 95), PM2.5 AQI 148: advisory is official, act on it",
+     "steps": [(edge("CAZ159", lambda tz: {"hours": sc.hours(tz, sc.heat_curve(94), lambda h: 35),
+                                             "aqi": sc.aqi(tz, 148, [148, 140]),
+                                             "alerts": [sc.nws_alert(tz, "Heat Advisory", "Moderate", 30,
+                                                                     "Heat Advisory through tomorrow evening",
+                                                                     "Hot conditions with highs near 94 expected.",
+                                                                     "Drink plenty of fluids and take breaks.")]},
+                     "advisory94"), {"send": True, "hazards": {"heat"}, "severity": {"moderate", "high"}})]},
+    {"id": "hard_warning_vs_mild_data", "kind": "hard",
+     "desc": "Extreme Heat Warning text says 110F, but our forecast data only shows 82F: trust the official warning",
+     "steps": [(edge("CAZ159", lambda tz: {"hours": sc.hours(tz, sc.heat_curve(82), lambda h: 40),
+                                             "aqi": sc.aqi(tz, 40, [40, 40]),
+                                             "alerts": [sc.nws_alert(tz, "Extreme Heat Warning", "Severe", 30,
+                                                                     "Extreme Heat Warning in effect",
+                                                                     "Dangerously hot conditions with temperatures "
+                                                                     "up to 110 expected.", "Stay cool.")]},
+                     "conflict"), {"send": True, "hazards": {"heat"}})]},
+    {"id": "hard_expired_alert_in_feed", "kind": "hard",
+     "desc": "Flood Warning that ended 3 hours ago still in the feed, dry weather now: don't alert",
+     "steps": [(edge("CAZ303", lambda tz: {"hours": sc.hours(tz, lambda h: 58, lambda h: 60),
+                                             "aqi": sc.aqi(tz, 30, [30, 30]),
+                                             "alerts": [sc.nws_alert(tz, "Flood Warning", "Severe", -3,
+                                                                     "Flood Warning for Bear Creek",
+                                                                     "Flooding of low-lying areas.",
+                                                                     "Turn around, don't drown.", "NWS Hanford CA")]},
+                     "expired"), {"send": False})]},
+    {"id": "hard_warning_plus_other_watch", "kind": "hard",
+     "desc": "Extreme Heat Warning and a Fire Weather Watch at once: alert both",
+     "steps": [(edge("CAZ159", lambda tz: {"hours": sc.hours(tz, sc.heat_curve(105), lambda h: 12,
+                                                             wind_at=lambda h: 25),
+                                             "aqi": sc.aqi(tz, 60, [60, 60]),
+                                             "alerts": [sc.nws_alert(tz, "Extreme Heat Warning", "Severe", 30,
+                                                                     "Extreme Heat Warning", "Highs up to 105.",
+                                                                     "Stay cool."),
+                                                        sc.nws_alert(tz, "Fire Weather Watch", "Moderate", 40,
+                                                                     "Fire Weather Watch tomorrow afternoon",
+                                                                     "Gusty north winds and very low humidity "
+                                                                     "could spread fires quickly.",
+                                                                     "Avoid outdoor burning.")]}, "heat+firewatch"),
+                {"send": True, "hazards": {"heat", "fire"}})]},
+    {"id": "hard_neighbor_zone_alert", "kind": "hard",
+     "desc": "Feed lists a Flood Warning whose text is clearly for another county (Fresno), dry here: don't alert",
+     "steps": [(edge("CAZ159", lambda tz: {"hours": sc.hours(tz, lambda h: 66, lambda h: 50),
+                                             "aqi": sc.aqi(tz, 35, [35, 35]),
+                                             "alerts": [sc.nws_alert(tz, "Flood Warning", "Severe", 12,
+                                                                     "Flood Warning for the Kings River in Fresno County",
+                                                                     "The Kings River near Piedra in Fresno County "
+                                                                     "is flooding farmland south of Fresno.",
+                                                                     "Residents near the Kings River should move to "
+                                                                     "higher ground.", "NWS Hanford CA")]},
+                     "neighbor"), {"send": False})]},
+    {"id": "hard_warning_about_to_end", "kind": "hard",
+     "desc": "Heat warning ends in 2 hours; it's already cool and the next 24 h stay mild: no new alert",
+     "steps": [(edge("CAZ159", lambda tz: {"hours": sc.hours(tz, lambda h: 76, lambda h: 40),
+                                             "aqi": sc.aqi(tz, 45, [45, 45]),
+                                             "alerts": [sc.nws_alert(tz, "Extreme Heat Warning", "Severe", 2,
+                                                                     f"Extreme Heat Warning until {_in(tz, 2)}",
+                                                                     "Hot conditions ending this evening.",
+                                                                     "Stay cool.")]}, "ending"),
+                {"send": False})]},
+    # Two cases added with the fix for the one above, so it's tested beyond the case it came from
+    {"id": "hard_ending_but_heat_returns", "kind": "hard",
+     "desc": "Heat warning ends in 2 hours, but tomorrow's forecast is 104F (no new warning yet): still alert",
+     "steps": [(edge("CAZ159", lambda tz: {"hours": sc.hours(tz, sc.heat_curve(104), lambda h: 20),
+                                             "aqi": sc.aqi(tz, 50, [50, 50]),
+                                             "alerts": [sc.nws_alert(tz, "Extreme Heat Warning", "Severe", 2,
+                                                                     f"Extreme Heat Warning until {_in(tz, 2)}",
+                                                                     "Hot conditions ending this evening.",
+                                                                     "Stay cool.")]}, "ending-but-hot"),
+                {"send": True, "hazards": {"heat"}})]},
+    {"id": "hard_air_alert_ending_air_clean", "kind": "hard",
+     "desc": "Air Quality Alert ends in 1 hour and AQI is already 42: no alert",
+     "steps": [(edge("CAZ159", lambda tz: {"hours": sc.hours(tz, sc.heat_curve(80), lambda h: 35),
+                                             "aqi": sc.aqi(tz, 42, [45, 40]),
+                                             "alerts": [sc.nws_alert(tz, "Air Quality Alert", "Unknown", 1,
+                                                                     f"Air Quality Alert until {_in(tz, 1)}",
+                                                                     "Smoke has cleared from the valley.",
+                                                                     "Air quality is improving.")]}, "aq-ending"),
+                {"send": False})]},
+    {"id": "hard_smoke_forecast_rising", "kind": "hard",
+     "desc": "AQI 101 now, no NWS alert, but tomorrow's smoke forecast is 165: warn ahead",
+     "steps": [(edge("CAZ159", lambda tz: {"hours": sc.hours(tz, sc.heat_curve(84), lambda h: 30,
+                                                             short_at=lambda h: "Haze"),
+                                             "aqi": sc.aqi(tz, 101, [120, 165]), "alerts": []}, "smoke-rising"),
+                {"send": True, "hazards": {"smoke"}})]},
+
     {"id": "edge_hurricane_watch_fl", "kind": "edge", "desc": "Hurricane Watch, Miami",
      "steps": [(edge("FLZ173", lambda tz: {"hours": sc.hours(tz, lambda h: 86, lambda h: 80, wind_at=lambda h: 30,
                                                              precip_at=lambda h: 70),

@@ -140,7 +140,7 @@ def test_eval_scoring():
 def test_eval_cases_are_well_formed():
     from eval_cases import CASES
     assert len(CASES) >= 20 and len({c["id"] for c in CASES}) == len(CASES)
-    assert {c["kind"] for c in CASES} == {"real", "edge"}
+    assert {c["kind"] for c in CASES} == {"real", "edge", "hard"}
     for c in CASES:
         for make, expect in c["steps"]:
             assert make()["zone"] and set(expect) <= {"send", "hazards", "severity", "no_repeat", "escalate",

@@ -10,7 +10,7 @@ import unicodedata
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from . import config, hazards
+from . import config, hazards, units
 from .languages import REVIEWED
 from .subscriptions import outbox, topic_arn
 from .translate import translate_alert
@@ -95,9 +95,9 @@ def compose(zone: dict, lang: str, hazard: str, severity: str, message: str,
                                                place=place))[:99]
     url = f"{config.FRONTEND_URL}/?zone={zone['zone']}&lang={lang}"
     when = datetime.now(ZoneInfo(zone.get("tz") or "America/New_York")).strftime("%Y-%m-%d %H:%M")
-    head = message
+    head = units.format_temps(message, lang)  # translations too: °F (°C) for non-English
     if lang in AUTO_LABEL:
-        head = f"{AUTO_LABEL[lang] if translated else AUTO_FALLBACK[lang]}\n{message}"
+        head = f"{AUTO_LABEL[lang] if translated else AUTO_FALLBACK[lang]}\n{head}"
     footer = FOOTER[lang].format(place=place, time=when, url=url)
     note = EXCLUSION_LINE.get(lang, EXCLUSION_LINE["en"])
     return subject, f"{head}\n\n--\n{footer}\n{note}"

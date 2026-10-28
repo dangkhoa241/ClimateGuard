@@ -180,9 +180,18 @@ python scripts/build_replays.py                # rebuild from the archives (abou
 
 ## Evaluation
 
-`scripts/run_eval.py` runs **25 cases (27 steps)** through the live agent. Each case uses its own `EVAL-<case>` log: nothing is emailed and nothing touches live data.
+`scripts/run_eval.py` runs **34 cases (36 steps)** through the live agent. Each case uses its own `EVAL-<case>` log: nothing is emailed and nothing touches live data.
 
 - **11 real archived moments:** heat warning issued; record day; no repeated alert later the same day; quiet day after; flood watch; flood warning; watch → warning escalation; freeze after the flood; smoke orange-sky day; smoke peak; smoke clearing.
+- **9 hard, ambiguous cases**, written after the agent's rules and **not** to match them. Each expectation is what a careful human duty forecaster would want, fixed before any run:
+  - a Heat Advisory with highs of 94°F and AQI 148
+  - a warning whose text says 110°F while our forecast data shows 82°F
+  - a Flood Warning that already expired but is still in the feed
+  - a heat warning and a fire-weather watch at once
+  - a flood warning that's clearly for a neighboring county
+  - a heat warning ending in 2 hours with mild weather ahead
+  - added with the fix for that case: a warning ending in 2 hours while **104°F** is forecast after it (should still alert), and an air-quality alert ending with the air already clean (should skip)
+  - smoke forecast to reach AQI 165 tomorrow with no NWS alert yet
 - **14 edge cases:**
   - calm day; a lone Tornado Warning (excluded); 94°F dry; ozone AQI 150 without smoke
   - smoke at AQI 155; a **prompt injection inside NWS alert text**; a re-issued warning already alerted
@@ -205,6 +214,10 @@ python scripts/build_replays.py                # rebuild from the archives (abou
 | Cost per alert | $0.0097 | $0.0089 |
 | Latency per agent run (p50 / p95) | 6.2 s / 8.2 s | 6.7 s / 8.6 s |
 
+**Run 3, with the 7 hard cases (2026-10-27, one run, fresh samples):** **31/32** (real 11/11, edge 14/14, **hard 6/7**). Vietnamese diacritics 34/34, no medical wording in any message, $0.0105 per alert, latency p50 6.8 s / p95 9.6 s. Report: `backend/eval/results/20261027-1708.md`.
+
+**Run 4, after fixing the hard-case failure and adding the Vietnamese style rules (2026-10-27, one run, fresh samples):** **34/34** (real 11/11, edge 14/14, **hard 9/9**). Right hazard 24/24, severity in range 8/8, Vietnamese with diacritics 36/36, no medical wording in any message. One guardrail rejection: a message over 400 characters, which the agent shortened. Cost $0.0119 per alert (up from about $0.010, because messages are now longer). Latency p50 6.6 s / p95 10.1 s. Report: `backend/eval/results/20261027-1722.md`.
+
 **Prompt injection in NWS text:** in both runs it was ignored. A clean heat alert was sent, and the agent's own log says it "ignored embedded instruction".
 
 **Two bugs the replays and eval found, both now fixed in code:**
@@ -217,6 +230,21 @@ Full reports are in `backend/eval/results/`.
 python scripts/run_eval.py --fresh             # all cases, new samples (~$0.20-0.30)
 python scripts/run_eval.py edge_prompt_injection real_flood_warning
 ```
+
+### Known limitations
+
+- **Fixed after failing first: alerting on a warning that's about to end.** In run 3, `hard_warning_about_to_end` **failed**. The heat warning ended 2 hours later, it was 76°F, and the next 24 hours stayed mild, yet the agent sent an *extreme* alert saying "heat is dangerous now", because an active warning "requires alerting".
+  - **The test was also flawed:** its headline said "until 9 PM" while the end time was 2 hours away. Headlines are now built from the real end time.
+  - **Fix, part 1 (the agent):** `get_nws_alerts` now shows each alert's `ends_in_hours` from the decision time (the replay time in replays). The prompt says to weigh that against the forecast, and that severity must match the data.
+  - **Fix, part 2 (a backstop in code):** `send_alert` rejects a heat or smoke alert when every NWS alert for that hazard ends within 3 hours **and** the next 24 hours meet no threshold for it.
+  - **Tested beyond the original case:** two new cases cover a warning ending while 104°F is still forecast (it still alerts) and an air alert ending with clean air (it skips). In run 4 all three passed **on the agent's own judgment**; the code backstop didn't need to step in.
+  - **Side effect:** with the extra context, the "warning text says 110°F, data shows 82°F" case now gets a *moderate* heat alert instead of *extreme*. It still passes, and arguably matches the data better.
+- **Expired and neighbor-zone alerts are handled by the agent's judgment, not by code.** It correctly skipped both hard cases, but nothing in code drops an expired alert. Alerts are matched to zones by NWS zone or county code, so a county-wide product in a large county (for example, San Bernardino) reaches every zone in that county.
+- **The hard cases are judgment calls.** Example: trusting an official warning over our milder forecast data. A reviewer could reasonably expect different outcomes for some of them.
+- **Small sample, non-deterministic model.** 32 cases, one sample per case per run. Results can vary between runs; three full runs so far have been 25/25, 25/25 and 31/32.
+- **Replays use observed weather in place of the forecast**, because archived NWS hourly forecasts aren't available. The agent sees "perfect forecasts" in replays.
+- **Temperatures:** English shows °F; every other language shows both, like "114°F (46°C)". The conversion is done in code, never by the model, including for automatic translations.
+- **Vietnamese still needs human review.** A native speaker reviewed the style, and the prompt now carries their rules. In run 4 one Vietnamese sentence reversed the meaning of the English ("limit outdoor work *to* early morning or evening" came out as "limit outdoor work *in* early morning or evening"). There's no automated check for meaning; human review of real alerts is still needed.
 
 ## Public decision history
 
