@@ -55,6 +55,9 @@ export const STRINGS = {
     voiceCheck: 'Check the text above and fix it if needed, then tap Ask.',
     readAloud: 'Read aloud',
     stopReading: 'Stop reading',
+    voiceLabel: 'Voice',
+    silentHint: "Can't hear it? Turn off your phone's silent mode.",
+    enhancedVoiceTip: 'For a more natural voice, download an "Enhanced" voice: Settings → Accessibility → Spoken Content → Voices.',
     errors: {
       mic_denied: 'Microphone not allowed. Allow it in your browser settings, or type your question.',
       transcribe_failed: 'Could not understand the recording. Please try again or type your question.',
@@ -132,6 +135,9 @@ export const STRINGS = {
     voiceCheck: 'Revise el texto de arriba y corríjalo si hace falta. Luego toque Preguntar.',
     readAloud: 'Leer en voz alta',
     stopReading: 'Dejar de leer',
+    voiceLabel: 'Voz',
+    silentHint: '¿No se oye? Quite el modo silencio del teléfono.',
+    enhancedVoiceTip: 'Para una voz más natural, descargue una voz "Mejorada": Ajustes → Accesibilidad → Contenido leído → Voces.',
     errors: {
       mic_denied: 'No se permitió el micrófono. Actívelo en la configuración del navegador o escriba su pregunta.',
       transcribe_failed: 'No se pudo entender la grabación. Intente de nuevo o escriba su pregunta.',
@@ -208,6 +214,9 @@ export const STRINGS = {
     voiceCheck: 'Hãy kiểm tra câu chữ ở trên và sửa nếu cần, rồi bấm Hỏi.',
     readAloud: 'Đọc to',
     stopReading: 'Dừng đọc',
+    voiceLabel: 'Giọng đọc',
+    silentHint: 'Không nghe thấy? Hãy tắt chế độ im lặng trên điện thoại.',
+    enhancedVoiceTip: 'Để có giọng đọc tự nhiên hơn, hãy tải giọng "Nâng cao": Cài đặt → Trợ năng → Nội dung được đọc → Giọng nói.',
     errors: {
       mic_denied: 'Micrô chưa được cho phép. Hãy bật micrô trong phần cài đặt trình duyệt, hoặc gõ câu hỏi.',
       transcribe_failed: 'Không nhận ra được đoạn ghi âm. Hãy thử lại hoặc gõ câu hỏi.',

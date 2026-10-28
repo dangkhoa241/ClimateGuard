@@ -154,3 +154,17 @@ _VI_TIME_MID_SENTENCE = re.compile(r"([^.!?:\s])(\s+)(Hôm nay|Tối nay|Sáng n
 
 def fix_vi_case(text: str) -> str:
     return _VI_TIME_MID_SENTENCE.sub(lambda m: m.group(1) + m.group(2) + m.group(3).lower(), text)
+
+
+# Weekday names are capitalized: "thứ Năm", "Chủ Nhật" (seen in Ask answers: "Sáng thứ năm").
+# Not "lần thứ hai" (the second time) and the like: an ordinal after a counting word.
+_VI_WEEKDAY = re.compile(r"(?<!lần )(?<!người )(?<!bước )(?<!điều )(?<!cách )(?<!loại )(?<!\w)(thứ) "
+                         r"(hai|ba|tư|năm|sáu|bảy)(?!\w)|(?<!\w)(chủ nhật)(?!\w)", re.IGNORECASE)
+
+
+def fix_vi_weekdays(text: str) -> str:
+    def cap(m):
+        if m.group(3):
+            return "Chủ Nhật"
+        return f"{m.group(1)} {m.group(2).capitalize()}"
+    return _VI_WEEKDAY.sub(cap, text)

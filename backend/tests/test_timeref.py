@@ -96,3 +96,35 @@ def test_weekday_names(q, expect):
     ref = timeref.resolve(q, TUE_2150)
     got = None if ref is None else "passed" if ref.passed else "tomorrow"
     assert got == expect
+
+
+# --- ranges and number words (from the iPhone test, 2026-10-28) ---
+
+WED_1205 = datetime(2026, 10, 28, 12, 5, tzinfo=LA)
+
+
+def test_range_with_vietnamese_number_words():
+    q = "Ngày mai tôi làm ngoài đồng từ sáu giờ sáng đến hai giờ chiều, tôi nên chuẩn bị gì?"
+    ref = timeref.resolve(q, WED_1205)
+    assert ref.target == datetime(2026, 10, 29, 6, 0, tzinfo=LA) and ref.end == datetime(2026, 10, 29, 14, 0, tzinfo=LA)
+    assert not ref.passed and "Thursday 6:00 AM to Thursday 2:00 PM" in ref.prompt_line()
+
+
+@pytest.mark.parametrize("q,hour", [
+    ("¿Hace calor a las tres de la tarde?", 15), ("a la una de la tarde", 13), ("at six pm", 18),
+    ("Lúc ba giờ chiều có nóng không?", 15),
+])
+def test_number_words_before_a_clock_word(q, hour):
+    assert timeref.resolve(q, WED_1205).target.hour == hour
+
+
+@pytest.mark.parametrize("q", ["Tôi có hai con, hôm nay nóng không?", "¿Hay dos refugios?", "one more question"])
+def test_number_words_without_a_clock_word_are_not_times(q):
+    assert timeref.resolve(q, WED_1205) is None
+
+
+def test_range_already_over_today_moves_to_tomorrow_with_a_range_note():
+    ref = timeref.resolve("từ 6 giờ sáng đến 10 giờ sáng", WED_1205)
+    assert ref.passed and ref.end.day == 29
+    assert timeref.note(ref, "vi") == ("6 giờ sáng–10 giờ sáng hôm nay đã qua, đây là dự báo cho "
+                                       "6 giờ sáng–10 giờ sáng ngày mai (thứ Năm).")

@@ -1,13 +1,14 @@
 """Offline tests for Ask: the symptom guardrail, answer checks, and the POST /ask handler."""
 import json
 import sys
+from datetime import datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import pytest
 
-from climateguard import ask, config, scenarios
+from climateguard import ask, config, scenarios, timeref
 from climateguard.handlers import ask as ask_handler
 from climateguard.languages import LANGS
 from climateguard.llm import ChatResult
@@ -84,7 +85,7 @@ def test_answer_is_grounded_in_live_data_and_guidance(monkeypatch):
     assert r["kind"] == "answer" and "108°F" in r["answer"]
     assert r["sources"] and r["data_time_local"] and "Extreme Heat Warning" in r["nws_alerts"]
     call = seen[0]
-    assert call["deadline_s"] == ask.CALL_DEADLINE_S and call["max_tokens"] == ask.MAX_ANSWER_TOKENS
+    assert call["deadline_s"] == ask.CALL_DEADLINE_S and call["max_tokens"] == ask.MAX_ANSWER_TOKENS[ask.ASK_REASONING_EFFORT]
     user = call["messages"][1]["content"]
     assert "Extreme Heat Warning" in user and "GUIDANCE" in user and '"masks_help": false' in user
 
@@ -228,7 +229,7 @@ def test_ask_uses_the_standard_model_minimal_effort_and_reports_timings(monkeypa
     monkeypatch.setattr(config, "USE_CONTRIBUTOR", True)  # dev setting must not leak into user questions
     r = ask.answer("Is it hot?", "en", "CAZ159")
     model, kw = calls[0]
-    assert model == "muse-spark-1.3" and kw["reasoning_effort"] == "minimal" and kw["max_tokens"] == ask.MAX_ANSWER_TOKENS
+    assert model == "muse-spark-1.3" and kw["reasoning_effort"] == "minimal" and kw["max_tokens"] == ask.MAX_ANSWER_TOKENS[ask.ASK_REASONING_EFFORT]
     assert set(r["timings_ms"]) == {"data", "context", "model", "check", "total"}
 
 
@@ -239,3 +240,24 @@ def test_on_demand_snapshots_are_reused_for_a_while(monkeypatch):
     monkeypatch.setattr(ask.nws, "get_zone_alerts", lambda rec: [])
     monkeypatch.setattr(ask.snapshot, "build_snapshot", lambda rec, alerts, prev=None: built.append(1) or snap)
     assert ask.zone_snapshot("CAZ159") is snap and ask.zone_snapshot("CAZ159") is snap and built == [1]
+
+
+def test_time_range_gets_a_summary_over_the_whole_range(monkeypatch):
+    # Seen live: asked about 6 AM-2 PM tomorrow, the answer gave only 6 AM and "I don't know".
+    snap = _store()
+    seen = []
+    _model_says(monkeypatch, "Sáng thứ năm mát, trưa nóng.", seen)
+    first = datetime.fromisoformat(snap["forecast"]["hours"][0]["time"])
+    start = (first + timedelta(days=1)).replace(hour=6)
+    ref = timeref.TimeRef(target=start, passed=False, end=start.replace(hour=14))
+    ctx = ask.build_context(snap, [], ref)
+    rng = ctx["time_range_asked"]
+    temps = [h["temp_f"] for h in snap["forecast"]["hours"]
+             if start - timedelta(hours=1) < datetime.fromisoformat(h["time"]) <= start.replace(hour=14)]
+    assert rng["temp_at_start_f"] == temps[0] and rng["temp_at_end_f"] == temps[-1] and rng["warmest_f"] == max(temps)
+    assert len(rng["hourly"]) == len(temps) and len(ctx["forecast_hourly_48h"]) == len(snap["forecast"]["hours"])
+    assert ctx["days"] and "forecast_at_time_asked" not in ctx
+    # the whole answer path: Vietnamese weekday names are capitalized in code
+    r = ask.answer("Ngày mai từ sáu giờ sáng đến hai giờ chiều tôi nên chuẩn bị gì?", "vi", "CAZ159")
+    assert "thứ Năm" in r["answer"] and r["data_time"] == snap["generated_at"]
+    assert "time_range_asked" in seen[0]["messages"][1]["content"]

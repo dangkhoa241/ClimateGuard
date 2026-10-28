@@ -16,6 +16,10 @@ body { margin: 0; background: var(--bg); }
   max-width: 480px;
   margin: 0 auto;
   padding: 16px;
+  /* iPhone: keep the last buttons (read aloud) clear of Safari's bottom toolbar and the home bar */
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
 }
 
 h1 { margin: 24px 0 4px; font-size: 2rem; }
@@ -155,3 +159,11 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
   background: transparent; color: var(--fg); font-size: 0.9rem; cursor: pointer;
 }
 .read-aloud[aria-pressed='true'] { border-color: var(--accent); color: var(--accent); }
+.read-aloud-row { margin-top: 10px; }
+.read-aloud-row .read-aloud { margin-top: 0; }
+.read-aloud-row p { margin: 6px 0 0; }
+.read-aloud-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.voice-picker {
+  max-width: 100%; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--muted);
+  background: transparent; color: var(--fg); font-size: 0.9rem;
+}

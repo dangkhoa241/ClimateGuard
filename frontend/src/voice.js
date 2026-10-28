@@ -70,41 +70,91 @@ export async function startRecording({ onAutoStop } = {}) {
 
 // --- read aloud --------------------------------------------------------------
 
-// BCP 47 prefixes per app language; Tagalog voices are usually tagged Filipino ("fil-PH").
+// BCP 47 prefixes per app language, best first; Tagalog voices are usually tagged Filipino ("fil-PH").
 const VOICE_LANGS = { en: ['en-US', 'en'], es: ['es-US', 'es-MX', 'es'], vi: ['vi'], zh: ['zh-CN', 'zh'],
   tl: ['fil', 'tl'], ko: ['ko'], ar: ['ar'] }
+// Higher-quality voices by name: iOS "Enhanced"/"Premium" downloads, Edge's online "Natural" voices
+// (e.g. "Microsoft HoaiMy Online (Natural) - Vietnamese (Vietnam)"), and a few known good ones.
+const QUALITY = [[/natural|neural|premium/i, 3], [/enhanced|online/i, 2],
+  [/hoaimy|namminh|\blinh\b|jenny|aria|samantha|paulina|m[oó]nica/i, 2], [/google/i, 1]]
 
-function pickVoice(voices, lang) {
-  for (const prefix of VOICE_LANGS[lang] || [lang]) {
-    const v = voices.find((x) => x.lang.replace('_', '-').toLowerCase().startsWith(prefix.toLowerCase()))
-    if (v) return v
-  }
-  return null
+export const isIOS = () =>
+  typeof navigator !== 'undefined' &&
+  (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
+
+function langRank(voice, lang) {
+  const tag = voice.lang.replace('_', '-').toLowerCase()
+  const i = (VOICE_LANGS[lang] || [lang]).findIndex((p) => tag.startsWith(p.toLowerCase()))
+  return i < 0 ? null : i
 }
 
-// The phone's voice for `lang`, or null (then no read-aloud button). Voices load asynchronously.
-export function useVoice(lang) {
+const quality = (v) => QUALITY.reduce((sum, [rx, pts]) => sum + (rx.test(v.name) ? pts : 0), 0)
+
+// The phone's voices for `lang`, best first (quality, then the closest regional variant).
+export function voicesFor(all, lang) {
+  return all
+    .filter((v) => langRank(v, lang) !== null)
+    .sort((a, b) => quality(b) - quality(a) || langRank(a, lang) - langRank(b, lang) || a.name.localeCompare(b.name))
+}
+
+const storeKey = (lang) => `cg-voice-${lang}`
+export function savedVoiceURI(lang) {
+  try { return localStorage.getItem(storeKey(lang)) } catch { return null }
+}
+export function saveVoiceURI(lang, uri) {
+  try { localStorage.setItem(storeKey(lang), uri) } catch { /* private mode: just not remembered */ }
+}
+
+// Voices for `lang` (best first). They load asynchronously: Chrome and Edge fire voiceschanged (Edge's
+// online voices arrive late); iOS Safari may return none at first without an event, so retry briefly.
+export function useVoices(lang) {
   const synth = typeof window !== 'undefined' ? window.speechSynthesis : undefined
-  const [voice, setVoice] = useState(() => (synth ? pickVoice(synth.getVoices(), lang) : null))
+  const [voices, setVoices] = useState(() => (synth ? voicesFor(synth.getVoices(), lang) : []))
   useEffect(() => {
     if (!synth) return undefined
-    const update = () => setVoice(pickVoice(synth.getVoices(), lang))
+    const update = () => setVoices(voicesFor(synth.getVoices(), lang))
     update()
-    synth.addEventListener('voiceschanged', update)
-    return () => synth.removeEventListener('voiceschanged', update)
+    synth.addEventListener?.('voiceschanged', update)
+    const retries = [250, 1000, 3000].map((ms) => setTimeout(update, ms))
+    return () => {
+      synth.removeEventListener?.('voiceschanged', update)
+      retries.forEach(clearTimeout)
+    }
   }, [synth, lang])
-  return voice
+  return voices
 }
 
+// Short chunks: Chrome stops long utterances after ~15 s, and sentence by sentence sounds more natural.
+export function chunks(text) {
+  return text
+    .split(/(?<=[.!?。！？؟])\s+|\n+/)
+    .flatMap((s) => (s.length > 200 ? s.split(/(?<=[,;，、])\s*/) : [s]))
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
+// Must run directly in the tap handler (iOS only speaks from a user gesture), so every chunk is queued
+// right away. cancel() only when something is playing: on iOS, cancel() then speak() can drop the speech.
 export function speak(text, voice, { onEnd } = {}) {
   const synth = window.speechSynthesis
-  synth.cancel()
-  const u = new SpeechSynthesisUtterance(text)
-  u.voice = voice
-  u.lang = voice.lang
-  u.rate = 0.95 // a little slower than default: plain, clear speech
-  u.onend = u.onerror = () => onEnd?.()
-  synth.speak(u)
+  if (synth.speaking || synth.pending) synth.cancel()
+  const parts = chunks(text)
+  let done = false
+  const finish = () => {
+    if (!done) {
+      done = true
+      onEnd?.()
+    }
+  }
+  parts.forEach((part, i) => {
+    const u = new SpeechSynthesisUtterance(part)
+    u.voice = voice
+    u.lang = voice.lang
+    u.rate = 0.95 // a little slower than default: plain, clear speech
+    u.onerror = finish
+    if (i === parts.length - 1) u.onend = finish
+    synth.speak(u)
+  })
 }
 
 export const stopSpeaking = () => window.speechSynthesis?.cancel()

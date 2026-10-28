@@ -116,7 +116,7 @@ The agent runs only for zones whose fingerprint changed. When NWS re-issues the 
    With no signal, the run is logged as skipped and costs nothing.
 2. **Budget check.** Over the **$5/day** model budget, only zones with an active NWS *Warning* run the agent; the rest are logged as skipped for budget.
 3. **Gather data.** The agent calls `get_nws_alerts`, `get_forecast` (in the zone's local time), `get_aqi` and `get_recent_alerts_sent`.
-4. **Ground the advice.** It calls `search_safety_guidance`, which searches 26 official excerpts from NWS, Ready.gov, CDC, EPA AirNow, FEMA, Cal/OSHA and OSHA. These cover protective actions only, with no symptom content.
+4. **Ground the advice.** It calls `search_safety_guidance`, which searches 28 official excerpts from NWS, Ready.gov, CDC, EPA AirNow, FEMA, Cal/OSHA and OSHA. These cover protective actions only, with no symptom content.
 5. **Decide and send.** The agent decides on its own. To alert, it calls `send_alert(zone, hazard, severity, messages_by_language, reason)` with English, Spanish and Vietnamese messages.
 6. **Log the decision.** Every run writes one decision-log entry: `sent`, `skipped` or `error`, why, which tools it called, how many model calls, and the cost.
 
@@ -151,8 +151,8 @@ python scripts/collect_local.py --monitor                   # real data for moni
 `POST /ask {question, lang, zone}` answers in any of the 7 languages with `muse-spark-1.3`, from live data for the person's NWS zone. It runs in its own Lambda (`handlers/ask.py`, 28 s timeout). Each answer is one model call with a 20 s deadline, and the browser gives up after 25 s with a "try again" message.
 
 1. **Symptom guardrail (no model call).** Questions about symptoms, illness, medicine, pregnancy or chronic conditions, in all 7 languages, get a fixed, pre-written answer: call 911 in an emergency, otherwise a doctor or clinic. The model never sees them. Over-matching is the safe direction: "pesticide" in Chinese (农药) contains "medicine" (药) and gets the fixed answer too.
-2. **Grounded context.** The zone's latest snapshot (if under 2 hours old; otherwise a fresh one built on demand, so Ask works in zones nobody has subscribed to yet), the alerts ClimateGuard sent there, and 4 official guidance excerpts. The guidance corpus is English, so common words in the 7 languages are mapped to English search terms.
-3. **One model call**, told to answer only from that context in up to 4 short sentences. It never names cooling centers, shelters, addresses or phone numbers, and never writes 211 itself. Vietnamese and Spanish answers get the reviewed wording rules.
+2. **Grounded context.** The zone's latest snapshot (if under 2 hours old; otherwise a fresh one built on demand, so Ask works in zones nobody has subscribed to yet), the alerts ClimateGuard sent there, and 4 official guidance excerpts (28 in the corpus, including CDC sun safety and CDC/NIOSH layers for cool mornings). The model gets the full 48-hour hourly forecast and a summary for each day: low, high and when, rain, wind and AQI forecast. The guidance corpus is English, so common words in the 7 languages are mapped to English search terms.
+3. **One model call**, told to answer only from that context in up to 5 short sentences. It should be useful: it says it doesn't know only when the data truly can't answer. It doesn't open with the data time, because the app shows that under the answer, in the reader's language. It never names cooling centers, shelters, addresses or phone numbers, and never writes 211 itself. Vietnamese and Spanish answers get the reviewed wording rules.
    - **211 is a fixed sentence written in code:** "To find a cooling center or shelter near you, call 211 or check your county's website", reviewed in EN/ES/VI. It's added when the question asks for a place (cooling center, shelter, where to go, in all 7 languages), or when the model marks its answer `[211]`. Any 211 sentence the model writes itself is removed.
    - **Not added to plain "I don't know" answers:** live, a cooling-center sentence after "Will there be a tornado next month?" read wrong.
 4. **The answer is checked again.** Medical wording in any language replaces it with the fixed symptom answer. Mask advice when masks wouldn't help (no smoke, dust or ash) replaces it with a fallback. When someone asks about masks on such a day, a fixed sentence is added: "A mask won't help with the air here right now: N95 masks only filter smoke, dust or ash, not ozone."
@@ -163,10 +163,33 @@ python scripts/collect_local.py --monitor                   # real data for moni
 - Limits: 60 s of audio; 30 recordings per IP per hour.
 
 **Read aloud** uses the phone's own voices (Web Speech API), because the Meta Model API has no text-to-speech model. Answers and alert cards get a read-aloud button only when the phone has a voice for that language. Desktop browsers often have no Vietnamese or Tagalog voice, so the button is hidden there rather than reading in the wrong voice.
+- **Better voices are picked automatically:** names with Natural, Neural, Premium, Enhanced or Online, plus known good voices (iOS Linh; Edge HoaiMy, NamMinh, Jenny, Aria). Edge's online voices load late, so the list is refreshed on `voiceschanged`.
+  - Picked on sample voice lists: Edge gets HoaiMy, iPhone gets Linh (Enhanced), Android gets Google tiếng Việt.
+  - On Windows, Edge is the browser with Vietnamese voices.
+- **Voice picker:** the Ask answer has a voice picker (voices for the current language only), remembered per language.
+- **Sentence by sentence, at rate 0.95:** all sentences are queued inside the tap, because iOS only speaks from a user gesture.
+- **iPhone hints:**
+  - The silent switch mutes speech, and websites can't detect it. So on iPhone/iPad, starting to read shows "Can't hear it? Turn off your phone's silent mode."
+  - A one-line tip suggests downloading an "Enhanced" voice. It's hidden once one is in use.
 
 Every answer shows the place and time of the data it used, and its official sources. Limits: 20 questions per IP per hour; over the $5/day model budget, Ask returns the fallback message.
 
-**Times in the question are resolved in code** (`timeref.py`), against the zone's local time: "3 giờ chiều", "3 PM", "a las 3 de la tarde", "下午3点", "오후 3시", "alas-3 ng hapon", "الساعة 3 مساءً". If that time has already passed today, the answer is for the same time tomorrow and starts with a note written in code, for example "3 giờ chiều hôm nay đã qua, đây là dự báo cho 3 giờ chiều ngày mai (thứ Tư)." The model gets the target time and the forecast for that hour. "Tomorrow" in the question, or tomorrow's weekday, means tomorrow with no note. Another weekday or a date is left to the model. Number words ("tres", 三) aren't recognized.
+**Times in the question are resolved in code** (`timeref.py`), against the zone's local time: "3 giờ chiều", "3 PM", "a las 3 de la tarde", "下午3点", "오후 3시", "alas-3 ng hapon", "الساعة 3 مساءً". If that time has already passed today, the answer is for the same time tomorrow and starts with a note written in code, for example "3 giờ chiều hôm nay đã qua, đây là dự báo cho 3 giờ chiều ngày mai (thứ Tư)." The model gets the target time and the forecast for that hour. "Tomorrow" in the question, or tomorrow's weekday, means tomorrow with no note. Another weekday or a date is left to the model.
+- **Ranges:** "từ 6 giờ sáng đến 2 giờ chiều" or "from 6 AM to 2 PM" get a summary computed in code: temperature at the start, the warmest and when, and at the end, plus sky, wind, rain and AQI. The model summarizes the range first, then gives 2–3 actions from the guidance.
+- **Number words:** read in Vietnamese, Spanish and English, only before a clock word ("sáu giờ sáng", "a las tres", "six PM"). "Tôi có hai con" isn't read as a time.
+- **Why ranges were added:** in the iPhone test, "Ngày mai tôi làm ngoài đồng từ sáu giờ sáng đến hai giờ chiều, tôi nên chuẩn bị gì?" got only the 6 AM forecast and "I don't know how to prepare". Three causes:
+  - the model saw only 24 hours, in 3-hour steps;
+  - "sáu giờ" wasn't recognized;
+  - there was no guidance on layers or sun protection.
+
+**Ask eval** (`scripts/run_ask_eval.py`, about $0.03 per run): 5 real questions on today's live data, checked in code. The checks look for "I don't know", an answer that opens with the data time, unasked health advice, too few temperatures, too few practical actions, and the fixed 211 sentence for "where can I cool off".
+
+| Reasoning effort | Passed | Median latency | Notes |
+|---|---|---|---|
+| `minimal` (kept) | 3/5 before the last prompt fixes, then **5/5** | 3.6–3.7 s | Range answer: "51°F … 66°F at 2 PM, haze then clouds, light wind", then layers, water, shade and sun protection |
+| `low` | 2/5 | 5.9 s | No more useful than `minimal`, about 2 s slower (860–1,030 reasoning tokens) |
+
+The failures, fixed in the prompt: "66 degrees" instead of "66°F", and an unasked "see a doctor". Vietnamese weekday names are capitalized in code ("thứ Năm"). Reports: `backend/eval/results/ask-*.md`.
 
 **Speed.** Each answer carries a timing breakdown (`timings_ms`), also logged. Measured on 3 questions (EN/ES/VI), standard `muse-spark-1.3`, fresh calls:
 

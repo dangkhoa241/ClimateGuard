@@ -263,5 +263,26 @@
     ],
     "title": "Coastal Flood Warning and rip currents",
     "text": "A Coastal Flood Warning means sea water is expected to flood low areas near the shore: move cars and belongings to higher ground and never drive through flooded roads. If caught in a rip current, stay calm and swim parallel to the shore, then back to land."
+  },
+  {
+    "id": "cdc-sun-safety",
+    "source": "CDC sun safety",
+    "url": "https://www.cdc.gov/skin-cancer/sun-safety/index.html",
+    "hazards": [
+      "heat",
+      "sun"
+    ],
+    "title": "Outdoor workers: sun protection",
+    "text": "When working outdoors in the sun, seek shade, especially in the middle of the day. Wear clothing that covers your arms and legs, a wide-brimmed hat that shades your face, ears and neck, and sunglasses that block UV rays. Use a broad-spectrum sunscreen with SPF 15 or higher, and put it on again after two hours outside and after sweating."
+  },
+  {
+    "id": "niosh-cool-layers",
+    "source": "CDC/NIOSH cold stress",
+    "url": "https://www.cdc.gov/niosh/cold-stress/about/index.html",
+    "hazards": [
+      "cold"
+    ],
+    "title": "Outdoor workers: cool mornings and layers",
+    "text": "For cool or cold outdoor work, wear several layers of loose-fitting clothing, a hat and gloves. Layers let you take clothing off as the day warms up so your clothes do not get wet with sweat, and wet clothing makes you colder. Keep a change of dry clothes and take breaks in a warm, dry place when it is cold."
   }
 ]

@@ -73,13 +73,24 @@ function VoiceInput({ lang, t, onText, disabled }) {
   )
 }
 
-function Answer({ result, lang, t }) {
+// The data time in the reader's language and the zone's timezone ("Th 5, 12:47" in Vietnamese).
+function dataTime(result, lang, tz) {
+  if (!result.data_time) return result.data_time_local
+  try {
+    return new Date(result.data_time).toLocaleString(lang, { weekday: 'short', hour: 'numeric', minute: '2-digit',
+      ...(tz ? { timeZone: tz } : {}) })
+  } catch {
+    return result.data_time_local
+  }
+}
+
+function Answer({ result, lang, t, tz }) {
   return (
     <article className="answer" aria-live="polite">
       <p className="answer-text">{result.answer}</p>
-      <ReadAloud text={result.answer} lang={lang} t={t} />
+      <ReadAloud text={result.answer} lang={lang} t={t} options />
       {result.data_time_local && (
-        <p className="muted small">{t.askDataFrom.replace('{place}', result.place).replace('{time}', result.data_time_local)}</p>
+        <p className="muted small">{t.askDataFrom.replace('{place}', result.place).replace('{time}', dataTime(result, lang, tz))}</p>
       )}
       {result.sources?.length > 0 && (
         <details className="sources">
@@ -153,7 +164,7 @@ export default function AskScreen({ lang, t, zone, setZone }) {
           )}
         </form>
       )}
-      {status === 'done' && result && <Answer result={result} lang={lang} t={t} />}
+      {status === 'done' && result && <Answer result={result} lang={lang} t={t} tz={zone?.tz} />}
       <p className="muted small">{t.askNotMedical}</p>
     </>
   )

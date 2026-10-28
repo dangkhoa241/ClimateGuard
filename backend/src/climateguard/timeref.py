@@ -4,8 +4,10 @@ against the zone's local time, so the model never has to decide whether a time h
   resolve("... lúc 3 giờ chiều ...", now=Tue 21:50)  -> TimeRef(target=Wed 15:00, passed=True)
   passed=True: the person asked about a time earlier today; the answer is for the same time tomorrow,
   and note(lang) says so in their language, as the first sentence of the answer.
-Only digits are recognized (not number words like "tres" or 三); a question without a clock time
-gets no TimeRef. Other weekdays ("on Friday") are left to the model.
+A range ("từ 6 giờ sáng đến 2 giờ chiều", "from 6 AM to 2 PM") gives a TimeRef with an end, and Ask
+summarizes the forecast over the whole range. Number words are read before a clock word in Vietnamese,
+Spanish and English ("sáu giờ sáng", "a las seis", "six o'clock"); other languages need digits.
+A question without a clock time gets no TimeRef. Other weekdays ("on Friday") are left to the model.
 """
 import re
 from dataclasses import dataclass
@@ -34,14 +36,37 @@ OTHER_DAY = re.compile(r"weekend|fin de semana|cuối tuần|周末|週末|주�
                        r"\d{1,2}/\d{1,2}", re.IGNORECASE)
 
 
+# Number words -> digits, only right before a clock word, so "hai" (two) or "una" elsewhere stay as they are.
+_VI_NUM = {"mười một": 11, "mười hai": 12, "một": 1, "hai": 2, "ba": 3, "bốn": 4, "tư": 4, "năm": 5, "sáu": 6,
+           "bảy": 7, "tám": 8, "chín": 9, "mười": 10}
+_ES_NUM = {"una": 1, "dos": 2, "tres": 3, "cuatro": 4, "cinco": 5, "seis": 6, "siete": 7, "ocho": 8, "nueve": 9,
+           "diez": 10, "once": 11, "doce": 12}
+_EN_NUM = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9,
+           "ten": 10, "eleven": 11, "twelve": 12}
+_NUM_WORDS = [
+    (re.compile(r"(?<!\w)(" + "|".join(_VI_NUM) + r")(?=\s+giờ)", re.IGNORECASE), _VI_NUM),
+    (re.compile(r"(?<=\blas )(" + "|".join(_ES_NUM) + r")\b|(?<=\bla )(una)\b", re.IGNORECASE), _ES_NUM),
+    (re.compile(r"\b(" + "|".join(_EN_NUM) + r")(?=\s*(?:o'?clock|a\.?\s?m\b|p\.?\s?m\b))", re.IGNORECASE), _EN_NUM),
+]
+
+
+def _with_digits(question: str) -> str:
+    for rx, words in _NUM_WORDS:
+        question = rx.sub(lambda m: str(words[(m.group(1) or m.group(2)).lower()]), question)
+    return question
+
+
 @dataclass
 class TimeRef:
-    target: datetime   # local time the answer is for
-    passed: bool       # asked about a time already past today -> answering for tomorrow
+    target: datetime               # local time the answer is for (the start of a range)
+    passed: bool                   # asked about a time already past today -> answering for tomorrow
+    end: datetime | None = None    # end of a range ("from 6 AM to 2 PM")
 
     def prompt_line(self) -> str:
         why = " (the time asked about has already passed today, so answer for tomorrow)" if self.passed else ""
-        return f"TIME ASKED ABOUT: {self.target.strftime('%A %I:%M %p').replace(' 0', ' ')} local time{why}."
+        fmt = lambda t: t.strftime('%A %I:%M %p').replace(' 0', ' ')  # noqa: E731
+        span = f"{fmt(self.target)} to {fmt(self.end)}" if self.end else fmt(self.target)
+        return f"TIME ASKED ABOUT: {span} local time{why}."
 
 
 def _hour24(h: int, word: str | None, pre: str | None) -> int | None:
@@ -73,26 +98,38 @@ def _named_day(question: str, now: datetime) -> str | None:
     return "today" if named == {today} else "tomorrow" if named == {tomorrow} else "other"
 
 
-def resolve(question: str, now: datetime) -> TimeRef | None:
-    """`now` is the zone's local time (timezone-aware)."""
-    day = _named_day(question, now)
-    if OTHER_DAY.search(question) or day == "other":
-        return None
+def _clock_times(question: str, now: datetime) -> list[datetime]:
+    """Every clock time in the question, as today's date at that time."""
+    out = []
     for m in _TIME.finditer(question):
         if not any(m.group(g) for g in ("pre", "at", "sep", "post")):
             continue  # a bare number is not a time
         h = int(m.group("h"))  # int() also reads Arabic-Indic digits (٣)
         minute = 30 if m.group("m") in ("半", "반") else int(m.group("m") or 0)
         hour = _hour24(h, m.group("post"), m.group("pre"))
-        if hour is None:
-            continue
-        target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-        if day == "tomorrow" or TOMORROW.search(question):
-            return TimeRef(target + timedelta(days=1), passed=False)
-        if target <= now:
-            return TimeRef(target + timedelta(days=1), passed=True)
-        return TimeRef(target, passed=False)
-    return None
+        if hour is not None:
+            out.append(now.replace(hour=hour, minute=minute, second=0, microsecond=0))
+    return out
+
+
+def resolve(question: str, now: datetime) -> TimeRef | None:
+    """`now` is the zone's local time (timezone-aware)."""
+    question = _with_digits(question)
+    day = _named_day(question, now)
+    if OTHER_DAY.search(question) or day == "other":
+        return None
+    times = _clock_times(question, now)
+    if not times:
+        return None
+    target, end = times[0], (times[1] if len(times) > 1 else None)
+    if end is not None and end <= target:  # "from 10 to 2" without AM/PM words; else past midnight
+        end += timedelta(hours=12) if end + timedelta(hours=12) > target else timedelta(days=1)
+    shift = timedelta(days=1)
+    if day == "tomorrow" or TOMORROW.search(question):
+        return TimeRef(target + shift, passed=False, end=end and end + shift)
+    if (end or target) <= now:
+        return TimeRef(target + shift, passed=True, end=end and end + shift)
+    return TimeRef(target, passed=False, end=end)
 
 
 # --- the note, written in code in each language ---------------------------------------------
@@ -141,6 +178,8 @@ def note(ref: TimeRef, lang: str) -> str | None:
     if not ref.passed:
         return None
     c, day = clock(ref.target, lang), WEEKDAYS[lang][ref.target.weekday()]
+    if ref.end:
+        c = f"{c}–{clock(ref.end, lang)}"
     return {
         "en": f"{c} today has already passed. This is the forecast for {c} tomorrow ({day}).",
         "es": f"{'La' if _h12(ref.target) == 1 else 'Las'} {c} de hoy ya {'pasó' if _h12(ref.target) == 1 else 'pasaron'}. "
