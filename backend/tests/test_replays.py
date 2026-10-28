@@ -144,7 +144,7 @@ def test_eval_cases_are_well_formed():
     for c in CASES:
         for make, expect in c["steps"]:
             assert make()["zone"] and set(expect) <= {"send", "hazards", "severity", "no_repeat", "escalate",
-                                                      "zero_calls"}
+                                                      "zero_calls", "mask_advised"}
 
 
 def test_missing_diacritics_rejected_so_the_agent_rewrites():

@@ -1,12 +1,13 @@
 """Automatic translation of validated English alerts (Muse Spark 1.3, Meta Model API).
 
 Only for languages that have subscribers in the zone. Source text has already passed the
-medical-wording guardrail in English; the prompt forbids adding anything. On any failure
+medical-wording and mask guardrails in English; the prompt forbids adding anything, and a
+translation that adds mask advice is rejected in code. On any failure
 the English message is sent instead, so an alert is never lost to a translation error.
 """
 import logging
 
-from . import config
+from . import config, guardrails
 from .languages import LANGS
 from .llm import chat
 
@@ -26,9 +27,13 @@ def translate_alert(text_en: str, lang: str) -> tuple[str, bool]:
                     {"role": "user", "content": text_en}],
                    max_tokens=1200, purpose=f"translate:{lang}")
         text = res.text.strip()
-        if text and len(text) <= MAX_CHARS:
+        if guardrails.mentions_mask(text) and not guardrails.mentions_mask(text_en):
+            # e.g. "limit time outdoors" on an ozone day must never become "wear a mask"
+            log.warning("translation to %s rejected (added mask advice the English doesn't have)", lang)
+        elif text and len(text) <= MAX_CHARS:
             return text, True
-        log.warning("translation to %s rejected (empty or too long)", lang)
+        else:
+            log.warning("translation to %s rejected (empty or too long)", lang)
     except Exception as e:  # missing key, API down, ...: never block the alert
         log.warning("translation to %s failed: %s", lang, e)
     return text_en, False

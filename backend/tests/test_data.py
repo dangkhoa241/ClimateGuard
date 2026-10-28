@@ -248,9 +248,19 @@ def test_airnow_parsing_new_format():
          "categoryName": "Unhealthy", "actionDay": True},
     ])
     assert fc == [
-        {"date": "2026-10-27", "aqi": 62, "category": "Moderate", "pollutant": "PM2.5", "action_day": False},
-        {"date": "2026-10-28", "aqi": None, "category": "Unhealthy", "pollutant": "PM2.5", "action_day": True},
+        {"date": "2026-10-27", "aqi": 62, "category": "Moderate", "pollutant": "PM2.5", "action_day": False,
+         "particles_unhealthy": False},
+        {"date": "2026-10-28", "aqi": None, "category": "Unhealthy", "pollutant": "PM2.5", "action_day": True,
+         "particles_unhealthy": True},
     ]
+    # ozone worse than smoke: the day shows ozone, but the smoke is not lost
+    both = airnow.parse_forecast([
+        {"dateValid": "2026-10-29", "parameterName": "OZONE", "aqi": 180, "categoryNumber": 4,
+         "categoryName": "Unhealthy", "actionDay": True},
+        {"dateValid": "2026-10-29", "parameterName": "PM2.5", "aqi": 160, "categoryNumber": 4,
+         "categoryName": "Unhealthy", "actionDay": True},
+    ])
+    assert (both[0]["pollutant"], both[0]["aqi"], both[0]["particles_unhealthy"]) == ("O3", 180, True)
 
 
 def test_airnow_key_from_ssm_when_env_missing(monkeypatch):

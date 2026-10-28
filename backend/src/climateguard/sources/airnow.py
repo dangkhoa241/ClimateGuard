@@ -37,6 +37,7 @@ def parse_observations(obs: list, tz_name: str = "America/Los_Angeles") -> dict:
         raise SourceError("AirNow returned no observations within 25 miles")
     worst = max(readings, key=lambda o: o["nowcastAQI"])
     pm25 = next((o["nowcastAQI"] for o in readings if o.get("parameterName") == "PM2.5"), None)
+    pm10 = next((o["nowcastAQI"] for o in readings if o.get("parameterName") == "PM10"), None)
     hour = int(str(worst.get("hourObserved", "0")).split(":")[0])
     observed = datetime.strptime(worst["dateObserved"].strip(), "%Y-%m-%d").replace(hour=hour, tzinfo=ZoneInfo(tz_name))
     return {
@@ -44,13 +45,21 @@ def parse_observations(obs: list, tz_name: str = "America/Los_Angeles") -> dict:
         "category": worst.get("aqiCategoryName") or risk.aqi_category(worst["nowcastAQI"]),
         "pollutant": _POLLUTANT.get(worst.get("parameterName"), worst.get("parameterName")),
         "pm25_aqi": pm25,
+        "pm10_aqi": pm10,
         "observed_at": observed.isoformat(),
         "area": worst.get("reportingAreaName"),
     }
 
 
+_PARTICLES = ("PM2.5", "PM10")
+UNHEALTHY_FOR_SENSITIVE_CATEGORY = 3
+
+
 def parse_forecast(rows: list) -> list[dict]:
+    """One entry per day for the worst pollutant. `particles_unhealthy` is kept separately, because
+    on a day with both ozone and smoke the worst pollutant may be ozone, and masks still help with smoke."""
     by_day: dict[str, dict] = {}
+    particles: dict[str, bool] = {}
     for f in rows:
         day = (f.get("dateValid") or "").strip()
         if not day:
@@ -58,12 +67,15 @@ def parse_forecast(rows: list) -> list[dict]:
         aqi = f.get("aqi")
         aqi = aqi if isinstance(aqi, int) and aqi >= 0 else None
         cat_num = f.get("categoryNumber") or 0
+        if f.get("parameterName") in _PARTICLES and (cat_num >= UNHEALTHY_FOR_SENSITIVE_CATEGORY or (aqi or 0) >= 101):
+            particles[day] = True
         prev = by_day.get(day)
         if prev is None or cat_num > prev["_cat"] or (cat_num == prev["_cat"] and (aqi or 0) > (prev["aqi"] or 0)):
             by_day[day] = {"date": day, "aqi": aqi, "category": f.get("categoryName") or risk.aqi_category(aqi),
                            "pollutant": _POLLUTANT.get(f.get("parameterName"), f.get("parameterName")),
                            "action_day": bool(f.get("actionDay")), "_cat": cat_num}
-    return [{k: v for k, v in d.items() if k != "_cat"} for _, d in sorted(by_day.items())]
+    return [{**{k: v for k, v in d.items() if k != "_cat"}, "particles_unhealthy": particles.get(day, False)}
+            for day, d in sorted(by_day.items())]
 
 
 def get_aqi(lat: float, lon: float, tz_name: str) -> dict:

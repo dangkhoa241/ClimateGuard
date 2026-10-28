@@ -69,7 +69,7 @@ def test_duplicate_rejected_but_escalation_allowed():
 
 def test_daily_cap():
     run = _run()
-    for hazard in ("heat", "smoke", "flood"):
+    for hazard in ("heat", "smoke", "fog"):
         assert monitor.tool_send_alert(run, _alert(hazard=hazard))["sent"]
     assert "cap" in monitor.tool_send_alert(run, _alert(hazard="wind"))["rejected"]
     assert "cap" in monitor.tool_send_alert(run, _alert(hazard="wind", severity="moderate"))["rejected"]
@@ -77,7 +77,7 @@ def test_daily_cap():
 
 def test_daily_cap_bypassed_only_by_higher_severity_than_all_sent_today():
     run = _run()
-    for hazard, sev in (("heat", "moderate"), ("smoke", "high"), ("flood", "moderate")):
+    for hazard, sev in (("heat", "moderate"), ("smoke", "high"), ("fog", "moderate")):
         assert monitor.tool_send_alert(run, _alert(hazard=hazard, severity=sev))["sent"]
     # "high" equals the highest already sent -> still capped
     assert "cap" in monitor.tool_send_alert(run, _alert(hazard="wind", severity="high"))["rejected"]

@@ -8,7 +8,10 @@ one decision-log entry (sent / skipped / error, and why).
 Guardrails enforced in code, not just in the prompt:
   - dedup: same hazard at same-or-lower severity within COOLDOWN_HOURS is rejected
   - daily cap per zone (bypassed only by an alert more severe than all sent in 24h),
-    required languages, message length, no medical wording
+    required languages, message length, no medical wording, accents/diacritics
+  - masks only for particle pollution (never ozone), no watch mentioned next to a warning for the
+    same hazard, heat index only when 5°F+ above the air temperature, firm flood wording
+    ("Nunca" in Spanish, "Tuyệt đối không" in Vietnamese)
   - only the zone under review can be queried or alerted
 Short-fuse warnings (tornado, flash flood, severe thunderstorm, extreme wind) never
 reach the agent: see hazards.py.
@@ -25,7 +28,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from . import alerts_store, config, guidance, hazards, notify, risk, units, zones
+from . import alerts_store, config, guardrails, guidance, hazards, notify, risk, units, zones
 from .languages import REVIEWED
 from .llm import chat
 from .store import get_store
@@ -76,18 +79,29 @@ How to work:
    Write each language the way a native speaker would say it, not word-for-word from English.
    No abbreviations, slashes, or jargon (write "air conditioning"/"aire acondicionado"/"máy lạnh", full day names).
    Write temperatures in Fahrenheit with a degree sign, like 114°F; Celsius is added automatically.
-   Hazard: one of {", ".join(HAZARDS)}. Severity: moderate, high, or extreme.
+   Hazard: one of {", ".join(HAZARDS)} ("smoke" covers every air-quality alert: smoke, dust or ozone).
+   Severity: moderate, high, or extreme.
+   Rules for every language:
+   - If a warning and a watch for the same hazard are both active, mention only the warning, never the watch.
+   - Mention each day only once in a message.
+   - Mention heat index ("feels like") only if it is at least 5°F above the air temperature.
+   - Masks (N95) protect only against particles: wildfire smoke, dust or ash (PM2.5/PM10; get_aqi says
+     masks_help). NEVER recommend a mask for ozone: masks do not filter ozone. For ozone: limit time
+     outdoors, avoid hard work, stay indoors with windows closed.
+   - Floods: use strong wording, "Never walk or drive through floodwater" / "Nunca camine ni maneje por
+     agua de inundación" / "Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập". Never "avoid"/"evite"/"tránh".
    Vietnamese (vi) style, reviewed by a native speaker:
    - Proper punctuation: commas and periods; never run sentences together.
-   - Put the weekday in parentheses after the time word: "Hôm nay (thứ Ba),", "Tối nay (thứ Hai),".
+   - Put the weekday in parentheses after the time word: "Hôm nay (thứ Ba),", "tối nay (thứ Hai)".
+     Capitalize "Hôm nay" only at the start of a sentence; mid-sentence write "hôm nay".
    - Put the warning's time window in its own sentence; other details (river flooding, smoke) in separate sentences.
    - Say "rất có hại cho sức khỏe" (never "rất không tốt cho sức khỏe"); say "khí ôzôn tăng cao", not just "ôzôn".
-   - Start each action sentence with "Hãy".
-   Examples:
-   - "Cảnh báo nắng nóng gay gắt có hiệu lực đến 8 giờ tối thứ Sáu. Hôm nay (thứ Ba), từ 11 giờ sáng đến 9 giờ tối, nhiệt độ lên đến 114°F. Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm."
-   - "Cảnh báo lũ lụt có hiệu lực đến 11 giờ 15 tối nay (thứ Hai). Sau nửa đêm, nước sông dâng cao và gây lũ đến sáng thứ Tư. Hãy tránh đi bộ hoặc lái xe qua nước lũ. Hãy di chuyển lên nơi cao ngay và làm theo lệnh sơ tán."
-   - "Hôm nay (thứ Bảy) và Chủ Nhật, khói cháy rừng làm không khí rất có hại cho sức khỏe. Hãy ở trong nhà và đóng kín cửa sổ. Hãy tránh làm việc hoặc vận động ngoài trời. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
-   - "Hôm nay (thứ Ba), khí ôzôn tăng cao làm không khí rất có hại cho sức khỏe. Hãy hạn chế làm việc nặng ngoài trời."
+   - Start action sentences with "Hãy" ("Tránh ..." or "Tuyệt đối không ..." for what not to do).
+   Vietnamese examples (approved by the reviewer; match their tone and structure):
+   - Heat: "Cảnh báo nắng nóng gay gắt có hiệu lực đến 8 giờ tối thứ Sáu. Hôm nay (thứ Ba), từ 11 giờ sáng đến 9 giờ tối, nhiệt độ có thể lên tới 114°F (46°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm. Nếu có thể, hãy chỉ làm việc ngoài trời vào sáng sớm hoặc chiều tối."
+   - Ozone: "Hôm nay (thứ Ba), khí ôzôn tăng cao khiến không khí rất có hại cho sức khỏe (chỉ số AQI lên tới 208). Hãy hạn chế ra ngoài và tránh vận động mạnh. Nếu có thể, hãy ở trong nhà và đóng kín cửa sổ."
+   - Flood: "Cảnh báo lũ lụt có hiệu lực đến 9 giờ 30 sáng thứ Tư. Hiện đang có lũ lụt, và nước suối Bear Creek dự kiến dâng vượt mức báo động lũ ngay sau nửa đêm nay. Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập. Nếu bạn ở vùng trũng thấp, hãy di chuyển lên chỗ cao ngay và làm theo lệnh sơ tán."
+   - Smoke: "Cảnh báo khói cháy rừng có hiệu lực hôm nay (thứ Bảy) và Chủ Nhật. Chất lượng không khí rất có hại cho sức khỏe (chỉ số AQI lên tới 206). Hãy ở trong nhà và đóng kín cửa sổ. Tránh làm việc hoặc vận động ngoài trời. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
 5. Never give medical advice: no symptoms, diagnoses, or medicines. Protective actions only.
 6. Finish with a plain-text explanation of 1-3 sentences that starts with "SENT:" or "SKIPPED:" and says why."""
 
@@ -200,7 +214,11 @@ def tool_get_forecast(run: Run, args: dict) -> dict:
 def tool_get_aqi(run: Run, args: dict) -> dict:
     if err := _check_zone(run, args):
         return err
-    return run.snapshot.get("aqi") or {"error": "air quality data unavailable"}
+    aqi = run.snapshot.get("aqi")
+    if not aqi:
+        return {"error": "air quality data unavailable"}
+    return {**aqi, "masks_help": guardrails.particle_pollution(run.snapshot),
+            "masks_note": "N95 masks help only against particles (smoke, dust, ash), never against ozone."}
 
 
 def tool_get_nws_alerts(run: Run, args: dict) -> dict:
@@ -257,6 +275,34 @@ def _ending_without_hazard(run: Run, hazard: str) -> str | None:
             f"({data}): the danger is over, so do not send this alert")
 
 
+WATCH_WORDS = {"en": re.compile(r"\bwatch(es)?\b", re.IGNORECASE), "es": re.compile(r"\bvigilancia", re.IGNORECASE)}
+FEELS_LIKE = re.compile(r"heat index|feels like|sensaci[oó]n t[eé]rmica|[ií]ndice de calor|se sienten? como|"
+                        r"c[aả]m gi[aá]c|ch[iỉ] s[oố] nhi[eệ]t", re.IGNORECASE)
+FEELS_LIKE_MIN_GAP_F = 5
+
+
+def _watch_with_warning(run: Run, hazard: str, msgs: dict) -> str | None:
+    """A watch is superseded by a warning for the same hazard; mentioning both confuses people
+    (seen in the Jan 9 2023 flood alert: "Flood Warning ... and Flood Watch through Wednesday")."""
+    warnings = [a for a in run.snapshot.get("alerts", []) if a.get("hazard") == hazard
+                and "Warning" in (a.get("event") or "") and (run.hours_left(a) is None or run.hours_left(a) > 0)]
+    if warnings and any(rx.search(msgs.get(lang, "")) for lang, rx in WATCH_WORDS.items()):
+        return (f"a {warnings[0]['event']} is active, so the {hazard} watch is superseded: mention only the "
+                "warning, remove the watch")
+    return None
+
+
+def _feels_like_too_close(run: Run, hazard: str, msgs: dict) -> str | None:
+    s = run.snapshot["summary"]
+    temp, hi = s.get("max_temp_f"), s.get("max_heat_index_f")
+    if hazard != "heat" or temp is None or hi is None or hi - temp >= FEELS_LIKE_MIN_GAP_F:
+        return None
+    if any(FEELS_LIKE.search(m) for m in msgs.values()):
+        return (f"heat index ({hi}°F) is within {FEELS_LIKE_MIN_GAP_F}°F of the air temperature ({temp}°F): "
+                "remove the feels-like / heat index part and give only the air temperature")
+    return None
+
+
 def validate_alert(run: Run, args: dict) -> str | None:
     """Return a rejection reason, or None if the alert may be sent."""
     hazard, severity = args.get("hazard"), args.get("severity")
@@ -282,6 +328,17 @@ def validate_alert(run: Run, args: dict) -> str | None:
             name = {"vi": "Vietnamese (dấu: ă â đ ê ô ơ ư and tone marks)", "es": "Spanish (á é í ó ú ñ)"}[lang]
             return (f"message '{lang}' is missing diacritics/accents; rewrite it in proper {name} "
                     "with every accent mark")
+    if any(guardrails.mentions_mask(m) for m in msgs.values()) and not guardrails.particle_pollution(run.snapshot):
+        return ("the message recommends a mask, but the air problem here is not smoke, dust or ash (particles). "
+                "Masks do not protect against ozone: remove the mask advice and tell people to limit time "
+                "outdoors and avoid hard work instead")
+    if watch_issue := _watch_with_warning(run, hazard, msgs):
+        return watch_issue
+    if feels := _feels_like_too_close(run, hazard, msgs):
+        return feels
+    if hazard == "flood" and ("tuyệt đối không" not in msgs["vi"].lower() or "nunca" not in msgs["es"].lower()):
+        return ('flood messages need firm wording, not "avoid": Spanish "Nunca camine ni maneje por agua de '
+                'inundación" and Vietnamese "Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập"')
     if ending := _ending_without_hazard(run, hazard):
         return ending
     recent = alerts_store.recent_sent(run.key, hours=24)
@@ -303,7 +360,9 @@ def tool_send_alert(run: Run, args: dict) -> dict:
         return err
     # Temperatures: degree sign everywhere, Celsius added in code for non-English (before the length check)
     raw = args.get("messages_by_language") or {}
-    args = {**args, "messages_by_language": {k: units.format_temps(str(v), k) for k, v in raw.items()}}
+    # and Vietnamese time words lowercased mid-sentence ("có hiệu lực hôm nay")
+    args = {**args, "messages_by_language": {
+        k: (guardrails.fix_vi_case if k == "vi" else str)(units.format_temps(str(v), k)) for k, v in raw.items()}}
     if rejection := validate_alert(run, args):
         return {"sent": False, "rejected": rejection}
     msgs = {lang: args["messages_by_language"][lang].strip() for lang in LANGS}

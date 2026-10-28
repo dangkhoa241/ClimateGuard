@@ -22,18 +22,18 @@ log = logging.getLogger(__name__)
 HAZARD_SUBJECT = {
     "en": {"heat": "heat", "cold": "cold", "winter": "winter storm", "flood": "flood", "coastal": "coastal",
            "tornado": "tornado watch", "thunderstorm": "thunderstorm", "tropical": "tropical storm",
-           "wind": "wind", "fire": "fire weather", "smoke": "smoke", "dust": "dust", "fog": "fog",
+           "wind": "wind", "fire": "fire weather", "smoke": "air quality", "dust": "dust", "fog": "fog",
            "other": "safety"},
     "es": {"heat": "calor", "cold": "frio", "winter": "tormenta invernal", "flood": "inundacion",
            "coastal": "costa", "tornado": "tornado", "thunderstorm": "tormentas", "tropical": "huracan",
-           "wind": "viento", "fire": "incendios", "smoke": "humo", "dust": "polvo", "fog": "niebla",
+           "wind": "viento", "fire": "incendios", "smoke": "calidad del aire", "dust": "polvo", "fog": "niebla",
            "other": "seguridad"},
     "vi": {"heat": "nang nong", "cold": "lanh", "winter": "bao tuyet", "flood": "lu lut", "coastal": "ven bien",
            "tornado": "loc xoay", "thunderstorm": "dong", "tropical": "bao", "wind": "gio manh",
-           "fire": "chay rung", "smoke": "khoi", "dust": "bui", "fog": "suong mu", "other": "an toan"},
+           "fire": "chay rung", "smoke": "chat luong khong khi", "dust": "bui", "fog": "suong mu", "other": "an toan"},
     "tl": {"heat": "init", "cold": "lamig", "winter": "niyebe", "flood": "baha", "coastal": "baybayin",
            "tornado": "buhawi", "thunderstorm": "kulog at kidlat", "tropical": "bagyo", "wind": "hangin",
-           "fire": "sunog", "smoke": "usok", "dust": "alikabok", "fog": "hamog", "other": "kaligtasan"},
+           "fire": "sunog", "smoke": "kalidad ng hangin", "dust": "alikabok", "fog": "hamog", "other": "kaligtasan"},
 }
 SUBJECT = {
     "en": "ClimateGuard {sev} {hazard} alert - {place}",

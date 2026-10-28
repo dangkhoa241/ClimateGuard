@@ -97,3 +97,124 @@ def test_hours_left_uses_the_replay_time():
     run = monitor.Run(zone="CAZ159", snapshot=snap)
     assert run.now == datetime.fromisoformat("2022-09-06T07:00:00-07:00")
     assert run.hours_left(snap["alerts"][0]) == 85.0
+
+
+# --- Vietnamese review round 2: masks, watch + warning, feels-like, flood wording, casing ---
+
+from climateguard import guardrails, translate  # noqa: E402
+
+MASK_IN_EVERY_LANGUAGE = {
+    "en": "If you must go outside, wear an N95 mask.", "es": "Si sale, use una mascarilla N95.",
+    "vi": "Nếu phải ra ngoài, hãy đeo khẩu trang vừa khít.", "zh": "外出时请佩戴口罩。",
+    "tl": "Kung lalabas, magsuot ng maskara.", "ko": "외출 시 마스크를 착용하세요.", "ar": "ارتدِ كمامة عند الخروج.",
+}
+NO_MASK = {"en": "Limit time outdoors.", "es": "Limite el tiempo afuera.", "vi": "Hãy hạn chế ra ngoài.",
+           "zh": "减少户外活动。", "tl": "Limitahan ang oras sa labas.", "ko": "야외 활동을 줄이세요.",
+           "ar": "قلل الوقت في الخارج."}
+
+
+@pytest.mark.parametrize("lang", list(MASK_IN_EVERY_LANGUAGE))
+def test_mask_detected_in_every_language(lang):
+    assert guardrails.mentions_mask(MASK_IN_EVERY_LANGUAGE[lang])
+    assert not guardrails.mentions_mask(NO_MASK[lang])
+
+
+def _air(pollutant, aqi_fc, alert_text=None):
+    def parts(tz):
+        alerts = [sc.nws_alert(tz, "Air Quality Alert", "Unknown", 24, alert_text, alert_text, "i")] if alert_text else []
+        return {"hours": sc.hours(tz, sc.heat_curve(95), lambda h: 20), "alerts": alerts,
+                "aqi": sc.aqi(tz, 90, [aqi_fc, 90], pollutant=pollutant)}
+    return sc.assemble("CAZ159", parts(ZoneInfo("America/Los_Angeles")), "air")
+
+
+def test_particle_pollution_only_for_particles():
+    assert not guardrails.particle_pollution(_air("O3", 185))
+    assert not guardrails.particle_pollution(_air("O3", 185, "Air Quality Alert for ozone"))
+    assert not guardrails.particle_pollution(replays.snapshot_for("heat_2022", "record_day_morning"))  # ozone 208
+    assert guardrails.particle_pollution(_air("PM2.5", 160))
+    assert guardrails.particle_pollution(_air("O3", 120, "Air Quality Alert for wildfire smoke"))
+    assert guardrails.particle_pollution(replays.snapshot_for("smoke_2020", "peak"))
+
+
+def test_masks_still_allowed_when_ozone_is_worse_than_the_smoke():
+    from eval_cases import _ozone_and_smoke
+    tz = ZoneInfo("America/Los_Angeles")
+    both = sc.assemble("CAZ159", {"hours": sc.hours(tz, sc.heat_curve(97), lambda h: 20), "alerts": [],
+                                  "aqi": _ozone_and_smoke(tz)}, "both")
+    assert both["aqi"]["current"]["pollutant"] == "O3"  # ozone is the headline pollutant...
+    assert guardrails.particle_pollution(both)  # ...but the smoke is still there
+    # smoke only in the forecast, ozone worst that day (AirNow keeps the worst pollutant per day)
+    fc_only = _air("O3", 185)
+    fc_only["aqi"]["forecast"][0]["particles_unhealthy"] = True
+    assert guardrails.particle_pollution(fc_only)
+    run = monitor.Run(zone="CAZ159", snapshot=both, namespace="EVAL-both")
+    msgs = {lang: f"Air is unhealthy. {MASK_IN_EVERY_LANGUAGE[lang]}" for lang in ("en", "es", "vi")}
+    msgs["es"] = "El aire es dañino. Si sale, use una mascarilla N95."
+    assert monitor.validate_alert(run, {"zone": "CAZ159", "hazard": "smoke", "severity": "high", "reason": "r",
+                                        "messages_by_language": msgs}) is None
+
+
+@pytest.mark.parametrize("lang", ["en", "es", "vi"])
+def test_mask_rejected_for_ozone_in_each_reviewed_language(lang):
+    ok = {"en": "Ozone is high today. Limit time outdoors.", "es": "Ozono alto hoy. Limite el tiempo afuera.",
+          "vi": "Hôm nay khí ôzôn tăng cao. Hãy hạn chế ra ngoài."}
+    run = monitor.Run(zone="CAZ159", snapshot=_air("O3", 185), namespace="EVAL-mask")
+    args = {"zone": "CAZ159", "hazard": "smoke", "severity": "high", "reason": "r"}
+    assert monitor.validate_alert(run, {**args, "messages_by_language": ok}) is None
+    bad = {**ok, lang: ok[lang] + " " + MASK_IN_EVERY_LANGUAGE[lang]}
+    reason = monitor.validate_alert(run, {**args, "messages_by_language": bad})
+    assert "Masks do not protect against ozone" in reason
+    from run_eval import rejection_kind
+    assert rejection_kind(reason) == "mask_without_particles"
+    smoke = monitor.Run(zone="CAZ159", snapshot=_air("PM2.5", 185), namespace="EVAL-mask2")
+    assert monitor.validate_alert(smoke, {**args, "messages_by_language": bad}) is None
+
+
+@pytest.mark.parametrize("lang", ["zh", "tl", "ko", "ar"])
+def test_translation_that_adds_a_mask_falls_back_to_english(monkeypatch, lang):
+    from climateguard.llm import ChatResult
+    monkeypatch.setattr(translate, "chat", lambda *a, **k: ChatResult(
+        text=MASK_IN_EVERY_LANGUAGE[lang], model="m", prompt_tokens=1, completion_tokens=1, reasoning_tokens=0, cost_usd=0.0,
+        cache_hit=False, raw={}))
+    assert translate.translate_alert("Limit time outdoors.", lang) == ("Limit time outdoors.", False)
+    # a mask that IS in the English (smoke) may be translated
+    assert translate.translate_alert("Wear an N95 mask outside.", lang) == (MASK_IN_EVERY_LANGUAGE[lang], True)
+
+
+def test_watch_not_mentioned_next_to_a_warning():
+    snap = replays.snapshot_for("flood_2023", "warning_night")
+    run = monitor.Run(zone=snap["zone"], snapshot=snap, namespace="EVAL-watch")
+    vi = "Cảnh báo lũ lụt có hiệu lực. Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập."
+    args = {"zone": snap["zone"], "hazard": "flood", "severity": "high", "reason": "r"}
+    both = {"en": "Flood Warning until 9:30 AM Wednesday and Flood Watch through Wednesday.",
+            "es": "Aviso de inundación hasta el miércoles. Nunca camine ni maneje por agua de inundación.",
+            "vi": vi}
+    from run_eval import rejection_kind
+    assert rejection_kind(monitor.validate_alert(run, {**args, "messages_by_language": both})) == "watch_with_warning"
+    only_warning = {**both, "en": "Flood Warning until 9:30 AM Wednesday. Never drive through floodwater."}
+    assert monitor.validate_alert(run, {**args, "messages_by_language": only_warning}) is None
+    weak_vi = {**only_warning, "vi": "Cảnh báo lũ lụt có hiệu lực. Hãy tránh đi qua nước lũ."}
+    assert rejection_kind(monitor.validate_alert(run, {**args, "messages_by_language": weak_vi})) == "flood_wording"
+    weak_es = {**only_warning, "es": "Aviso de inundación hasta el miércoles. Evite el agua de inundación."}
+    assert rejection_kind(monitor.validate_alert(run, {**args, "messages_by_language": weak_es})) == "flood_wording"
+
+
+def test_feels_like_only_when_5F_above_air_temperature():
+    msgs = {"en": "Up to 104F, feels like 106F.", "es": "Hasta 104F.", "vi": "Nhiệt độ lên tới 104F."}
+    args = {"zone": "CAZ159", "hazard": "heat", "severity": "high", "reason": "r", "messages_by_language": msgs}
+    dry = monitor.Run(zone="CAZ159", snapshot=_snap(104, 20, 30), namespace="EVAL-fl")  # heat index ~ air temp
+    humid = monitor.Run(zone="CAZ159", snapshot=_snap(100, 55, 30), namespace="EVAL-fl2")
+    assert dry.snapshot["summary"]["max_heat_index_f"] - dry.snapshot["summary"]["max_temp_f"] < 5
+    assert humid.snapshot["summary"]["max_heat_index_f"] - humid.snapshot["summary"]["max_temp_f"] >= 5
+    from run_eval import rejection_kind
+    assert rejection_kind(monitor.validate_alert(dry, args)) == "feels_like_too_close"
+    assert monitor.validate_alert(humid, args) is None
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Cảnh báo khói có hiệu lực Hôm nay (thứ Bảy) và Chủ Nhật.", "Cảnh báo khói có hiệu lực hôm nay (thứ Bảy) và Chủ Nhật."),
+    ("Hôm nay (thứ Ba), nắng nóng. Tối nay trời mát.", "Hôm nay (thứ Ba), nắng nóng. Tối nay trời mát."),
+    ("Có hiệu lực đến 11 giờ Tối nay (thứ Hai).", "Có hiệu lực đến 11 giờ tối nay (thứ Hai)."),
+])
+def test_vietnamese_time_words_lowercased_mid_sentence(text, expected):
+    assert guardrails.fix_vi_case(text) == expected
