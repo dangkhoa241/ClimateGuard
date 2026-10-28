@@ -12,6 +12,8 @@ from . import hazards, risk, snapshot, zones
 TEST_ZONES = {
     "MNZ060": {"zone": "MNZ060", "name": "Hennepin", "state": "MN", "tz": "America/Chicago",
                "place": "Minneapolis, MN", "county": "MNC053", "fire_zone": "MNZ060", "lat": 44.98, "lon": -93.27},
+    "FLZ173": {"zone": "FLZ173", "name": "Coastal Miami Dade County", "state": "FL", "tz": "America/New_York",
+               "place": "Miami, FL", "county": "FLC086", "fire_zone": "FLZ173", "lat": 25.77, "lon": -80.19},
 }
 
 
@@ -100,8 +102,17 @@ SCENARIOS = {
 def build(name: str, zone_id: str | None = None) -> dict:
     default_zone, make = SCENARIOS[name]
     z = _zone(zone_id or default_zone)
+    return assemble(z["zone"], make(ZoneInfo(z["tz"])), name)
+
+
+# Public building blocks (used by the eval set to make edge cases)
+hours, aqi, nws_alert, heat_curve = _hours, _aqi, _nws, _heat_curve
+
+
+def assemble(zone_id: str, parts: dict, name: str) -> dict:
+    """parts = {"hours": [...], "aqi": {...} | None, "alerts": [...]} -> snapshot."""
+    z = _zone(zone_id)
     tz = ZoneInfo(z["tz"])
-    parts = make(tz)
     handled = [a for a in parts["alerts"] if not hazards.is_excluded(a["event"])]
     excluded = [a for a in parts["alerts"] if hazards.is_excluded(a["event"])]
     summary = snapshot.summarize(parts["hours"], parts["aqi"], handled)

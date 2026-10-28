@@ -1,0 +1,2216 @@
+{
+ "event": "heat_2022",
+ "title": "September 2022 California heat wave",
+ "zone": "CAZ159",
+ "place": "Stockton, CA",
+ "tz": "America/Los_Angeles",
+ "historic_ugc": [
+  "CAZ019",
+  "CAC077"
+ ],
+ "facts": "NWS Sacramento issued an Excessive Heat Warning for the Northern San Joaquin Valley in effect Sept 4-9, 2022. Stockton tied its all-time record high of 115F on Sept 6, the day Sacramento set its all-time record of 116F. (Hourly airport readings in this replay peak at 114F.)",
+ "sources": {
+  "weather": "Observed hourly readings, airport station SCK (IEM ASOS archive)",
+  "alerts": "NWS products from the IEM VTEC archive (original text)",
+  "air_quality": "AirNow hourly archive (files.airnowtech.org) and EPA AirData daily county AQI"
+ },
+ "note": "Replays use observed weather in place of the forecast; archived NWS hourly forecasts are not available.",
+ "built_at": "2026-10-27T23:26:49+00:00",
+ "moments": [
+  {
+   "id": "warning_issued",
+   "at_local": "2022-09-01T10:00:00-07:00",
+   "label": "Warning already issued for the weekend",
+   "hours": [
+    {
+     "time": "2022-09-01T10:00:00-07:00",
+     "temp_f": 82,
+     "rh": 34,
+     "heat_index_f": 81,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-01T11:00:00-07:00",
+     "temp_f": 86,
+     "rh": 34,
+     "heat_index_f": 84,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-01T12:00:00-07:00",
+     "temp_f": 92,
+     "rh": 27,
+     "heat_index_f": 90,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-01T13:00:00-07:00",
+     "temp_f": 95,
+     "rh": 27,
+     "heat_index_f": 93,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-01T14:00:00-07:00",
+     "temp_f": 99,
+     "rh": 22,
+     "heat_index_f": 97,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-01T15:00:00-07:00",
+     "temp_f": 101,
+     "rh": 20,
+     "heat_index_f": 99,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-01T16:00:00-07:00",
+     "temp_f": 103,
+     "rh": 18,
+     "heat_index_f": 100,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-01T17:00:00-07:00",
+     "temp_f": 104,
+     "rh": 18,
+     "heat_index_f": 102,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-01T18:00:00-07:00",
+     "temp_f": 103,
+     "rh": 18,
+     "heat_index_f": 101,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-01T19:00:00-07:00",
+     "temp_f": 100,
+     "rh": 20,
+     "heat_index_f": 98,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-01T20:00:00-07:00",
+     "temp_f": 91,
+     "rh": 24,
+     "heat_index_f": 88,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-01T21:00:00-07:00",
+     "temp_f": 88,
+     "rh": 24,
+     "heat_index_f": 85,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-01T22:00:00-07:00",
+     "temp_f": 84,
+     "rh": 27,
+     "heat_index_f": 82,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-01T23:00:00-07:00",
+     "temp_f": 81,
+     "rh": 34,
+     "heat_index_f": 80,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T00:00:00-07:00",
+     "temp_f": 79,
+     "rh": 36,
+     "heat_index_f": 79,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T01:00:00-07:00",
+     "temp_f": 76,
+     "rh": 42,
+     "heat_index_f": 76,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T02:00:00-07:00",
+     "temp_f": 74,
+     "rh": 43,
+     "heat_index_f": 74,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T03:00:00-07:00",
+     "temp_f": 72,
+     "rh": 48,
+     "heat_index_f": 72,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T04:00:00-07:00",
+     "temp_f": 72,
+     "rh": 48,
+     "heat_index_f": 72,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T05:00:00-07:00",
+     "temp_f": 70,
+     "rh": 51,
+     "heat_index_f": 70,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T06:00:00-07:00",
+     "temp_f": 68,
+     "rh": 55,
+     "heat_index_f": 68,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T07:00:00-07:00",
+     "temp_f": 68,
+     "rh": 59,
+     "heat_index_f": 68,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T08:00:00-07:00",
+     "temp_f": 73,
+     "rh": 51,
+     "heat_index_f": 73,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T09:00:00-07:00",
+     "temp_f": 78,
+     "rh": 42,
+     "heat_index_f": 78,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T10:00:00-07:00",
+     "temp_f": 85,
+     "rh": 30,
+     "heat_index_f": 83,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T11:00:00-07:00",
+     "temp_f": 89,
+     "rh": 26,
+     "heat_index_f": 86,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T12:00:00-07:00",
+     "temp_f": 94,
+     "rh": 18,
+     "heat_index_f": 90,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T13:00:00-07:00",
+     "temp_f": 98,
+     "rh": 14,
+     "heat_index_f": 94,
+     "wind_mph": 14,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T14:00:00-07:00",
+     "temp_f": 100,
+     "rh": 14,
+     "heat_index_f": 96,
+     "wind_mph": 13,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T15:00:00-07:00",
+     "temp_f": 102,
+     "rh": 16,
+     "heat_index_f": 98,
+     "wind_mph": 14,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T16:00:00-07:00",
+     "temp_f": 104,
+     "rh": 12,
+     "heat_index_f": 99,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T17:00:00-07:00",
+     "temp_f": 103,
+     "rh": 9,
+     "heat_index_f": 97,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T18:00:00-07:00",
+     "temp_f": 99,
+     "rh": 13,
+     "heat_index_f": 94,
+     "wind_mph": 14,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T19:00:00-07:00",
+     "temp_f": 93,
+     "rh": 20,
+     "heat_index_f": 89,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T20:00:00-07:00",
+     "temp_f": 89,
+     "rh": 21,
+     "heat_index_f": 85,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T21:00:00-07:00",
+     "temp_f": 83,
+     "rh": 28,
+     "heat_index_f": 81,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T22:00:00-07:00",
+     "temp_f": 83,
+     "rh": 25,
+     "heat_index_f": 81,
+     "wind_mph": 13,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-02T23:00:00-07:00",
+     "temp_f": 81,
+     "rh": 24,
+     "heat_index_f": 79,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-03T00:00:00-07:00",
+     "temp_f": 78,
+     "rh": 29,
+     "heat_index_f": 78,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    }
+   ],
+   "aqi": {
+    "source": "airnow-archive+epa-airdata",
+    "current": {
+     "aqi": 39,
+     "category": "Good",
+     "pollutant": "PM2.5",
+     "pm25_aqi": 39,
+     "observed_at": "2022-09-01T10:00:00-07:00",
+     "area": "Stockton"
+    },
+    "forecast": [
+     {
+      "date": "2022-09-01",
+      "aqi": 71,
+      "category": "Moderate",
+      "pollutant": "Ozone",
+      "action_day": false
+     },
+     {
+      "date": "2022-09-02",
+      "aqi": 53,
+      "category": "Moderate",
+      "pollutant": "PM2.5",
+      "action_day": false
+     }
+    ]
+   },
+   "alerts": [
+    {
+     "id": "STO-EH.W-3",
+     "event": "Excessive Heat Warning",
+     "message_type": "Update",
+     "severity": "Severe",
+     "urgency": "Expected",
+     "certainty": "Likely",
+     "headline": "Excessive Heat Warning issued by NWS STO",
+     "description": "...EXCESSIVE HEAT WARNING REMAINS IN EFFECT FROM 11 AM SATURDAY TO 8 PM PDT TUESDAY... * WHAT...An extended period of dangerously hot conditions with record temperatures up to 105 to 115 degrees possible. Limited overnight relief. * WHERE...Sacramento Valley, northern San Joaquin Valley, Delta, and adjacent foothills and mountains. * WHEN...From 11 AM Saturday to 8 PM PDT Tuesday. * IMPACTS...Extreme heat will significantly increase the potential for heat related illnesses, particularly for those working or participating in outdoor activities over the holiday weekend. * ADDITIONAL DETAILS...Hottest days forecast to occur Sunday, Monday, and Tuesday. There will be limited overnight relief from the heat, with low temperatures only in the upper 60s to mid 80s.",
+     "instruction": "Drink plenty of fluids, stay in an air-conditioned room, stay out of the sun, and check up on relatives and neighbors. Young children and pets should never be left unattended in vehicles under any circumstances. Take extra precautions if you work or spend time outside. When possible reschedule strenuous activities to early morning or evening. Know the signs and symptoms of heat exhaustion and heat stroke. Wear lightweight and loose fitting clothing when possible. To reduce risk during outdoor work, the Occupational Safety and Health Administration recommends scheduling frequent rest breaks in shaded or air conditioned environments. Anyone overcome by heat should be moved to a cool and shaded location. Heat stroke is an emergency! Call 9 1 1.",
+     "sent": "2022-09-01T02:26:00-07:00",
+     "onset": "2022-09-03T11:00:00-07:00",
+     "ends": "2022-09-06T20:00:00-07:00",
+     "expires": "2022-09-06T20:00:00-07:00",
+     "references": [],
+     "sender": "NWS STO",
+     "ugc": [],
+     "archive_url": "https://mesonet.agron.iastate.edu/vtec/?wfo=STO&year=2022&phenomena=EH&significance=W&etn=3"
+    }
+   ]
+  },
+  {
+   "id": "warning_starts",
+   "at_local": "2022-09-04T09:00:00-07:00",
+   "label": "First day of the warning",
+   "hours": [
+    {
+     "time": "2022-09-04T09:00:00-07:00",
+     "temp_f": 80,
+     "rh": 39,
+     "heat_index_f": 80,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-04T10:00:00-07:00",
+     "temp_f": 84,
+     "rh": 35,
+     "heat_index_f": 83,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-04T11:00:00-07:00",
+     "temp_f": 87,
+     "rh": 34,
+     "heat_index_f": 85,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-04T12:00:00-07:00",
+     "temp_f": 93,
+     "rh": 27,
+     "heat_index_f": 91,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-04T13:00:00-07:00",
+     "temp_f": 96,
+     "rh": 24,
+     "heat_index_f": 94,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-04T14:00:00-07:00",
+     "temp_f": 99,
+     "rh": 19,
+     "heat_index_f": 96,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-04T15:00:00-07:00",
+     "temp_f": 103,
+     "rh": 16,
+     "heat_index_f": 100,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-04T16:00:00-07:00",
+     "temp_f": 104,
+     "rh": 16,
+     "heat_index_f": 101,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-04T17:00:00-07:00",
+     "temp_f": 105,
+     "rh": 17,
+     "heat_index_f": 102,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-04T18:00:00-07:00",
+     "temp_f": 103,
+     "rh": 16,
+     "heat_index_f": 100,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-04T19:00:00-07:00",
+     "temp_f": 100,
+     "rh": 17,
+     "heat_index_f": 96,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-04T20:00:00-07:00",
+     "temp_f": 92,
+     "rh": 20,
+     "heat_index_f": 88,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-04T21:00:00-07:00",
+     "temp_f": 86,
+     "rh": 30,
+     "heat_index_f": 84,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-04T22:00:00-07:00",
+     "temp_f": 88,
+     "rh": 26,
+     "heat_index_f": 85,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-04T23:00:00-07:00",
+     "temp_f": 83,
+     "rh": 31,
+     "heat_index_f": 81,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T00:00:00-07:00",
+     "temp_f": 79,
+     "rh": 35,
+     "heat_index_f": 79,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T01:00:00-07:00",
+     "temp_f": 77,
+     "rh": 40,
+     "heat_index_f": 77,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T02:00:00-07:00",
+     "temp_f": 74,
+     "rh": 45,
+     "heat_index_f": 74,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T03:00:00-07:00",
+     "temp_f": 76,
+     "rh": 42,
+     "heat_index_f": 76,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T04:00:00-07:00",
+     "temp_f": 72,
+     "rh": 48,
+     "heat_index_f": 72,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T05:00:00-07:00",
+     "temp_f": 71,
+     "rh": 49,
+     "heat_index_f": 71,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T06:00:00-07:00",
+     "temp_f": 69,
+     "rh": 59,
+     "heat_index_f": 69,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T07:00:00-07:00",
+     "temp_f": 69,
+     "rh": 59,
+     "heat_index_f": 69,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T08:00:00-07:00",
+     "temp_f": 78,
+     "rh": 42,
+     "heat_index_f": 78,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T09:00:00-07:00",
+     "temp_f": 83,
+     "rh": 34,
+     "heat_index_f": 82,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T10:00:00-07:00",
+     "temp_f": 87,
+     "rh": 34,
+     "heat_index_f": 85,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T11:00:00-07:00",
+     "temp_f": 96,
+     "rh": 21,
+     "heat_index_f": 93,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T12:00:00-07:00",
+     "temp_f": 99,
+     "rh": 22,
+     "heat_index_f": 97,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T13:00:00-07:00",
+     "temp_f": 103,
+     "rh": 16,
+     "heat_index_f": 100,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T14:00:00-07:00",
+     "temp_f": 105,
+     "rh": 15,
+     "heat_index_f": 102,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T15:00:00-07:00",
+     "temp_f": 109,
+     "rh": 15,
+     "heat_index_f": 107,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T16:00:00-07:00",
+     "temp_f": 110,
+     "rh": 15,
+     "heat_index_f": 108,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T17:00:00-07:00",
+     "temp_f": 111,
+     "rh": 14,
+     "heat_index_f": 109,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T18:00:00-07:00",
+     "temp_f": 109,
+     "rh": 17,
+     "heat_index_f": 108,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T19:00:00-07:00",
+     "temp_f": 106,
+     "rh": 18,
+     "heat_index_f": 105,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T20:00:00-07:00",
+     "temp_f": 100,
+     "rh": 17,
+     "heat_index_f": 97,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T21:00:00-07:00",
+     "temp_f": 99,
+     "rh": 16,
+     "heat_index_f": 95,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T22:00:00-07:00",
+     "temp_f": 90,
+     "rh": 30,
+     "heat_index_f": 88,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-05T23:00:00-07:00",
+     "temp_f": 83,
+     "rh": 37,
+     "heat_index_f": 82,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T00:00:00-07:00",
+     "temp_f": 84,
+     "rh": 40,
+     "heat_index_f": 83,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    }
+   ],
+   "aqi": {
+    "source": "airnow-archive+epa-airdata",
+    "current": {
+     "aqi": 36,
+     "category": "Good",
+     "pollutant": "PM2.5",
+     "pm25_aqi": 36,
+     "observed_at": "2022-09-04T09:00:00-07:00",
+     "area": "Stockton"
+    },
+    "forecast": [
+     {
+      "date": "2022-09-04",
+      "aqi": 51,
+      "category": "Moderate",
+      "pollutant": "Ozone",
+      "action_day": false
+     },
+     {
+      "date": "2022-09-05",
+      "aqi": 61,
+      "category": "Moderate",
+      "pollutant": "Ozone",
+      "action_day": false
+     }
+    ]
+   },
+   "alerts": [
+    {
+     "id": "STO-EH.W-3",
+     "event": "Excessive Heat Warning",
+     "message_type": "Update",
+     "severity": "Severe",
+     "urgency": "Expected",
+     "certainty": "Likely",
+     "headline": "Excessive Heat Warning issued by NWS STO",
+     "description": "...EXCESSIVE HEAT WARNING REMAINS IN EFFECT FROM 11 AM THIS MORNING TO 8 PM PDT WEDNESDAY... * WHAT...An extended period of dangerously hot conditions with record and near record temperatures up to 105 to 115 degrees. Limited overnight relief especially in the foothills. * WHERE...Sacramento Valley, northern San Joaquin Valley, Delta, and adjacent foothills and mountains. * WHEN...From 11 AM Sunday to 8 PM PDT Wednesday. * IMPACTS...Extreme heat will significantly increase the potential for heat related illnesses, particularly for those working or participating in outdoor activities over the holiday weekend. * ADDITIONAL DETAILS...The most significant heat is forecast to occur Monday, Tuesday, and Wednesday. There will be limited overnight relief from the heat, with low temperatures only in the upper 60s to mid 80s.",
+     "instruction": "Drink plenty of fluids, stay in an air-conditioned room, stay out of the sun, and check up on relatives and neighbors. Young children and pets should never be left unattended in vehicles under any circumstances. Take extra precautions if you work or spend time outside. When possible reschedule strenuous activities to early morning or evening. Know the signs and symptoms of heat exhaustion and heat stroke. Wear lightweight and loose fitting clothing when possible. To reduce risk during outdoor work, the Occupational Safety and Health Administration recommends scheduling frequent rest breaks in shaded or air conditioned environments. Anyone overcome by heat should be moved to a cool and shaded location. Heat stroke is an emergency! Call 9 1 1.",
+     "sent": "2022-09-04T03:19:00-07:00",
+     "onset": "2022-09-04T11:00:00-07:00",
+     "ends": "2022-09-07T20:00:00-07:00",
+     "expires": "2022-09-07T20:00:00-07:00",
+     "references": [],
+     "sender": "NWS STO",
+     "ugc": [],
+     "archive_url": "https://mesonet.agron.iastate.edu/vtec/?wfo=STO&year=2022&phenomena=EH&significance=W&etn=3"
+    }
+   ]
+  },
+  {
+   "id": "record_day_morning",
+   "at_local": "2022-09-06T07:00:00-07:00",
+   "label": "Morning of the record day (115F)",
+   "hours": [
+    {
+     "time": "2022-09-06T07:00:00-07:00",
+     "temp_f": 76,
+     "rh": 52,
+     "heat_index_f": 76,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T08:00:00-07:00",
+     "temp_f": 82,
+     "rh": 44,
+     "heat_index_f": 82,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T09:00:00-07:00",
+     "temp_f": 89,
+     "rh": 35,
+     "heat_index_f": 88,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T10:00:00-07:00",
+     "temp_f": 93,
+     "rh": 31,
+     "heat_index_f": 92,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T11:00:00-07:00",
+     "temp_f": 99,
+     "rh": 24,
+     "heat_index_f": 98,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T12:00:00-07:00",
+     "temp_f": 105,
+     "rh": 21,
+     "heat_index_f": 105,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T13:00:00-07:00",
+     "temp_f": 108,
+     "rh": 17,
+     "heat_index_f": 107,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T14:00:00-07:00",
+     "temp_f": 112,
+     "rh": 16,
+     "heat_index_f": 112,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T15:00:00-07:00",
+     "temp_f": 112,
+     "rh": 16,
+     "heat_index_f": 112,
+     "wind_mph": null,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T16:00:00-07:00",
+     "temp_f": 113,
+     "rh": 18,
+     "heat_index_f": 115,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T17:00:00-07:00",
+     "temp_f": 114,
+     "rh": 16,
+     "heat_index_f": 114,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T18:00:00-07:00",
+     "temp_f": 111,
+     "rh": 17,
+     "heat_index_f": 111,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T19:00:00-07:00",
+     "temp_f": 105,
+     "rh": 19,
+     "heat_index_f": 104,
+     "wind_mph": 14,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T20:00:00-07:00",
+     "temp_f": 98,
+     "rh": 21,
+     "heat_index_f": 95,
+     "wind_mph": 13,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T21:00:00-07:00",
+     "temp_f": 95,
+     "rh": 20,
+     "heat_index_f": 92,
+     "wind_mph": 13,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T22:00:00-07:00",
+     "temp_f": 91,
+     "rh": 22,
+     "heat_index_f": 88,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T23:00:00-07:00",
+     "temp_f": 89,
+     "rh": 24,
+     "heat_index_f": 86,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T00:00:00-07:00",
+     "temp_f": 85,
+     "rh": 28,
+     "heat_index_f": 83,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T01:00:00-07:00",
+     "temp_f": 80,
+     "rh": 38,
+     "heat_index_f": 80,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T02:00:00-07:00",
+     "temp_f": 76,
+     "rh": 45,
+     "heat_index_f": 76,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T03:00:00-07:00",
+     "temp_f": 77,
+     "rh": 43,
+     "heat_index_f": 77,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T04:00:00-07:00",
+     "temp_f": 74,
+     "rh": 52,
+     "heat_index_f": 74,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T05:00:00-07:00",
+     "temp_f": 75,
+     "rh": 46,
+     "heat_index_f": 75,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T06:00:00-07:00",
+     "temp_f": 76,
+     "rh": 45,
+     "heat_index_f": 76,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T07:00:00-07:00",
+     "temp_f": 71,
+     "rh": 59,
+     "heat_index_f": 71,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T08:00:00-07:00",
+     "temp_f": 80,
+     "rh": 45,
+     "heat_index_f": 80,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T09:00:00-07:00",
+     "temp_f": 85,
+     "rh": 39,
+     "heat_index_f": 84,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T10:00:00-07:00",
+     "temp_f": 91,
+     "rh": 31,
+     "heat_index_f": 89,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T11:00:00-07:00",
+     "temp_f": 97,
+     "rh": 25,
+     "heat_index_f": 95,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T12:00:00-07:00",
+     "temp_f": 100,
+     "rh": 24,
+     "heat_index_f": 99,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T13:00:00-07:00",
+     "temp_f": 104,
+     "rh": 18,
+     "heat_index_f": 102,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T14:00:00-07:00",
+     "temp_f": 109,
+     "rh": 15,
+     "heat_index_f": 107,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T15:00:00-07:00",
+     "temp_f": 109,
+     "rh": 12,
+     "heat_index_f": 105,
+     "wind_mph": 14,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T16:00:00-07:00",
+     "temp_f": 109,
+     "rh": 12,
+     "heat_index_f": 105,
+     "wind_mph": 15,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T17:00:00-07:00",
+     "temp_f": 107,
+     "rh": 13,
+     "heat_index_f": 103,
+     "wind_mph": 16,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T18:00:00-07:00",
+     "temp_f": 105,
+     "rh": 12,
+     "heat_index_f": 100,
+     "wind_mph": 16,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T19:00:00-07:00",
+     "temp_f": 100,
+     "rh": 17,
+     "heat_index_f": 97,
+     "wind_mph": 13,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T20:00:00-07:00",
+     "temp_f": 91,
+     "rh": 28,
+     "heat_index_f": 89,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T21:00:00-07:00",
+     "temp_f": 91,
+     "rh": 16,
+     "heat_index_f": 87,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T22:00:00-07:00",
+     "temp_f": 89,
+     "rh": 14,
+     "heat_index_f": 85,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T23:00:00-07:00",
+     "temp_f": 85,
+     "rh": 16,
+     "heat_index_f": 82,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-08T00:00:00-07:00",
+     "temp_f": 81,
+     "rh": 33,
+     "heat_index_f": 80,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    }
+   ],
+   "aqi": {
+    "source": "airnow-archive+epa-airdata",
+    "current": {
+     "aqi": 69,
+     "category": "Moderate",
+     "pollutant": "PM2.5",
+     "pm25_aqi": 69,
+     "observed_at": "2022-09-06T07:00:00-07:00",
+     "area": "Stockton"
+    },
+    "forecast": [
+     {
+      "date": "2022-09-06",
+      "aqi": 208,
+      "category": "Very Unhealthy",
+      "pollutant": "Ozone",
+      "action_day": true
+     },
+     {
+      "date": "2022-09-07",
+      "aqi": 67,
+      "category": "Moderate",
+      "pollutant": "Ozone",
+      "action_day": false
+     }
+    ]
+   },
+   "alerts": [
+    {
+     "id": "STO-EH.W-3",
+     "event": "Excessive Heat Warning",
+     "message_type": "Update",
+     "severity": "Severe",
+     "urgency": "Expected",
+     "certainty": "Likely",
+     "headline": "Excessive Heat Warning issued by NWS STO",
+     "description": "...EXCESSIVE HEAT WARNING REMAINS IN EFFECT UNTIL 8 PM PDT FRIDAY... * WHAT...A prolonged period of dangerously hot conditions with record and near record temperatures up to 105 to 118 degrees. Limited overnight relief, especially in the foothills. * WHERE...Sacramento Valley, northern San Joaquin Valley, Delta, and adjacent foothills and mountains. * WHEN...Until 8 PM PDT Friday. * IMPACTS...Extreme heat will significantly increase the potential for heat related illnesses, particularly for those working or participating in outdoor activities. * ADDITIONAL DETAILS...The most significant heat is forecast to occur through Tuesday with excessive heat continuing through Friday. There will be limited overnight relief with low temperatures only in the 70s to mid 80s.",
+     "instruction": "Drink plenty of fluids, stay in an air-conditioned room, stay out of the sun, and check up on relatives and neighbors. Young children and pets should never be left unattended in vehicles under any circumstances. Take extra precautions if you work or spend time outside. When possible reschedule strenuous activities to early morning or evening. Know the signs and symptoms of heat exhaustion and heat stroke. Wear lightweight and loose fitting clothing when possible. To reduce risk during outdoor work, the Occupational Safety and Health Administration recommends scheduling frequent rest breaks in shaded or air conditioned environments. Anyone overcome by heat should be moved to a cool and shaded location. Heat stroke is an emergency! Call 9 1 1.",
+     "sent": "2022-09-06T02:00:00-07:00",
+     "onset": null,
+     "ends": "2022-09-09T20:00:00-07:00",
+     "expires": "2022-09-09T20:00:00-07:00",
+     "references": [],
+     "sender": "NWS STO",
+     "ugc": [],
+     "archive_url": "https://mesonet.agron.iastate.edu/vtec/?wfo=STO&year=2022&phenomena=EH&significance=W&etn=3"
+    }
+   ]
+  },
+  {
+   "id": "record_day_afternoon",
+   "at_local": "2022-09-06T15:00:00-07:00",
+   "label": "Afternoon of the record day",
+   "hours": [
+    {
+     "time": "2022-09-06T15:00:00-07:00",
+     "temp_f": 112,
+     "rh": 16,
+     "heat_index_f": 112,
+     "wind_mph": null,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T16:00:00-07:00",
+     "temp_f": 113,
+     "rh": 18,
+     "heat_index_f": 115,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T17:00:00-07:00",
+     "temp_f": 114,
+     "rh": 16,
+     "heat_index_f": 114,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T18:00:00-07:00",
+     "temp_f": 111,
+     "rh": 17,
+     "heat_index_f": 111,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T19:00:00-07:00",
+     "temp_f": 105,
+     "rh": 19,
+     "heat_index_f": 104,
+     "wind_mph": 14,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T20:00:00-07:00",
+     "temp_f": 98,
+     "rh": 21,
+     "heat_index_f": 95,
+     "wind_mph": 13,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T21:00:00-07:00",
+     "temp_f": 95,
+     "rh": 20,
+     "heat_index_f": 92,
+     "wind_mph": 13,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T22:00:00-07:00",
+     "temp_f": 91,
+     "rh": 22,
+     "heat_index_f": 88,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-06T23:00:00-07:00",
+     "temp_f": 89,
+     "rh": 24,
+     "heat_index_f": 86,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T00:00:00-07:00",
+     "temp_f": 85,
+     "rh": 28,
+     "heat_index_f": 83,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T01:00:00-07:00",
+     "temp_f": 80,
+     "rh": 38,
+     "heat_index_f": 80,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T02:00:00-07:00",
+     "temp_f": 76,
+     "rh": 45,
+     "heat_index_f": 76,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T03:00:00-07:00",
+     "temp_f": 77,
+     "rh": 43,
+     "heat_index_f": 77,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T04:00:00-07:00",
+     "temp_f": 74,
+     "rh": 52,
+     "heat_index_f": 74,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T05:00:00-07:00",
+     "temp_f": 75,
+     "rh": 46,
+     "heat_index_f": 75,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T06:00:00-07:00",
+     "temp_f": 76,
+     "rh": 45,
+     "heat_index_f": 76,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T07:00:00-07:00",
+     "temp_f": 71,
+     "rh": 59,
+     "heat_index_f": 71,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T08:00:00-07:00",
+     "temp_f": 80,
+     "rh": 45,
+     "heat_index_f": 80,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T09:00:00-07:00",
+     "temp_f": 85,
+     "rh": 39,
+     "heat_index_f": 84,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T10:00:00-07:00",
+     "temp_f": 91,
+     "rh": 31,
+     "heat_index_f": 89,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T11:00:00-07:00",
+     "temp_f": 97,
+     "rh": 25,
+     "heat_index_f": 95,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T12:00:00-07:00",
+     "temp_f": 100,
+     "rh": 24,
+     "heat_index_f": 99,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T13:00:00-07:00",
+     "temp_f": 104,
+     "rh": 18,
+     "heat_index_f": 102,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T14:00:00-07:00",
+     "temp_f": 109,
+     "rh": 15,
+     "heat_index_f": 107,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T15:00:00-07:00",
+     "temp_f": 109,
+     "rh": 12,
+     "heat_index_f": 105,
+     "wind_mph": 14,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T16:00:00-07:00",
+     "temp_f": 109,
+     "rh": 12,
+     "heat_index_f": 105,
+     "wind_mph": 15,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T17:00:00-07:00",
+     "temp_f": 107,
+     "rh": 13,
+     "heat_index_f": 103,
+     "wind_mph": 16,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T18:00:00-07:00",
+     "temp_f": 105,
+     "rh": 12,
+     "heat_index_f": 100,
+     "wind_mph": 16,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T19:00:00-07:00",
+     "temp_f": 100,
+     "rh": 17,
+     "heat_index_f": 97,
+     "wind_mph": 13,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T20:00:00-07:00",
+     "temp_f": 91,
+     "rh": 28,
+     "heat_index_f": 89,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T21:00:00-07:00",
+     "temp_f": 91,
+     "rh": 16,
+     "heat_index_f": 87,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T22:00:00-07:00",
+     "temp_f": 89,
+     "rh": 14,
+     "heat_index_f": 85,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-07T23:00:00-07:00",
+     "temp_f": 85,
+     "rh": 16,
+     "heat_index_f": 82,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-08T00:00:00-07:00",
+     "temp_f": 81,
+     "rh": 33,
+     "heat_index_f": 80,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    }
+   ],
+   "aqi": {
+    "source": "airnow-archive+epa-airdata",
+    "current": {
+     "aqi": 71,
+     "category": "Moderate",
+     "pollutant": "PM2.5",
+     "pm25_aqi": 71,
+     "observed_at": "2022-09-06T15:00:00-07:00",
+     "area": "Stockton"
+    },
+    "forecast": [
+     {
+      "date": "2022-09-06",
+      "aqi": 208,
+      "category": "Very Unhealthy",
+      "pollutant": "Ozone",
+      "action_day": true
+     },
+     {
+      "date": "2022-09-07",
+      "aqi": 67,
+      "category": "Moderate",
+      "pollutant": "Ozone",
+      "action_day": false
+     }
+    ]
+   },
+   "alerts": [
+    {
+     "id": "STO-EH.W-3",
+     "event": "Excessive Heat Warning",
+     "message_type": "Update",
+     "severity": "Severe",
+     "urgency": "Expected",
+     "certainty": "Likely",
+     "headline": "Excessive Heat Warning issued by NWS STO",
+     "description": "...EXCESSIVE HEAT WARNING REMAINS IN EFFECT UNTIL 8 PM PDT FRIDAY... * WHAT...A prolonged period of dangerously hot conditions with record and near record temperatures up to 105 to 118 degrees. Limited overnight relief, especially in the foothills. * WHERE...Sacramento Valley, northern San Joaquin Valley, Delta, and adjacent foothills and mountains. * WHEN...Until 8 PM PDT Friday. * IMPACTS...Extreme heat will significantly increase the potential for heat related illnesses, particularly for those working or participating in outdoor activities. * ADDITIONAL DETAILS...The most significant heat is forecast to occur through Tuesday with excessive heat continuing through Friday. There will be limited overnight relief with low temperatures only in the 70s to mid 80s.",
+     "instruction": "Drink plenty of fluids, stay in an air-conditioned room, stay out of the sun, and check up on relatives and neighbors. Young children and pets should never be left unattended in vehicles under any circumstances. Take extra precautions if you work or spend time outside. When possible reschedule strenuous activities to early morning or evening. Know the signs and symptoms of heat exhaustion and heat stroke. Wear lightweight and loose fitting clothing when possible. To reduce risk during outdoor work, the Occupational Safety and Health Administration recommends scheduling frequent rest breaks in shaded or air conditioned environments. Anyone overcome by heat should be moved to a cool and shaded location. Heat stroke is an emergency! Call 9 1 1.",
+     "sent": "2022-09-06T02:00:00-07:00",
+     "onset": null,
+     "ends": "2022-09-09T20:00:00-07:00",
+     "expires": "2022-09-09T20:00:00-07:00",
+     "references": [],
+     "sender": "NWS STO",
+     "ugc": [],
+     "archive_url": "https://mesonet.agron.iastate.edu/vtec/?wfo=STO&year=2022&phenomena=EH&significance=W&etn=3"
+    }
+   ]
+  },
+  {
+   "id": "after",
+   "at_local": "2022-09-10T10:00:00-07:00",
+   "label": "The day after the warning ended",
+   "hours": [
+    {
+     "time": "2022-09-10T10:00:00-07:00",
+     "temp_f": 77,
+     "rh": 52,
+     "heat_index_f": 77,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-10T11:00:00-07:00",
+     "temp_f": 80,
+     "rh": 47,
+     "heat_index_f": 80,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-10T12:00:00-07:00",
+     "temp_f": 82,
+     "rh": 44,
+     "heat_index_f": 82,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-10T13:00:00-07:00",
+     "temp_f": 85,
+     "rh": 40,
+     "heat_index_f": 84,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-10T14:00:00-07:00",
+     "temp_f": 86,
+     "rh": 36,
+     "heat_index_f": 85,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-10T15:00:00-07:00",
+     "temp_f": 86,
+     "rh": 36,
+     "heat_index_f": 85,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-10T16:00:00-07:00",
+     "temp_f": 85,
+     "rh": 39,
+     "heat_index_f": 84,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-10T17:00:00-07:00",
+     "temp_f": 83,
+     "rh": 46,
+     "heat_index_f": 83,
+     "wind_mph": 15,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-10T18:00:00-07:00",
+     "temp_f": 80,
+     "rh": 52,
+     "heat_index_f": 81,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-10T19:00:00-07:00",
+     "temp_f": 79,
+     "rh": 54,
+     "heat_index_f": 79,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-10T20:00:00-07:00",
+     "temp_f": 77,
+     "rh": 58,
+     "heat_index_f": 77,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-10T21:00:00-07:00",
+     "temp_f": 76,
+     "rh": 60,
+     "heat_index_f": 76,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-10T22:00:00-07:00",
+     "temp_f": 76,
+     "rh": 60,
+     "heat_index_f": 76,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-10T23:00:00-07:00",
+     "temp_f": 74,
+     "rh": 57,
+     "heat_index_f": 74,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T00:00:00-07:00",
+     "temp_f": 75,
+     "rh": 51,
+     "heat_index_f": 75,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T01:00:00-07:00",
+     "temp_f": 74,
+     "rh": 50,
+     "heat_index_f": 74,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T02:00:00-07:00",
+     "temp_f": 74,
+     "rh": 48,
+     "heat_index_f": 74,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T03:00:00-07:00",
+     "temp_f": 72,
+     "rh": 51,
+     "heat_index_f": 72,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T04:00:00-07:00",
+     "temp_f": 70,
+     "rh": 57,
+     "heat_index_f": 70,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T05:00:00-07:00",
+     "temp_f": 71,
+     "rh": 55,
+     "heat_index_f": 71,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T06:00:00-07:00",
+     "temp_f": 70,
+     "rh": 59,
+     "heat_index_f": 70,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T07:00:00-07:00",
+     "temp_f": 70,
+     "rh": 61,
+     "heat_index_f": 70,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T08:00:00-07:00",
+     "temp_f": 73,
+     "rh": 53,
+     "heat_index_f": 73,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T09:00:00-07:00",
+     "temp_f": 77,
+     "rh": 42,
+     "heat_index_f": 77,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T10:00:00-07:00",
+     "temp_f": 80,
+     "rh": 39,
+     "heat_index_f": 80,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T11:00:00-07:00",
+     "temp_f": 83,
+     "rh": 37,
+     "heat_index_f": 82,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T12:00:00-07:00",
+     "temp_f": 87,
+     "rh": 21,
+     "heat_index_f": 84,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T13:00:00-07:00",
+     "temp_f": 88,
+     "rh": 23,
+     "heat_index_f": 85,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T14:00:00-07:00",
+     "temp_f": 90,
+     "rh": 24,
+     "heat_index_f": 87,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T15:00:00-07:00",
+     "temp_f": 93,
+     "rh": 22,
+     "heat_index_f": 90,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T16:00:00-07:00",
+     "temp_f": 94,
+     "rh": 17,
+     "heat_index_f": 90,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T17:00:00-07:00",
+     "temp_f": 93,
+     "rh": 21,
+     "heat_index_f": 89,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T18:00:00-07:00",
+     "temp_f": 88,
+     "rh": 16,
+     "heat_index_f": 84,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T19:00:00-07:00",
+     "temp_f": 85,
+     "rh": 18,
+     "heat_index_f": 82,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T20:00:00-07:00",
+     "temp_f": 82,
+     "rh": 22,
+     "heat_index_f": 80,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T21:00:00-07:00",
+     "temp_f": 79,
+     "rh": 30,
+     "heat_index_f": 79,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T22:00:00-07:00",
+     "temp_f": 76,
+     "rh": 36,
+     "heat_index_f": 76,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-11T23:00:00-07:00",
+     "temp_f": 75,
+     "rh": 38,
+     "heat_index_f": 75,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2022-09-12T00:00:00-07:00",
+     "temp_f": 75,
+     "rh": 36,
+     "heat_index_f": 75,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    }
+   ],
+   "aqi": {
+    "source": "airnow-archive+epa-airdata",
+    "current": {
+     "aqi": 34,
+     "category": "Good",
+     "pollutant": "O3",
+     "pm25_aqi": null,
+     "observed_at": "2022-09-10T10:00:00-07:00",
+     "area": "Stockton"
+    },
+    "forecast": [
+     {
+      "date": "2022-09-10",
+      "aqi": 65,
+      "category": "Moderate",
+      "pollutant": "PM2.5",
+      "action_day": false
+     },
+     {
+      "date": "2022-09-11",
+      "aqi": 73,
+      "category": "Moderate",
+      "pollutant": "PM2.5",
+      "action_day": false
+     }
+    ]
+   },
+   "alerts": []
+  }
+ ]
+}

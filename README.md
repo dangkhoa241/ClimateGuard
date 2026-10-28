@@ -43,12 +43,16 @@ backend/src/           Lambda code (packaged by `sam build`)
     budget.py          daily model budget ($5/day)
     languages.py, translate.py   alert languages; automatic translation of the English alert
     scenarios.py       synthetic heatwave / smoke / flood / calm / tornado_warning / winter_storm
+    replays.py         real past events (data/replays/*.json) as snapshots, labeled REPLAY
+    stats.py           daily counters for the public decision history
     subscriptions.py   sign-up by zone + language via SNS (double opt-in), abuse limits, confirmed counts
     notify.py          alert delivery: one SNS publish per zone + language topic
     ratelimit.py       per-IP / per-email counters, subscriber cap
     ssm.py             read API keys from SSM Parameter Store (Lambda)
     llm.py, cache.py, usage.py   model calls, response cache, usage and cost log
-backend/scripts/       smoke tests, collect_local.py, run_monitor.py, local_api.py, spend.py, compare_effort.py
+backend/scripts/       smoke tests, collect_local.py, run_monitor.py, local_api.py, spend.py, compare_effort.py,
+                       build_replays.py, replay.py, run_eval.py + eval_cases.py
+backend/eval/results/  evaluation reports (.md + .json)
 backend/tests/         offline tests (pytest)
 frontend/              React + Vite, mobile-first, deployed on Vercel
 ```
@@ -140,6 +144,94 @@ python scripts/run_monitor.py --scenario heatwave --reset   # heatwave|smoke|flo
 python scripts/collect_local.py --monitor                   # real data for monitored zones, agent only where changed
 ```
 
+## Real-event replays
+
+Demo mode replays **real past events** through the live agent, so the demo never depends on a disaster happening that day. `scripts/build_replays.py` downloads the archives once and saves small files in `backend/src/climateguard/data/replays/` (committed).
+
+| Event | Place (zone) | Moments | What the archives show |
+|---|---|---|---|
+| `heat_2022`: September 2022 heat wave | Stockton (`CAZ159`; `CAZ019` in 2022) | warning issued (Sept 1), warning starts (Sept 4), record day 7 AM and 3 PM (Sept 6), after (Sept 10) | Excessive Heat Warning Sept 4–9; Stockton tied its all-time record of 115°F on Sept 6 (hourly readings peak at 114°F), with county AQI 208 that day |
+| `flood_2023`: January 2023 Merced County floods | Planada (`CAZ303`) | Flood Watch (Jan 8), flood warnings (Jan 9, 10 PM), evacuation morning (Jan 10), after (Jan 20) | Bear Creek "major flooding… flood of record"; Planada evacuated Jan 10; a Freeze Warning followed |
+| `smoke_2020`: September 2020 wildfire smoke | Stockton (`CAZ159`) | orange sky (Sept 9), peak (Sept 12), improving (Sept 16) | San Joaquin County daily AQI 206 (Very Unhealthy) on Sept 12 |
+
+**Sources, all public archives:**
+
+| Data | Source |
+|---|---|
+| Weather | Observed hourly airport readings (IEM ASOS archive, SCK/MCE) |
+| NWS products | Watches, warnings and advisories **with their original NWS text and end times as of each moment** (IEM VTEC archive) |
+| Air quality | AirNow hourly file archive, plus EPA AirData daily county AQI |
+
+**How the archive is read:** each moment uses the latest NWS product before it, including upgrades: once a watch is upgraded to a warning, the watch disappears. The NWS header lines (zone codes, VTEC code, area names) are stripped, so the agent sees the plain-language message.
+
+**Labeled everywhere:**
+- Every replay snapshot carries a `replay` block with the banner "REPLAY of a real event, not live. Weather shown is what was observed."
+- Archived NWS hourly forecasts don't exist, so replays use observed weather in their place, and say so.
+- The agent is told it's a replay and reasons at the historical local time.
+- In the demo story, **Maria is always labeled an example person**. The events, places and data are real.
+
+**Isolation:** replay runs use the `REPLAY-<event>` log. They never email anyone and never appear in the live decision history.
+
+```bash
+python scripts/replay.py                       # list events and moments
+python scripts/replay.py flood_2023            # run every moment through the live agent
+python scripts/build_replays.py                # rebuild from the archives (about 45 s)
+```
+
+## Evaluation
+
+`scripts/run_eval.py` runs **25 cases (27 steps)** through the live agent. Each case uses its own `EVAL-<case>` log: nothing is emailed and nothing touches live data.
+
+- **11 real archived moments:** heat warning issued; record day; no repeated alert later the same day; quiet day after; flood watch; flood warning; watch → warning escalation; freeze after the flood; smoke orange-sky day; smoke peak; smoke clearing.
+- **14 edge cases:**
+  - calm day; a lone Tornado Warning (excluded); 94°F dry; ozone AQI 150 without smoke
+  - smoke at AQI 155; a **prompt injection inside NWS alert text**; a re-issued warning already alerted
+  - Heat Advisory → Extreme Heat Warning escalation; daily cap reached, then an extreme alert
+  - heat and smoke together; air-quality source down; dense tule fog
+  - a Minneapolis winter storm; a Miami hurricane watch
+
+**What it measures:** decision accuracy (send vs. skip), right hazard, severity range, deduplication, escalation, zero model calls on the pre-filter cases, medical wording in every sent message, Vietnamese written with diacritics, guardrail rejections, cost per alert, and latency.
+
+**Two full runs (2026-10-27, `low` reasoning effort, fresh samples each time):**
+
+| Metric | Run 1 | Run 2 (with accent guardrail) |
+|---|---|---|
+| Cases passed | **25/25** (real 11/11, edge 14/14) | **25/25** (real 11/11, edge 14/14) |
+| Decision accuracy / right hazard / severity in range | 25/25 · 19/19 · 7/7 | 25/25 · 19/19 · 7/7 |
+| Dedup / escalation / pre-filter zero calls | 2/2 · 1/1 · 5/5 | 2/2 · 1/1 · 5/5 |
+| Sent messages free of medical wording | 27/27 | 27/27 |
+| Vietnamese written with diacritics | not measured | 27/27 |
+| Guardrail rejections | none | 1 duplicate (the agent backed off) |
+| Cost per alert | $0.0097 | $0.0089 |
+| Latency per agent run (p50 / p95) | 6.2 s / 8.2 s | 6.7 s / 8.6 s |
+
+**Prompt injection in NWS text:** in both runs it was ignored. A clean heat alert was sent, and the agent's own log says it "ignored embedded instruction".
+
+**Two bugs the replays and eval found, both now fixed in code:**
+- **Missing accents.** In one replay the model wrote Spanish and Vietnamese without accents ("Canh bao Ngap Lut…"). `send_alert` now rejects Vietnamese with no diacritics and common Spanish words missing their accent; the agent rewrites.
+- **A hung request.** One model request in run 2 hung for **19 minutes**, because HTTP timeouts only limit the gap between bytes. Every model call now has a hard **60 s** wall-clock limit (with 1 retry), and every agent run a **150 s** limit, logged as an `error` decision. A stuck zone can no longer use up the collector's 10-minute Lambda limit.
+
+Full reports are in `backend/eval/results/`.
+
+```bash
+python scripts/run_eval.py --fresh             # all cases, new samples (~$0.20-0.30)
+python scripts/run_eval.py edge_prompt_injection real_flood_warning
+```
+
+## Public decision history
+
+`GET /decisions?zone=&days=7&limit=50` returns the live agent's **real** decisions since deployment, newest first, and is public.
+
+- **Each decision shows:** time, zone and place, sent or skipped, the agent's reason, risk signals, the tools it called (including any guardrail rejections), the alerts it sent, model calls and cost.
+- **Live only:** replays and evals live in their own `REPLAY-*`/`EVAL-*` logs, so they can never appear here.
+- **Daily counters:** decisions are only written when a zone's data materially changes, so a quiet week has few rows. The response therefore also carries daily totals recorded by every collector run:
+  - collector runs and zone checks
+  - data changes and pre-filter skips
+  - agent runs, budget skips and alerts sent
+  - errors and model cost
+
+  An example of how a quiet week reads: "2,000 checks · 9 changes · 7 skipped by pre-filter · 2 agent runs · 0 alerts". The page itself comes in Phase 4.
+
 ## Email alerts (sign-up)
 
 - **Sign-up:** a ZIP code or browser location, plus the alert language. One SNS topic per **zone and language**, for example `climateguard-caz159-es`, created on first use. Each subscriber gets alerts only in their language, and the topics show "ClimateGuard" as the email sender name.
@@ -179,6 +271,7 @@ python scripts/collect_local.py --monitor                   # real data for moni
   | `GET /zones/{zone}/alerts` | Alerts sent in the last 48 h |
   | `GET /languages` | Supported alert languages |
   | `POST /subscribe {email, lang, zip or lat+lon}` | Sign-up (double opt-in) |
+  | `GET /decisions?zone=&days=&limit=` | The live agent's real decisions + daily counters (public) |
 
 ## Deploy (AWS SAM), step by step
 

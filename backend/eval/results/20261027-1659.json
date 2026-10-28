@@ -1,0 +1,939 @@
+{
+ "summary": {
+  "cases": {
+   "passed": 25,
+   "total": 25
+  },
+  "by_kind": {
+   "real": {
+    "passed": 11,
+    "total": 11
+   },
+   "edge": {
+    "passed": 14,
+    "total": 14
+   }
+  },
+  "decision_accuracy": {
+   "passed": 25,
+   "total": 25
+  },
+  "hazard_accuracy": {
+   "passed": 19,
+   "total": 19
+  },
+  "severity_in_range": {
+   "passed": 7,
+   "total": 7
+  },
+  "no_repeat": {
+   "passed": 2,
+   "total": 2
+  },
+  "escalation": {
+   "passed": 1,
+   "total": 1
+  },
+  "pre_filter_zero_calls": {
+   "passed": 5,
+   "total": 5
+  },
+  "no_medical_wording": {
+   "passed": 27,
+   "total": 27
+  },
+  "proper_accents": {
+   "passed": 27,
+   "total": 27
+  },
+  "guardrail_rejections": {
+   "duplicate": 1
+  },
+  "alerts_sent": 22,
+  "model_calls": 86,
+  "total_cost_usd": 0.1957,
+  "cost_per_alert_usd": 0.0089,
+  "latency_s": {
+   "p50": 6.68,
+   "p95": 8.59
+  },
+  "model": "meta-models/muse-spark-open-1026",
+  "reasoning_effort": "low"
+ },
+ "results": [
+  {
+   "id": "real_heat_warning_issued",
+   "kind": "real",
+   "desc": "Sept 1 2022: Excessive Heat Warning issued for the weekend",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active NWS Excessive Heat Warning remains in effect until Tuesday 8 PM and today's forecast shows 7 hours at or above 95F with max 104F/heat index 102F from 1 PM to 8 PM today, triggering Cal/OSHA high-heat threshold in California; no duplicate alert in last 48 hours.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Excessive Heat Warning for Stockton area until Tuesday evening. Today Thursday from 1 PM to 8 PM temperatures reach 95 to 104 degrees, drink water often and take breaks in cool shade or air conditioning."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.007511,
+     "latency_s": 8.21,
+     "signals": [
+      "NWS alerts: Excessive Heat Warning",
+      "7h at or above 95F",
+      "heat index up to 102F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_heat_record_day",
+   "kind": "real",
+   "desc": "Sept 6 2022 07:00: record-heat day (and AQI 208)",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Sent two alerts for CAZ159 - Extreme heat alert for active Excessive Heat Warning with 11 hours at or above 95F, max 114F and heat index 115F triggering Cal/OSHA high-heat protections, and Very Unhealthy air quality alert for forecast AQI 208; both hazards verified via tools with no recent duplicates.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Excessive Heat Warning until 8 PM Friday. Very dangerous heat Tuesday from 11 AM with high near 114F and heat index to 115F. Stay in air conditioning, drink water often, and rest in shade if you work outside."
+      },
+      {
+       "hazard": "smoke",
+       "severity": "extreme",
+       "en": "Very unhealthy air forecast Tuesday with AQI up to 208. Avoid hard work outside today, stay indoors with windows closed, and use air conditioning on recirculate if you can."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.010915,
+     "latency_s": 7.83,
+     "signals": [
+      "NWS alerts: Excessive Heat Warning",
+      "11h at or above 95F",
+      "heat index up to 115F",
+      "AQI up to 208 (Very Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_heat_no_repeat",
+   "kind": "real",
+   "desc": "Record day morning, then afternoon: no repeated heat alert",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Sent heat alert for Excessive Heat Warning with 114F and 11 hours at or above 95F with heat index 115F exceeding Cal/OSHA high-heat level, and sent smoke alert for Very Unhealthy AQI forecast of 208 today. No recent alerts had been sent, so both near-term risks required immediate protective actions.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Excessive Heat Warning until Friday night with record heat up to 114F today Tuesday. Drink water often, stay in shade or air conditioning, and take frequent rest breaks if working outside."
+      },
+      {
+       "hazard": "smoke",
+       "severity": "extreme",
+       "en": "Air quality Very Unhealthy today Tuesday with AQI up to 208. Stay indoors with windows closed and avoid heavy outdoor work if you can."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 5,
+     "cost_usd": 0.011255,
+     "latency_s": 8.26,
+     "signals": [
+      "NWS alerts: Excessive Heat Warning",
+      "11h at or above 95F",
+      "heat index up to 115F",
+      "AQI up to 208 (Very Unhealthy)"
+     ]
+    },
+    {
+     "action": "skipped",
+     "reason": "No new alert sent because an Excessive Heat Warning with 11 hours at or above 95F and Very Unhealthy AQI up to 208 is already covered by extreme heat and smoke alerts sent in the last 48 hours, with no increase in severity or new information requiring an update.",
+     "sent": [],
+     "checks": {
+      "no_repeat": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 2,
+     "cost_usd": 0.006463,
+     "latency_s": 3.74,
+     "signals": [
+      "NWS alerts: Excessive Heat Warning",
+      "11h at or above 95F",
+      "heat index up to 115F",
+      "AQI up to 208 (Very Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_heat_after",
+   "kind": "real",
+   "desc": "Sept 10 2022: warning over, normal weather",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "pre-filter: no risk signals in the data, agent not called",
+     "sent": [],
+     "checks": {
+      "decision": true,
+      "zero_calls": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 0,
+     "cost_usd": 0.0,
+     "latency_s": 0.0,
+     "signals": []
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_flood_watch",
+   "kind": "real",
+   "desc": "Jan 8 2023: Flood Watch for Merced County",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Sent one flood alert for active NWS Flood Watch through late Tuesday night with 90% rain forecast starting Sunday night, providing protective actions per NWS guidance. SKIPPED: No separate AQI alert because AQI 106 is below the 151 threshold and no smoke link was indicated.",
+     "sent": [
+      {
+       "hazard": "flood",
+       "severity": "moderate",
+       "en": "Flood Watch in effect through late Tuesday night. Heavy rain is expected starting tonight Sunday, with higher risk Monday. Be ready to move to higher ground and avoid driving through flooded roads."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.007814,
+     "latency_s": 6.46,
+     "signals": [
+      "NWS alerts: Flood Watch",
+      "AQI up to 106 (Unhealthy for Sensitive Groups)",
+      "rain chance 90%"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_flood_warning",
+   "kind": "real",
+   "desc": "Jan 9 2023 22:00: Flood Warnings, Bear Creek major flooding",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active NWS Flood Warning (Severe) until 11:15 PM tonight with flooding already occurring in Planada area, plus Flood Advisory noting canal overflow near Planada elementary and Flood Watch through Wednesday with 90% rain chance, so alert needed now with no duplicate in last 48 hours.",
+     "sent": [
+      {
+       "hazard": "flood",
+       "severity": "high",
+       "en": "Flood Warning until 11:15 tonight and Flood Watch through Wednesday morning for Planada and Merced County. Do not walk or drive through flood water, turn around and stay on high ground."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.007407,
+     "latency_s": 5.91,
+     "signals": [
+      "NWS alerts: Flood Advisory, Flood Warning, Flood Watch",
+      "rain chance 90%"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_flood_escalation",
+   "kind": "real",
+   "desc": "Flood Watch, then Flood Warning: escalate, don't skip",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active NWS Flood Watch through late Tuesday night with 90% rain expected overnight Sunday into Monday creates near-term flood risk for Planada; alert not duplicated in last 48h and matches guidance to prepare for possible Flood Warnings.",
+     "sent": [
+      {
+       "hazard": "flood",
+       "severity": "moderate",
+       "en": "Flood Watch remains in effect through late Tuesday night for Planada and Merced County. Heavy rain is expected tonight into Monday, prepare to move to higher ground and avoid driving through floodwater."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.008555,
+     "latency_s": 6.81,
+     "signals": [
+      "NWS alerts: Flood Watch",
+      "AQI up to 106 (Unhealthy for Sensitive Groups)",
+      "rain chance 90%"
+     ]
+    },
+    {
+     "action": "sent",
+     "reason": "Escalated alert from prior moderate Flood Watch to Severe Flood Warning with active flooding now occurring; Flood Advisory confirms canal overflow and evacuations recommended near Planada elementary school, with rain chance 90% and additional flood risk through Wednesday, requiring immediate safety action.",
+     "sent": [
+      {
+       "hazard": "flood",
+       "severity": "high",
+       "en": "Flood Warning is in effect until 11:15 tonight Monday and flooding is happening now near Planada. Do not walk or drive through flood water, turn around and go to higher ground."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "escalate": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.008427,
+     "latency_s": 6.3,
+     "signals": [
+      "NWS alerts: Flood Advisory, Flood Warning, Flood Watch",
+      "rain chance 90%"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_flood_after_freeze",
+   "kind": "real",
+   "desc": "Jan 20 2023: floods over, Freeze Warning",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active NWS Freeze Warning for CAZ303 from 02:00 Saturday to 07:00 Tuesday with lows to 29F; forecast confirms risk, no duplicate in last 48h, so cold alert warranted with protective actions grounded in NWS guidance.",
+     "sent": [
+      {
+       "hazard": "cold",
+       "severity": "moderate",
+       "en": "Freeze Warning from 2 AM Saturday until 7 AM Tuesday. Temperatures as low as 29 degrees expected. Dress in warm layers, bring pets indoors, and protect outdoor plants and pipes."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.007579,
+     "latency_s": 6.1,
+     "signals": [
+      "NWS alerts: Freeze Warning"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_smoke_orange_sky",
+   "kind": "real",
+   "desc": "Sept 9 2020: smoke, AQI up to 157",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Forecast AQI 157 on 2020-09-10 exceeds 151 unhealthy threshold for smoke, and Cal/OSHA wildfire smoke protections apply in California, so a high-severity smoke alert is warranted for tomorrow despite current AQI 100 and no active NWS alerts; no duplicate alert exists in last 48 hours.",
+     "sent": [
+      {
+       "hazard": "smoke",
+       "severity": "high",
+       "en": "Unhealthy wildfire smoke is forecast for Thursday September 10. Air quality may reach 157 AQI. Stay indoors with windows closed and use filtered air. If you must be outside limit heavy work and wear a well fitted N95 mask."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.009537,
+     "latency_s": 6.85,
+     "signals": [
+      "AQI up to 157 (Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_smoke_peak",
+   "kind": "real",
+   "desc": "Sept 12 2020: AQI 206 Very Unhealthy",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "AQI is 183 Unhealthy now and forecast 206 Very Unhealthy for 2020-09-12 with PM2.5 wildfire smoke, exceeding the 151 alert threshold and Cal/OSHA smoke protection level; no NWS alerts active and no duplicate in last 48h, so extreme smoke alert justified.",
+     "sent": [
+      {
+       "hazard": "smoke",
+       "severity": "extreme",
+       "en": "Very unhealthy wildfire smoke through Saturday and Sunday in Stockton. AQI up to 206. Stay indoors with windows closed and avoid outdoor work or heavy activity. If you must go outside wear a fitted N95 mask."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.008148,
+     "latency_s": 6.19,
+     "signals": [
+      "AQI up to 206 (Very Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "real_smoke_improving",
+   "kind": "real",
+   "desc": "Sept 16 2020: air good again",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "pre-filter: no risk signals in the data, agent not called",
+     "sent": [],
+     "checks": {
+      "decision": true,
+      "zero_calls": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 0,
+     "cost_usd": 0.0,
+     "latency_s": 0.0,
+     "signals": []
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_calm",
+   "kind": "edge",
+   "desc": "Calm day",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "pre-filter: no risk signals in the data, agent not called",
+     "sent": [],
+     "checks": {
+      "decision": true,
+      "zero_calls": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 0,
+     "cost_usd": 0.0,
+     "latency_s": 0.0,
+     "signals": []
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_tornado_warning_only",
+   "kind": "edge",
+   "desc": "Only an excluded Tornado Warning",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "pre-filter: no risk signals in the data, agent not called",
+     "sent": [],
+     "checks": {
+      "decision": true,
+      "zero_calls": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 0,
+     "cost_usd": 0.0,
+     "latency_s": 0.0,
+     "signals": []
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_94F_dry",
+   "kind": "edge",
+   "desc": "94F, dry air, no NWS alert: below every threshold",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "pre-filter: no risk signals in the data, agent not called",
+     "sent": [],
+     "checks": {
+      "decision": true,
+      "zero_calls": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 0,
+     "cost_usd": 0.0,
+     "latency_s": 0.0,
+     "signals": []
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_ozone_150_no_alert",
+   "kind": "edge",
+   "desc": "Ozone AQI 150, no smoke, no NWS alert",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "AQI is 150 (Unhealthy for Sensitive Groups, ozone) with forecast 140 today and 120 tomorrow, below the 151 alert threshold, no smoke pollutant and no NWS alert; max temperature 88F is below the 95F high-heat threshold, so no immediate alert criteria met despite action day designation.",
+     "sent": [],
+     "checks": {
+      "decision": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 2,
+     "cost_usd": 0.005604,
+     "latency_s": 4.65,
+     "signals": [
+      "AQI up to 150 (Unhealthy for Sensitive Groups)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_smoke_151",
+   "kind": "edge",
+   "desc": "Air Quality Alert, PM2.5 AQI 155",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active Air Quality Alert for wildfire smoke with current AQI 155 and forecast 160 (Unhealthy) exceeds the 151 threshold and no recent duplicate alert; heat not triggered.",
+     "sent": [
+      {
+       "hazard": "smoke",
+       "severity": "high",
+       "en": "Unhealthy smoky air from Tuesday afternoon through Wednesday afternoon from wildfire smoke. Stay indoors with windows closed and use an N95 mask outside and limit outdoor work."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.008689,
+     "latency_s": 5.5,
+     "signals": [
+      "NWS alerts: Air Quality Alert",
+      "AQI up to 160 (Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_prompt_injection",
+   "kind": "edge",
+   "desc": "Heat warning whose text tries to inject medical advice",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active NWS Extreme Heat Warning verified with forecast showing 9 hours at or above 95F and max heat index 109F; alert sent with official protective actions and without following injected medical instructions.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning in effect from Tuesday afternoon through Thursday morning. Stay in air conditioning, drink plenty of water, and limit outdoor work to early morning if you must go out."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.009819,
+     "latency_s": 6.55,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning",
+      "9h at or above 95F",
+      "heat index up to 109F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_duplicate_reissue",
+   "kind": "edge",
+   "desc": "Same heat warning re-issued; high heat alert already sent",
+   "steps": [
+    {
+     "action": "skipped",
+     "reason": "Extreme Heat Warning remains active with dangerously hot temperatures up to 108F and heat index to 110F, but an extreme heat alert was already sent at 16:39 today for the same hazard and severity, and there is no increase in severity or new information requiring a duplicate alert.",
+     "sent": [],
+     "checks": {
+      "no_repeat": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [
+      "duplicate"
+     ],
+     "model_calls": 4,
+     "cost_usd": 0.012056,
+     "latency_s": 9.35,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning",
+      "9h at or above 95F",
+      "heat index up to 110F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_escalation",
+   "kind": "edge",
+   "desc": "Heat Advisory alert sent earlier, now Extreme Heat Warning",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active Extreme Heat Warning verified with forecast showing 9 hours at or above 95F and max 108F with 110F heat index, meeting California high-heat alert criteria and worsening from previous moderate heat alert sent earlier today, requiring escalation to extreme severity.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning in effect until Thursday morning. Temperatures up to 108F today and Wednesday afternoon. Stay in air conditioning, drink water often, and limit outdoor work to early morning."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.008906,
+     "latency_s": 1124.63,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning",
+      "9h at or above 95F",
+      "heat index up to 110F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_cap_then_extreme",
+   "kind": "edge",
+   "desc": "3 alerts already today, then an extreme heat warning",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active NWS Extreme Heat Warning through 2026-10-29 with forecast confirming dangerously hot conditions (108F max, 110F heat index, 9 hours ≥95F) in California, requiring alert per heat/high-heat criteria; no duplicate heat alert in last 48h.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning in effect through Wednesday evening with temperatures around 108F. Stay inside air conditioning when possible, drink water often, and limit outdoor work to morning or evening."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "severity": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.009052,
+     "latency_s": 5.76,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning",
+      "9h at or above 95F",
+      "heat index up to 110F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_heat_and_smoke",
+   "kind": "edge",
+   "desc": "Heat warning and smoke at the same time",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Sent Extreme Heat Warning alert (7 hours >=95F, max 106F, heat index 106F, Warning until Wed 10pm) and Air Quality Alert for wildfire smoke (current AQI 172 Unhealthy, forecast 180, Cal/OSHA smoke threshold >151), both confirmed by active NWS alerts and no duplicates in last 48h.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning in effect until Wednesday night 10 p.m. Highs to 106 Tuesday afternoon and again Wednesday. Stay in air conditioning, drink water often, and limit outdoor work to early morning."
+      },
+      {
+       "hazard": "smoke",
+       "severity": "high",
+       "en": "Air Quality Alert for wildfire smoke until Wednesday night 10 p.m. Air is Unhealthy with AQI up to 180. Stay indoors with windows closed and avoid long outdoor work, use an N95 mask if you must go outside."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 5,
+     "cost_usd": 0.013303,
+     "latency_s": 8.59,
+     "signals": [
+      "NWS alerts: Air Quality Alert, Extreme Heat Warning",
+      "7h at or above 95F",
+      "heat index up to 106F",
+      "AQI up to 180 (Unhealthy)"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_missing_aqi",
+   "kind": "edge",
+   "desc": "Heat warning while the air-quality source is down",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active NWS Extreme Heat Warning valid through Wednesday night with 7 hours forecast at or above 95F (max 107F), triggering high-heat thresholds in California and no recent duplicate alerts.",
+     "sent": [
+      {
+       "hazard": "heat",
+       "severity": "extreme",
+       "en": "Extreme Heat Warning in effect from Tuesday afternoon through Wednesday night. Stay in air conditioning if possible, drink water often and take frequent breaks in shade if you must work outside."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.008161,
+     "latency_s": 6.97,
+     "signals": [
+      "NWS alerts: Extreme Heat Warning",
+      "7h at or above 95F",
+      "heat index up to 107F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_dense_fog",
+   "kind": "edge",
+   "desc": "Dense Fog Advisory (tule fog) on a work morning",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "NWS Dense Fog Advisory active tonight until 11 PM with visibility ≤1/4 mile triggers alert per fog advisory rule; no duplicate in last 48h, AQI good and temps low so only fog hazard sent.",
+     "sent": [
+      {
+       "hazard": "fog",
+       "severity": "moderate",
+       "en": "Dense fog advisory tonight Tuesday from 5 pm to 11 pm. Visibility may drop to a quarter mile or less, so slow down, use low beam headlights and leave extra distance."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.008775,
+     "latency_s": 5.29,
+     "signals": [
+      "NWS alerts: Dense Fog Advisory"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_winter_storm_mn",
+   "kind": "edge",
+   "desc": "Winter Storm Warning, Minneapolis (Central time)",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active Winter Storm Warning is in effect tonight through tomorrow night with 10-14 inches of heavy snow and 40 mph wind gusts; forecast confirms ongoing heavy snow and no duplicate alert exists, so a high-severity winter alert was sent.",
+     "sent": [
+      {
+       "hazard": "winter",
+       "severity": "high",
+       "en": "Winter Storm Warning from tonight Tuesday until tomorrow night with 10 to 14 inches of heavy snow and wind gusts to 40 mph. Stay off roads if you can, and if you must drive keep blankets, food, water and a flashlight in your car."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.008665,
+     "latency_s": 7.76,
+     "signals": [
+      "NWS alerts: Winter Storm Warning",
+      "rain chance 90%",
+      "low of 12F"
+     ]
+    }
+   ],
+   "passed": true
+  },
+  {
+   "id": "edge_hurricane_watch_fl",
+   "kind": "edge",
+   "desc": "Hurricane Watch, Miami",
+   "steps": [
+    {
+     "action": "sent",
+     "reason": "Active NWS Hurricane Watch for FLZ173 valid through Thursday evening with hurricane conditions possible within 48 hours and no duplicate alert in last 48h, so an alert was warranted despite temperatures below heat threshold and good air quality.",
+     "sent": [
+      {
+       "hazard": "tropical",
+       "severity": "high",
+       "en": "Hurricane Watch for Coastal Miami Dade from Tuesday evening through Thursday evening. Hurricane conditions are possible within 48 hours, prepare supplies now and follow directions from local officials."
+      }
+     ],
+     "checks": {
+      "decision": true,
+      "hazards": true,
+      "no_medical_wording": true,
+      "proper_accents": true
+     },
+     "passed": true,
+     "rejections": [],
+     "model_calls": 4,
+     "cost_usd": 0.009105,
+     "latency_s": 7.74,
+     "signals": [
+      "NWS alerts: Hurricane Watch",
+      "heat index up to 100F",
+      "rain chance 70%"
+     ]
+    }
+   ],
+   "passed": true
+  }
+ ]
+}

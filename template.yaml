@@ -233,6 +233,9 @@ Resources:
         Subscribe:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /subscribe }
+        Decisions:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /decisions }
 
 Outputs:
   ApiUrl:

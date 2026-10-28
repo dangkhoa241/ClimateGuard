@@ -220,3 +220,10 @@ def test_dynamodb_usage_cache_and_alerts(monkeypatch):
     alerts_store.record_sent("CAZ159", "heat", "high", GOOD, "test")
     [row] = alerts_store.recent_sent("CAZ159")
     assert row["hazard"] == "heat" and row["messages"]["vi"] == GOOD["vi"]
+
+
+def test_run_deadline_stops_a_slow_agent_and_logs_an_error(monkeypatch):
+    monkeypatch.setattr(config, "AGENT_RUN_DEADLINE_S", -1.0)  # already over the limit before step 1
+    monkeypatch.setattr(monitor, "chat", lambda *a, **k: pytest.fail("no model call after the deadline"))
+    d = monitor.run_monitor("CAZ159", scenarios.build("heatwave", "CAZ159"))
+    assert d["action"] == "error" and "time limit" in d["reason"] and d["model_calls"] == 0

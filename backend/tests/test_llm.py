@@ -110,3 +110,23 @@ def test_missing_key_and_param_raises(monkeypatch):
     monkeypatch.setattr(llm, "_clients", {})
     with pytest.raises(RuntimeError, match="not set"):
         llm._client("meta")
+
+
+# --- hard wall-clock limits on model calls ---
+
+def test_hung_model_call_is_abandoned_after_the_deadline(fake, monkeypatch):
+    import time as _time
+    monkeypatch.setattr(config, "LLM_CALL_DEADLINE_S", 0.2)
+    monkeypatch.setattr(fake, "create", lambda **params: _time.sleep(5))
+    started = _time.monotonic()
+    with pytest.raises(llm.CallTimeout):
+        _ask(use_cache=False)
+    assert _time.monotonic() - started < 2
+
+
+def test_model_errors_still_propagate(fake, monkeypatch):
+    def boom(**params):
+        raise ValueError("bad request")
+    monkeypatch.setattr(fake, "create", boom)
+    with pytest.raises(ValueError, match="bad request"):
+        _ask(use_cache=False)

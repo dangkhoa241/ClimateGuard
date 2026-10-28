@@ -37,6 +37,11 @@ REASONING_EFFORT = {
     "meta": os.getenv("META_REASONING_EFFORT", "low"),
 }
 
+# Hard limits for slow model calls. HTTP timeouts alone don't cap total time (a trickling
+# response held one request open for 19 minutes in testing).
+LLM_CALL_DEADLINE_S = float(os.getenv("LLM_CALL_DEADLINE_S", "60"))   # one model call
+AGENT_RUN_DEADLINE_S = float(os.getenv("AGENT_RUN_DEADLINE_S", "150"))  # one monitoring run (all steps)
+
 # Response cache TTL (seconds); override per call with chat(cache_ttl=...).
 CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", "3600"))
 

@@ -12,10 +12,15 @@ Guardrails enforced in code, not just in the prompt:
   - only the zone under review can be queried or alerted
 Short-fuse warnings (tornado, flash flood, severe thunderstorm, extreme wind) never
 reach the agent: see hazards.py.
+
+Replays and evals run the same agent in an isolated namespace (REPLAY-<event> / EVAL-<case>):
+their sent alerts and decisions are stored separately, nothing is emailed, and they never
+appear in the live decision history.
 """
 import json
 import logging
 import re
+import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -38,6 +43,11 @@ MAX_MESSAGE_CHARS = 400
 # Alerts give protective actions only. Reject wording that drifts into medical advice.
 MEDICAL_TERMS = re.compile(r"diagnos|symptom|medicat|dosage|ibuprofen|aspirin|acetaminophen|"
                            r"s[ií]ntoma|diagn[oó]stic|medicamento|tri[eệ]u ch[uứ]ng|thu[oố]c", re.IGNORECASE)
+# Spanish words that are always written with an accent, here spelled WITHOUT it.
+SPANISH_MISSING_ACCENT = re.compile(
+    r"\b(inundacion|evacuacion|proteccion|informacion|ubicacion|precaucion|atencion|miercoles|sabado|"
+    r"despues|tambien|electricas?|rapidamente|maximas?|minimas?|dias|mas|aqui|rio|rios|telefono|estan)\b",
+    re.IGNORECASE)
 
 SYSTEM_PROMPT = f"""You are ClimateGuard's monitoring agent. ClimateGuard warns farmworkers, outdoor workers and immigrant families in the United States, in their language.
 You review ONE NWS forecast zone at a time and decide whether people there need an alert right now.
@@ -111,9 +121,18 @@ TOOLS = [
 class Run:
     zone: str
     snapshot: dict
+    namespace: str = ""  # where sent alerts/decisions are stored; "" = the live zone
     sent: list = field(default_factory=list)
     tool_log: list = field(default_factory=list)
     cost_usd: float = 0.0
+
+    @property
+    def key(self) -> str:
+        return self.namespace or self.zone
+
+    @property
+    def live(self) -> bool:
+        return self.key == self.zone
 
     @property
     def tz(self) -> ZoneInfo:
@@ -173,7 +192,7 @@ def tool_get_nws_alerts(run: Run, args: dict) -> dict:
 def tool_get_recent_alerts_sent(run: Run, args: dict) -> dict:
     if err := _check_zone(run, args):
         return err
-    rows = alerts_store.recent_sent(run.zone, hours=48)
+    rows = alerts_store.recent_sent(run.key, hours=48)
     return {"alerts_sent_last_48h": [{"sent_at": run.local(r["ts"]), "hazard": r["hazard"],
                                       "severity": r["severity"], "message_en": r["messages"].get("en")}
                                      for r in rows]}
@@ -200,14 +219,22 @@ def validate_alert(run: Run, args: dict) -> str | None:
         if MEDICAL_TERMS.search(text):
             return (f"message '{lang}' mentions symptoms/diagnosis/medicine. Alerts must give protective "
                     "actions only; rewrite without medical content")
-    recent = alerts_store.recent_sent(run.zone, hours=24)
+        # Vietnamese without tone marks is hard to read, and Spanish without accents looks careless.
+        # The model occasionally drops them (seen in a replay), so check rather than trust. Real
+        # Vietnamese always has diacritics; Spanish can be accent-free, so only catch common words
+        # written without their required accent.
+        if (lang == "vi" and text.isascii()) or (lang == "es" and SPANISH_MISSING_ACCENT.search(text)):
+            name = {"vi": "Vietnamese (dấu: ă â đ ê ô ơ ư and tone marks)", "es": "Spanish (á é í ó ú ñ)"}[lang]
+            return (f"message '{lang}' is missing diacritics/accents; rewrite it in proper {name} "
+                    "with every accent mark")
+    recent = alerts_store.recent_sent(run.key, hours=24)
     if len(recent) >= MAX_ALERTS_PER_DAY:
         # An alert more severe than everything sent in the last 24h always goes through.
         highest_sent = max(SEVERITIES.get(r["severity"], 0) for r in recent)
         if SEVERITIES[severity] <= highest_sent:
             return (f"daily cap reached ({MAX_ALERTS_PER_DAY} alerts in 24h for this zone); only an alert more "
                     f"severe than every alert already sent today can go through")
-    for r in alerts_store.recent_sent(run.zone, hours=COOLDOWN_HOURS):
+    for r in alerts_store.recent_sent(run.key, hours=COOLDOWN_HOURS):
         if r["hazard"] == hazard and SEVERITIES.get(r["severity"], 0) >= SEVERITIES[severity]:
             return (f"duplicate: a {r['severity']} {hazard} alert was already sent at {run.local(r['ts'])}. "
                     "Only send again if severity increases.")
@@ -220,10 +247,14 @@ def tool_send_alert(run: Run, args: dict) -> dict:
     if rejection := validate_alert(run, args):
         return {"sent": False, "rejected": rejection}
     msgs = {lang: args["messages_by_language"][lang].strip() for lang in LANGS}
-    alerts_store.record_sent(run.zone, args["hazard"], args["severity"], msgs, args.get("reason", ""))
-    zone_rec = zones.get(run.zone) or {"zone": run.zone, "name": run.snapshot["name"],
-                                       "place": run.snapshot.get("place"), "tz": run.snapshot.get("tz"), "langs": []}
-    delivery = notify.deliver(zone_rec, args["hazard"], args["severity"], msgs)
+    alerts_store.record_sent(run.key, args["hazard"], args["severity"], msgs, args.get("reason", ""))
+    if run.live:
+        zone_rec = zones.get(run.zone) or {"zone": run.zone, "name": run.snapshot["name"],
+                                           "place": run.snapshot.get("place"), "tz": run.snapshot.get("tz"),
+                                           "langs": []}
+        delivery = notify.deliver(zone_rec, args["hazard"], args["severity"], msgs)
+    else:  # replay / eval: recorded in its own namespace, never emailed
+        delivery = {"channel": "none", "namespace": run.key}
     run.sent.append({"hazard": args["hazard"], "severity": args["severity"], "messages": msgs})
     return {"sent": True, "delivery": delivery}
 
@@ -274,38 +305,53 @@ def _assistant_history_message(message: dict) -> dict:
 
 
 def run_monitor(zone: str, snapshot: dict | None = None, *, force: bool = False,
-                reasoning_effort: str | None = None, skip_reason: str | None = None) -> dict:
+                reasoning_effort: str | None = None, skip_reason: str | None = None,
+                namespace: str | None = None) -> dict:
     """Run the monitoring agent for one zone. Returns the decision-log entry.
 
-    `snapshot` defaults to the latest stored one (demo mode passes a seeded one).
+    `snapshot` defaults to the latest stored one (replays/evals pass their own).
     `force` skips the deterministic pre-filter. `skip_reason` logs a skip without a model
-    call (e.g. the daily budget is used up).
+    call (e.g. the daily budget is used up). `namespace` isolates sent alerts and decisions;
+    replay snapshots default to REPLAY-<event>, so they can never email or enter live history.
     """
     zone = zone.upper()
     snapshot = snapshot or get_store().get_latest(zone)
+    replay = (snapshot or {}).get("replay")
+    key = namespace or (f"REPLAY-{replay['event']}" if replay else zone)
     if snapshot is None:
-        return alerts_store.log_decision(zone, "error", "no snapshot available")
+        return alerts_store.log_decision(key, "error", "no snapshot available")
 
     signals = risk_signals(snapshot["summary"])
     if not signals and not force:
-        return alerts_store.log_decision(zone, "skipped", "pre-filter: no risk signals in the data, agent not called",
-                                         fingerprint=snapshot.get("fingerprint"), model_calls=0, cost_usd=0.0)
+        return alerts_store.log_decision(key, "skipped", "pre-filter: no risk signals in the data, agent not called",
+                                         fingerprint=snapshot.get("fingerprint"), model_calls=0, cost_usd=0.0,
+                                         **_replay_meta(replay))
     if skip_reason:
-        return alerts_store.log_decision(zone, "skipped", skip_reason, signals=signals,
+        return alerts_store.log_decision(key, "skipped", skip_reason, signals=signals,
                                          fingerprint=snapshot.get("fingerprint"), model_calls=0, cost_usd=0.0)
 
-    run = Run(zone=zone, snapshot=snapshot)
-    now_local = datetime.now(run.tz).strftime("%A %Y-%m-%d %H:00")  # hour granularity: retries hit the cache
+    run = Run(zone=zone, snapshot=snapshot, namespace=key if key != zone else "")
+    if replay:  # the agent reasons at the moment being replayed
+        now_local = datetime.fromisoformat(replay["at_local"]).strftime("%A %Y-%m-%d %H:00")
+    else:
+        now_local = datetime.now(run.tz).strftime("%A %Y-%m-%d %H:00")  # hour granularity: retries hit the cache
     where = f"{snapshot['name']} (zone {zone}, near {snapshot.get('place') or 'n/a'}, state {snapshot.get('state')})"
+    note = (f" This is a REPLAY of a real past event ({replay['title']}) used for a demo or evaluation; "
+            "decide exactly as you would live." if replay else "")
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": (f"Zone: {where}. Local time: {now_local}. "
+        {"role": "user", "content": (f"Zone: {where}. Local time: {now_local}.{note} "
                                      f"Data was refreshed and these risk signals were detected: "
                                      f"{'; '.join(signals) or 'none (forced run)'}. Review and decide.")},
     ]
-    final_text, calls = "", 0
+    final_text, calls, timed_out = "", 0, False
+    started = time.monotonic()
     try:
         for _ in range(MAX_STEPS):
+            if time.monotonic() - started > config.AGENT_RUN_DEADLINE_S:
+                timed_out = True
+                final_text = f"time limit ({config.AGENT_RUN_DEADLINE_S:.0f} s) reached before a final answer"
+                break
             res = chat("baseten", config.MONITOR_MODEL, messages, max_tokens=MAX_TOKENS_PER_STEP,
                        tools=TOOLS, reasoning_effort=reasoning_effort, purpose=f"monitor:{zone}")
             calls += 1
@@ -334,12 +380,16 @@ def run_monitor(zone: str, snapshot: dict | None = None, *, force: bool = False,
             final_text = f"step limit ({MAX_STEPS}) reached before a final answer"
     except Exception as e:
         log.exception("monitor run failed for %s", zone)
-        return alerts_store.log_decision(zone, "error", f"{type(e).__name__}: {e}", signals=signals,
+        return alerts_store.log_decision(key, "error", f"{type(e).__name__}: {e}", signals=signals,
                                          tools=run.tool_log, sent=run.sent, model_calls=calls,
                                          cost_usd=round(run.cost_usd, 6))
 
-    action = "sent" if run.sent else "skipped"
+    action = "sent" if run.sent else ("error" if timed_out else "skipped")
     reason = re.sub(r"^\s*(SENT|SKIPPED)\s*:\s*", "", final_text).strip() or "(no explanation given)"
-    return alerts_store.log_decision(zone, action, reason, signals=signals, tools=run.tool_log, sent=run.sent,
+    return alerts_store.log_decision(key, action, reason, signals=signals, tools=run.tool_log, sent=run.sent,
                                      fingerprint=snapshot.get("fingerprint"), model_calls=calls,
-                                     cost_usd=round(run.cost_usd, 6))
+                                     cost_usd=round(run.cost_usd, 6), **_replay_meta(replay))
+
+
+def _replay_meta(replay: dict | None) -> dict:
+    return {"replay": {"event": replay["event"], "moment": replay["moment"]}} if replay else {}

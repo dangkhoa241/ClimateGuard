@@ -1,0 +1,1196 @@
+{
+ "event": "smoke_2020",
+ "title": "September 2020 wildfire smoke",
+ "zone": "CAZ159",
+ "place": "Stockton, CA",
+ "tz": "America/Los_Angeles",
+ "historic_ugc": [
+  "CAZ019",
+  "CAC077"
+ ],
+ "facts": "Smoke from the August Complex, Creek and other wildfires filled the Central Valley. San Joaquin County's daily AQI reached 206 (Very Unhealthy) on Sept 12, 2020.",
+ "sources": {
+  "weather": "Observed hourly readings, airport station SCK (IEM ASOS archive)",
+  "alerts": "NWS products from the IEM VTEC archive (original text)",
+  "air_quality": "AirNow hourly archive (files.airnowtech.org) and EPA AirData daily county AQI"
+ },
+ "note": "Replays use observed weather in place of the forecast; archived NWS hourly forecasts are not available.",
+ "built_at": "2026-10-27T23:26:59+00:00",
+ "moments": [
+  {
+   "id": "orange_sky",
+   "at_local": "2020-09-09T12:00:00-07:00",
+   "label": "Smoke turns the sky orange",
+   "hours": [
+    {
+     "time": "2020-09-09T12:00:00-07:00",
+     "temp_f": 81,
+     "rh": 29,
+     "heat_index_f": 80,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-09T13:00:00-07:00",
+     "temp_f": 82,
+     "rh": 26,
+     "heat_index_f": 80,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-09T14:00:00-07:00",
+     "temp_f": 84,
+     "rh": 26,
+     "heat_index_f": 82,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-09T15:00:00-07:00",
+     "temp_f": 80,
+     "rh": 30,
+     "heat_index_f": 80,
+     "wind_mph": 14,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-09T16:00:00-07:00",
+     "temp_f": 79,
+     "rh": 32,
+     "heat_index_f": 79,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-09T17:00:00-07:00",
+     "temp_f": 78,
+     "rh": 35,
+     "heat_index_f": 78,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-09T18:00:00-07:00",
+     "temp_f": 77,
+     "rh": 34,
+     "heat_index_f": 77,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-09T19:00:00-07:00",
+     "temp_f": 74,
+     "rh": 46,
+     "heat_index_f": 74,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-09T20:00:00-07:00",
+     "temp_f": 72,
+     "rh": 49,
+     "heat_index_f": 72,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-09T21:00:00-07:00",
+     "temp_f": 69,
+     "rh": 47,
+     "heat_index_f": 69,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-09T22:00:00-07:00",
+     "temp_f": 68,
+     "rh": 55,
+     "heat_index_f": 68,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-09T23:00:00-07:00",
+     "temp_f": 67,
+     "rh": 66,
+     "heat_index_f": 67,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T00:00:00-07:00",
+     "temp_f": 65,
+     "rh": 73,
+     "heat_index_f": 65,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T01:00:00-07:00",
+     "temp_f": 64,
+     "rh": 75,
+     "heat_index_f": 64,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T02:00:00-07:00",
+     "temp_f": 64,
+     "rh": 73,
+     "heat_index_f": 64,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T03:00:00-07:00",
+     "temp_f": 63,
+     "rh": 75,
+     "heat_index_f": 63,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T04:00:00-07:00",
+     "temp_f": 62,
+     "rh": 75,
+     "heat_index_f": 62,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T05:00:00-07:00",
+     "temp_f": 62,
+     "rh": 78,
+     "heat_index_f": 62,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T06:00:00-07:00",
+     "temp_f": 60,
+     "rh": 83,
+     "heat_index_f": 60,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T07:00:00-07:00",
+     "temp_f": 60,
+     "rh": 83,
+     "heat_index_f": 60,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T08:00:00-07:00",
+     "temp_f": 60,
+     "rh": 83,
+     "heat_index_f": 60,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T11:00:00-07:00",
+     "temp_f": 73,
+     "rh": 55,
+     "heat_index_f": 73,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T12:00:00-07:00",
+     "temp_f": 77,
+     "rh": 47,
+     "heat_index_f": 77,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T13:00:00-07:00",
+     "temp_f": 78,
+     "rh": 43,
+     "heat_index_f": 78,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T14:00:00-07:00",
+     "temp_f": 79,
+     "rh": 44,
+     "heat_index_f": 79,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T15:00:00-07:00",
+     "temp_f": 78,
+     "rh": 48,
+     "heat_index_f": 78,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T16:00:00-07:00",
+     "temp_f": 77,
+     "rh": 43,
+     "heat_index_f": 77,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T17:00:00-07:00",
+     "temp_f": 77,
+     "rh": 45,
+     "heat_index_f": 77,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T18:00:00-07:00",
+     "temp_f": 77,
+     "rh": 39,
+     "heat_index_f": 77,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T19:00:00-07:00",
+     "temp_f": 74,
+     "rh": 53,
+     "heat_index_f": 74,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T20:00:00-07:00",
+     "temp_f": 71,
+     "rh": 61,
+     "heat_index_f": 71,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T21:00:00-07:00",
+     "temp_f": 68,
+     "rh": 65,
+     "heat_index_f": 68,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T22:00:00-07:00",
+     "temp_f": 66,
+     "rh": 68,
+     "heat_index_f": 66,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-10T23:00:00-07:00",
+     "temp_f": 66,
+     "rh": 68,
+     "heat_index_f": 66,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-11T00:00:00-07:00",
+     "temp_f": 65,
+     "rh": 68,
+     "heat_index_f": 65,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    }
+   ],
+   "aqi": {
+    "source": "airnow-archive+epa-airdata",
+    "current": {
+     "aqi": 100,
+     "category": "Moderate",
+     "pollutant": "PM2.5",
+     "pm25_aqi": 100,
+     "observed_at": "2020-09-09T12:00:00-07:00",
+     "area": "Stockton"
+    },
+    "forecast": [
+     {
+      "date": "2020-09-09",
+      "aqi": 98,
+      "category": "Moderate",
+      "pollutant": "PM2.5",
+      "action_day": false
+     },
+     {
+      "date": "2020-09-10",
+      "aqi": 157,
+      "category": "Unhealthy",
+      "pollutant": "PM2.5",
+      "action_day": true
+     }
+    ]
+   },
+   "alerts": []
+  },
+  {
+   "id": "peak",
+   "at_local": "2020-09-12T14:00:00-07:00",
+   "label": "Peak: county AQI 206 (Very Unhealthy)",
+   "hours": [
+    {
+     "time": "2020-09-12T14:00:00-07:00",
+     "temp_f": 87,
+     "rh": 30,
+     "heat_index_f": 85,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-12T15:00:00-07:00",
+     "temp_f": 90,
+     "rh": 27,
+     "heat_index_f": 87,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-12T16:00:00-07:00",
+     "temp_f": 90,
+     "rh": 31,
+     "heat_index_f": 88,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-12T17:00:00-07:00",
+     "temp_f": 89,
+     "rh": 35,
+     "heat_index_f": 88,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-12T18:00:00-07:00",
+     "temp_f": 87,
+     "rh": 34,
+     "heat_index_f": 85,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-12T19:00:00-07:00",
+     "temp_f": 82,
+     "rh": 41,
+     "heat_index_f": 82,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-12T20:00:00-07:00",
+     "temp_f": 78,
+     "rh": 46,
+     "heat_index_f": 78,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-12T21:00:00-07:00",
+     "temp_f": 76,
+     "rh": 54,
+     "heat_index_f": 76,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-12T22:00:00-07:00",
+     "temp_f": 70,
+     "rh": 57,
+     "heat_index_f": 70,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-12T23:00:00-07:00",
+     "temp_f": 70,
+     "rh": 61,
+     "heat_index_f": 70,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T00:00:00-07:00",
+     "temp_f": 68,
+     "rh": 70,
+     "heat_index_f": 68,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T01:00:00-07:00",
+     "temp_f": 66,
+     "rh": 70,
+     "heat_index_f": 66,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T02:00:00-07:00",
+     "temp_f": 65,
+     "rh": 73,
+     "heat_index_f": 65,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T03:00:00-07:00",
+     "temp_f": 63,
+     "rh": 75,
+     "heat_index_f": 63,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T04:00:00-07:00",
+     "temp_f": 62,
+     "rh": 75,
+     "heat_index_f": 62,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T05:00:00-07:00",
+     "temp_f": 60,
+     "rh": 78,
+     "heat_index_f": 60,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T06:00:00-07:00",
+     "temp_f": 61,
+     "rh": 72,
+     "heat_index_f": 61,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T07:00:00-07:00",
+     "temp_f": 60,
+     "rh": 80,
+     "heat_index_f": 60,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T08:00:00-07:00",
+     "temp_f": 62,
+     "rh": 72,
+     "heat_index_f": 62,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T09:00:00-07:00",
+     "temp_f": 66,
+     "rh": 68,
+     "heat_index_f": 66,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T10:00:00-07:00",
+     "temp_f": 70,
+     "rh": 57,
+     "heat_index_f": 70,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T11:00:00-07:00",
+     "temp_f": 75,
+     "rh": 51,
+     "heat_index_f": 75,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T12:00:00-07:00",
+     "temp_f": 79,
+     "rh": 44,
+     "heat_index_f": 79,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T13:00:00-07:00",
+     "temp_f": 85,
+     "rh": 36,
+     "heat_index_f": 84,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T14:00:00-07:00",
+     "temp_f": 87,
+     "rh": 31,
+     "heat_index_f": 85,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T15:00:00-07:00",
+     "temp_f": 88,
+     "rh": 33,
+     "heat_index_f": 86,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T16:00:00-07:00",
+     "temp_f": 89,
+     "rh": 32,
+     "heat_index_f": 87,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T17:00:00-07:00",
+     "temp_f": 88,
+     "rh": 34,
+     "heat_index_f": 86,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T18:00:00-07:00",
+     "temp_f": 85,
+     "rh": 39,
+     "heat_index_f": 84,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T19:00:00-07:00",
+     "temp_f": 80,
+     "rh": 44,
+     "heat_index_f": 80,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T20:00:00-07:00",
+     "temp_f": 76,
+     "rh": 48,
+     "heat_index_f": 76,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T21:00:00-07:00",
+     "temp_f": 72,
+     "rh": 55,
+     "heat_index_f": 72,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T22:00:00-07:00",
+     "temp_f": 72,
+     "rh": 57,
+     "heat_index_f": 72,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-13T23:00:00-07:00",
+     "temp_f": 68,
+     "rh": 61,
+     "heat_index_f": 68,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-14T00:00:00-07:00",
+     "temp_f": 66,
+     "rh": 63,
+     "heat_index_f": 66,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    }
+   ],
+   "aqi": {
+    "source": "airnow-archive+epa-airdata",
+    "current": {
+     "aqi": 183,
+     "category": "Unhealthy",
+     "pollutant": "PM2.5",
+     "pm25_aqi": 183,
+     "observed_at": "2020-09-12T14:00:00-07:00",
+     "area": "Stockton"
+    },
+    "forecast": [
+     {
+      "date": "2020-09-12",
+      "aqi": 206,
+      "category": "Very Unhealthy",
+      "pollutant": "PM2.5",
+      "action_day": true
+     },
+     {
+      "date": "2020-09-13",
+      "aqi": 191,
+      "category": "Unhealthy",
+      "pollutant": "PM2.5",
+      "action_day": true
+     }
+    ]
+   },
+   "alerts": []
+  },
+  {
+   "id": "improving",
+   "at_local": "2020-09-16T12:00:00-07:00",
+   "label": "Smoke improving",
+   "hours": [
+    {
+     "time": "2020-09-16T12:00:00-07:00",
+     "temp_f": 81,
+     "rh": 46,
+     "heat_index_f": 81,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-16T13:00:00-07:00",
+     "temp_f": 85,
+     "rh": 39,
+     "heat_index_f": 84,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-16T14:00:00-07:00",
+     "temp_f": 87,
+     "rh": 34,
+     "heat_index_f": 85,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-16T15:00:00-07:00",
+     "temp_f": 90,
+     "rh": 31,
+     "heat_index_f": 88,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-16T16:00:00-07:00",
+     "temp_f": 91,
+     "rh": 28,
+     "heat_index_f": 89,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-16T17:00:00-07:00",
+     "temp_f": 92,
+     "rh": 26,
+     "heat_index_f": 89,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-16T18:00:00-07:00",
+     "temp_f": 90,
+     "rh": 27,
+     "heat_index_f": 87,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-16T19:00:00-07:00",
+     "temp_f": 86,
+     "rh": 31,
+     "heat_index_f": 84,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-16T20:00:00-07:00",
+     "temp_f": 80,
+     "rh": 47,
+     "heat_index_f": 80,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-16T21:00:00-07:00",
+     "temp_f": 77,
+     "rh": 56,
+     "heat_index_f": 77,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-16T22:00:00-07:00",
+     "temp_f": 73,
+     "rh": 66,
+     "heat_index_f": 73,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-16T23:00:00-07:00",
+     "temp_f": 71,
+     "rh": 70,
+     "heat_index_f": 71,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T00:00:00-07:00",
+     "temp_f": 69,
+     "rh": 75,
+     "heat_index_f": 69,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T01:00:00-07:00",
+     "temp_f": 64,
+     "rh": 84,
+     "heat_index_f": 64,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T02:00:00-07:00",
+     "temp_f": 64,
+     "rh": 84,
+     "heat_index_f": 64,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T03:00:00-07:00",
+     "temp_f": 63,
+     "rh": 87,
+     "heat_index_f": 63,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T04:00:00-07:00",
+     "temp_f": 60,
+     "rh": 83,
+     "heat_index_f": 60,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T05:00:00-07:00",
+     "temp_f": 60,
+     "rh": 80,
+     "heat_index_f": 60,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T06:00:00-07:00",
+     "temp_f": 60,
+     "rh": 86,
+     "heat_index_f": 60,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T07:00:00-07:00",
+     "temp_f": 58,
+     "rh": 90,
+     "heat_index_f": 58,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T08:00:00-07:00",
+     "temp_f": 63,
+     "rh": 83,
+     "heat_index_f": 63,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T09:00:00-07:00",
+     "temp_f": 70,
+     "rh": 71,
+     "heat_index_f": 70,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T10:00:00-07:00",
+     "temp_f": 74,
+     "rh": 64,
+     "heat_index_f": 74,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T11:00:00-07:00",
+     "temp_f": 78,
+     "rh": 54,
+     "heat_index_f": 78,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T12:00:00-07:00",
+     "temp_f": 82,
+     "rh": 49,
+     "heat_index_f": 83,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T13:00:00-07:00",
+     "temp_f": 85,
+     "rh": 46,
+     "heat_index_f": 86,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T14:00:00-07:00",
+     "temp_f": 88,
+     "rh": 38,
+     "heat_index_f": 87,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T15:00:00-07:00",
+     "temp_f": 90,
+     "rh": 32,
+     "heat_index_f": 88,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T16:00:00-07:00",
+     "temp_f": 92,
+     "rh": 28,
+     "heat_index_f": 90,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T17:00:00-07:00",
+     "temp_f": 91,
+     "rh": 30,
+     "heat_index_f": 89,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T18:00:00-07:00",
+     "temp_f": 91,
+     "rh": 31,
+     "heat_index_f": 89,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T19:00:00-07:00",
+     "temp_f": 85,
+     "rh": 37,
+     "heat_index_f": 84,
+     "wind_mph": 15,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T20:00:00-07:00",
+     "temp_f": 80,
+     "rh": 42,
+     "heat_index_f": 80,
+     "wind_mph": 15,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T21:00:00-07:00",
+     "temp_f": 78,
+     "rh": 45,
+     "heat_index_f": 78,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T22:00:00-07:00",
+     "temp_f": 75,
+     "rh": 46,
+     "heat_index_f": 75,
+     "wind_mph": 13,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-17T23:00:00-07:00",
+     "temp_f": 73,
+     "rh": 55,
+     "heat_index_f": 73,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2020-09-18T00:00:00-07:00",
+     "temp_f": 70,
+     "rh": 63,
+     "heat_index_f": 70,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    }
+   ],
+   "aqi": {
+    "source": "airnow-archive+epa-airdata",
+    "current": {
+     "aqi": 38,
+     "category": "Good",
+     "pollutant": "O3",
+     "pm25_aqi": 35,
+     "observed_at": "2020-09-16T12:00:00-07:00",
+     "area": "Stockton"
+    },
+    "forecast": [
+     {
+      "date": "2020-09-16",
+      "aqi": 61,
+      "category": "Moderate",
+      "pollutant": "PM2.5",
+      "action_day": false
+     },
+     {
+      "date": "2020-09-17",
+      "aqi": 42,
+      "category": "Good",
+      "pollutant": "PM2.5",
+      "action_day": false
+     }
+    ]
+   },
+   "alerts": []
+  }
+ ]
+}

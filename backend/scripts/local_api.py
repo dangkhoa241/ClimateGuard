@@ -19,6 +19,7 @@ ROUTES = [  # (method, regex, routeKey)
     ("GET", r"^/zones/(?P<zone>[A-Za-z]{2}[Zz]\d{3})$", "GET /zones/{zone}"),
     ("GET", r"^/zones/(?P<zone>[A-Za-z]{2}[Zz]\d{3})/alerts$", "GET /zones/{zone}/alerts"),
     ("POST", r"^/subscribe$", "POST /subscribe"),
+    ("GET", r"^/decisions$", "GET /decisions"),
 ]
 CORS = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type"}

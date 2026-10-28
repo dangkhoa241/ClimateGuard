@@ -4,13 +4,14 @@ GET  /locate?zip=95202 | ?lat=..&lon=..  -> the NWS forecast zone for a location
 GET  /zones/{zone}                       -> latest snapshot (summary + alerts + hourly forecast + AQI)
 GET  /zones/{zone}/alerts                -> alerts ClimateGuard sent to this zone in the last 48 h
 POST /subscribe                          -> {email, lang, zip | lat+lon} sign-up (SNS double opt-in)
+GET  /decisions?zone=&days=7&limit=50    -> the live agent's real decisions + daily counters (public)
 """
 import base64
 import json
 import logging
 import re
 
-from .. import alerts_store, hazards, ratelimit, zones
+from .. import alerts_store, hazards, ratelimit, stats, zones
 from ..geo import GeoError
 from ..languages import LANGS
 from ..store import get_store
@@ -94,8 +95,46 @@ def get_zone_alerts(zone: str) -> dict:
                         "messages": r["messages"]} for r in rows], cache_s=60)
 
 
+def _public_decision(zone: dict, d: dict) -> dict:
+    """What the public history shows for one decision (no internal ids or raw tool payloads)."""
+    return {"ts": d["ts"], "zone": d["zone"], "place": zone.get("place") or zone.get("name"),
+            "action": d["action"], "reason": d["reason"], "signals": d.get("signals") or [],
+            "tools": [{"tool": t["tool"], **({"rejected": t["rejected"]} if t.get("rejected") else {})}
+                      for t in d.get("tools") or []],
+            "alerts": [{"hazard": s["hazard"], "severity": s["severity"], "messages": s["messages"]}
+                       for s in d.get("sent") or []],
+            "model_calls": int(d.get("model_calls") or 0), "cost_usd": round(float(d.get("cost_usd") or 0), 4)}
+
+
+def get_decisions(event) -> dict:
+    """Live decisions only: replays/evals live in REPLAY-*/EVAL-* namespaces, never under a zone id."""
+    q = event.get("queryStringParameters") or {}
+    try:
+        days = min(max(int(q.get("days", 7)), 1), 30)
+        limit = min(max(int(q.get("limit", 50)), 1), 200)
+    except ValueError:
+        return _resp(400, {"error": "invalid_query"})
+    wanted = (q.get("zone") or "").upper()
+    if wanted and not ZONE_RE.match(wanted):
+        return _resp(404, {"error": "unknown_zone"})
+    zone_list = [z for z in zones.monitored() if not wanted or z["zone"] == wanted]
+    rows = []
+    for z in zone_list:
+        rows += [_public_decision(z, d) for d in alerts_store.recent_decisions(z["zone"], hours=days * 24)
+                 if not d.get("replay")]
+    rows.sort(key=lambda r: r["ts"], reverse=True)
+    daily = stats.recent(days)
+    return _resp(200, {"days": days, "since": min((r["day"] for r in daily), default=None),
+                       "totals": stats.totals(daily), "by_day": daily,
+                       "zones": [{"zone": z["zone"], "place": z.get("place"), "demo": bool(z.get("demo"))}
+                                 for z in zone_list],
+                       "decisions": rows[:limit]}, cache_s=60)
+
+
 def handler(event, context):
     route = event.get("routeKey", "")
+    if route == "GET /decisions":
+        return get_decisions(event)
     zone = ((event.get("pathParameters") or {}).get("zone") or "").upper()
     if route == "GET /locate":
         return get_locate(event)

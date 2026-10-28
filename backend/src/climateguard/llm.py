@@ -6,6 +6,7 @@ returned, caches identical requests, and logs usage + estimated cost.
 import hashlib
 import json
 import re
+import threading
 from dataclasses import dataclass
 
 
@@ -49,8 +50,34 @@ def _client(provider: str):
         # and most collector runs never call a model.
         from openai import OpenAI
 
-        _clients[provider] = OpenAI(api_key=key, base_url=url, timeout=120)
+        _clients[provider] = OpenAI(api_key=key, base_url=url, timeout=config.LLM_CALL_DEADLINE_S, max_retries=1)
     return _clients[provider]
+
+
+class CallTimeout(TimeoutError):
+    """A model call exceeded its wall-clock deadline."""
+
+
+def _with_deadline(fn, seconds: float):
+    """Run fn() with a hard wall-clock limit. HTTP timeouts only bound the gap between bytes,
+    so a server that trickles output can hold a request open far longer (seen: 19 min).
+    The worker is a daemon thread: if it hangs, it's abandoned, never waited on."""
+    box: dict = {}
+
+    def target():
+        try:
+            box["value"] = fn()
+        except BaseException as e:  # noqa: BLE001 - re-raised in the caller's thread
+            box["error"] = e
+
+    t = threading.Thread(target=target, daemon=True)
+    t.start()
+    t.join(seconds)
+    if t.is_alive():
+        raise CallTimeout(f"model call exceeded {seconds:.0f} s")
+    if "error" in box:
+        raise box["error"]
+    return box["value"]
 
 
 def strip_reasoning(message: dict) -> str:
@@ -91,7 +118,9 @@ def chat(provider: str, model: str, messages: list[dict], *, max_tokens: int,
     raw = cache.get(key, ttl) if use_cache else None
     cache_hit = raw is not None
     if not cache_hit:
-        raw = _client(provider).chat.completions.create(**params).model_dump()
+        client = _client(provider)
+        raw = _with_deadline(lambda: client.chat.completions.create(**params).model_dump(),
+                             config.LLM_CALL_DEADLINE_S)
 
     u = raw.get("usage") or {}
     prompt_tokens = u.get("prompt_tokens") or 0

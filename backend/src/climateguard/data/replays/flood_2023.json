@@ -1,0 +1,1778 @@
+{
+ "event": "flood_2023",
+ "title": "January 2023 Merced County floods (Planada)",
+ "zone": "CAZ303",
+ "place": "Planada, CA",
+ "tz": "America/Los_Angeles",
+ "historic_ugc": [
+  "CAC047",
+  "CAZ300",
+  "CAZ301"
+ ],
+ "facts": "Atmospheric-river storms flooded Merced County. Bear Creek reached a record stage on the morning of Jan 10, 2023, and the entire town of Planada (about 4,000 people, many of them farmworker families) was ordered to evacuate.",
+ "sources": {
+  "weather": "Observed hourly readings, airport station MCE (IEM ASOS archive)",
+  "alerts": "NWS products from the IEM VTEC archive (original text)",
+  "air_quality": "AirNow hourly archive (files.airnowtech.org) and EPA AirData daily county AQI"
+ },
+ "note": "Replays use observed weather in place of the forecast; archived NWS hourly forecasts are not available.",
+ "built_at": "2026-10-27T23:26:54+00:00",
+ "moments": [
+  {
+   "id": "watch",
+   "at_local": "2023-01-08T10:00:00-08:00",
+   "label": "Flood Watch ahead of the storm",
+   "hours": [
+    {
+     "time": "2023-01-08T10:00:00-08:00",
+     "temp_f": 55,
+     "rh": 77,
+     "heat_index_f": 55,
+     "wind_mph": 21,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-08T11:00:00-08:00",
+     "temp_f": 57,
+     "rh": 69,
+     "heat_index_f": 57,
+     "wind_mph": 22,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-08T12:00:00-08:00",
+     "temp_f": 57,
+     "rh": 69,
+     "heat_index_f": 57,
+     "wind_mph": 17,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-08T13:00:00-08:00",
+     "temp_f": 59,
+     "rh": 69,
+     "heat_index_f": 59,
+     "wind_mph": 21,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-08T14:00:00-08:00",
+     "temp_f": 59,
+     "rh": 72,
+     "heat_index_f": 59,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-08T15:00:00-08:00",
+     "temp_f": 58,
+     "rh": 78,
+     "heat_index_f": 58,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-08T16:00:00-08:00",
+     "temp_f": 58,
+     "rh": 78,
+     "heat_index_f": 58,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-08T17:00:00-08:00",
+     "temp_f": 56,
+     "rh": 84,
+     "heat_index_f": 56,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-08T18:00:00-08:00",
+     "temp_f": 56,
+     "rh": 84,
+     "heat_index_f": 56,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-08T19:00:00-08:00",
+     "temp_f": 56,
+     "rh": 84,
+     "heat_index_f": 56,
+     "wind_mph": 13,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-08T20:00:00-08:00",
+     "temp_f": 56,
+     "rh": 84,
+     "heat_index_f": 56,
+     "wind_mph": 14,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-08T21:00:00-08:00",
+     "temp_f": 56,
+     "rh": 87,
+     "heat_index_f": 56,
+     "wind_mph": 14,
+     "precip_prob": 90,
+     "precip_in": 0.01,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-08T22:00:00-08:00",
+     "temp_f": 55,
+     "rh": 90,
+     "heat_index_f": 55,
+     "wind_mph": 15,
+     "precip_prob": 90,
+     "precip_in": 0.03,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-08T23:00:00-08:00",
+     "temp_f": 56,
+     "rh": 87,
+     "heat_index_f": 56,
+     "wind_mph": 14,
+     "precip_prob": 90,
+     "precip_in": 0.03,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T00:00:00-08:00",
+     "temp_f": 55,
+     "rh": 90,
+     "heat_index_f": 55,
+     "wind_mph": 14,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-09T01:00:00-08:00",
+     "temp_f": 55,
+     "rh": 90,
+     "heat_index_f": 55,
+     "wind_mph": 18,
+     "precip_prob": 90,
+     "precip_in": 0.02,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T02:00:00-08:00",
+     "temp_f": 55,
+     "rh": 90,
+     "heat_index_f": 55,
+     "wind_mph": 20,
+     "precip_prob": 90,
+     "precip_in": 0.09,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T03:00:00-08:00",
+     "temp_f": 56,
+     "rh": 87,
+     "heat_index_f": 56,
+     "wind_mph": 22,
+     "precip_prob": 90,
+     "precip_in": 0.07,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T04:00:00-08:00",
+     "temp_f": 55,
+     "rh": 90,
+     "heat_index_f": 55,
+     "wind_mph": 25,
+     "precip_prob": 90,
+     "precip_in": 0.04,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T05:00:00-08:00",
+     "temp_f": 54,
+     "rh": 90,
+     "heat_index_f": 54,
+     "wind_mph": 25,
+     "precip_prob": 90,
+     "precip_in": 0.03,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T06:00:00-08:00",
+     "temp_f": 55,
+     "rh": 90,
+     "heat_index_f": 55,
+     "wind_mph": 30,
+     "precip_prob": 90,
+     "precip_in": 0.04,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T07:00:00-08:00",
+     "temp_f": 56,
+     "rh": 93,
+     "heat_index_f": 56,
+     "wind_mph": 26,
+     "precip_prob": 90,
+     "precip_in": 0.07,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T08:00:00-08:00",
+     "temp_f": 57,
+     "rh": 90,
+     "heat_index_f": 57,
+     "wind_mph": 26,
+     "precip_prob": 90,
+     "precip_in": 0.04,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T09:00:00-08:00",
+     "temp_f": 58,
+     "rh": 90,
+     "heat_index_f": 58,
+     "wind_mph": 16,
+     "precip_prob": 90,
+     "precip_in": 0.11,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T10:00:00-08:00",
+     "temp_f": 57,
+     "rh": 93,
+     "heat_index_f": 57,
+     "wind_mph": 9,
+     "precip_prob": 90,
+     "precip_in": 0.18,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T11:00:00-08:00",
+     "temp_f": 57,
+     "rh": 96,
+     "heat_index_f": 57,
+     "wind_mph": 12,
+     "precip_prob": 90,
+     "precip_in": 0.04,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T12:00:00-08:00",
+     "temp_f": 58,
+     "rh": 93,
+     "heat_index_f": 58,
+     "wind_mph": 8,
+     "precip_prob": 90,
+     "precip_in": 0.04,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T13:00:00-08:00",
+     "temp_f": 58,
+     "rh": 97,
+     "heat_index_f": 58,
+     "wind_mph": 10,
+     "precip_prob": 90,
+     "precip_in": 0.04,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T14:00:00-08:00",
+     "temp_f": 59,
+     "rh": 93,
+     "heat_index_f": 59,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-09T15:00:00-08:00",
+     "temp_f": 59,
+     "rh": 93,
+     "heat_index_f": 59,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-09T16:00:00-08:00",
+     "temp_f": 59,
+     "rh": 93,
+     "heat_index_f": 59,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-09T17:00:00-08:00",
+     "temp_f": 58,
+     "rh": 97,
+     "heat_index_f": 58,
+     "wind_mph": 5,
+     "precip_prob": 90,
+     "precip_in": 0.08,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T18:00:00-08:00",
+     "temp_f": 57,
+     "rh": 93,
+     "heat_index_f": 57,
+     "wind_mph": 5,
+     "precip_prob": 90,
+     "precip_in": 0.3,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T19:00:00-08:00",
+     "temp_f": 53,
+     "rh": 93,
+     "heat_index_f": 53,
+     "wind_mph": 0,
+     "precip_prob": 90,
+     "precip_in": 0.48,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T20:00:00-08:00",
+     "temp_f": 53,
+     "rh": 93,
+     "heat_index_f": 53,
+     "wind_mph": 6,
+     "precip_prob": 90,
+     "precip_in": 0.13,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-09T21:00:00-08:00",
+     "temp_f": 54,
+     "rh": 90,
+     "heat_index_f": 54,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-09T22:00:00-08:00",
+     "temp_f": 54,
+     "rh": 93,
+     "heat_index_f": 54,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-09T23:00:00-08:00",
+     "temp_f": 55,
+     "rh": 93,
+     "heat_index_f": 55,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T00:00:00-08:00",
+     "temp_f": 58,
+     "rh": 90,
+     "heat_index_f": 58,
+     "wind_mph": 17,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    }
+   ],
+   "aqi": {
+    "source": "airnow-archive+epa-airdata",
+    "current": {
+     "aqi": 106,
+     "category": "Unhealthy for Sensitive Groups",
+     "pollutant": "PM2.5",
+     "pm25_aqi": 106,
+     "observed_at": "2023-01-08T10:00:00-08:00",
+     "area": "Merced"
+    },
+    "forecast": [
+     {
+      "date": "2023-01-08",
+      "aqi": 35,
+      "category": "Good",
+      "pollutant": "Ozone",
+      "action_day": false
+     },
+     {
+      "date": "2023-01-09",
+      "aqi": 31,
+      "category": "Good",
+      "pollutant": "Ozone",
+      "action_day": false
+     }
+    ]
+   },
+   "alerts": [
+    {
+     "id": "HNX-FA.A-2",
+     "event": "Flood Watch",
+     "message_type": "Update",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Likely",
+     "headline": "Flood Watch issued by NWS HNX",
+     "description": "...FLOOD WATCH REMAINS IN EFFECT THROUGH LATE TUESDAY NIGHT... * WHAT...Flooding caused by excessive rainfall continues to be possible. * WHERE...A portion of central California, including the following areas, Bakersfield, Buena Vista, Buttonwillow - Lost Hills - I5, Caruthers - San Joaquin - Selma, Coalinga - Avenal, Delano-Wasco-Shafter, Frazier Mountain Communities, Fresno-Clovis, Fresno-Tulare Foothills, Fresno-Tulare Lower Sierra, Grant Grove Area, Grapevine, Hanford - Corcoran - Lemoore, Kaiser to Rodgers Ridge, Kern River Valley, Los Banos - Dos Palos, Mariposa Madera Foothills, Mariposa-Madera Lower Sierra, Merced - Madera - Mendota, Mojave Desert Slopes, Piute Walker Basin, Planada - Le Grand - Snelling, San Joaquin River Canyon, Sequoia NP, South End San Joaquin Valley, South End Sierra Foothills, South End of the Lower Sierra, South End of the Upper Sierra, Southeast San Joaquin Valley, Tehachapi, Visalia - Porterville - Reedley, West Side Mountains South of 198, West Side Mountains north of 198, West Side of Fresno and Kings Counties, Yosemite NP outside of the valley and Yosemite Valley. * WHEN...Through late Tuesday night. * IMPACTS...Excessive runoff may result in fl",
+     "instruction": "You should monitor later forecasts and be alert for possible Flood Warnings. Those living in areas prone to flooding should be prepared to take action should flooding develop.",
+     "sent": "2023-01-08T08:51:00-08:00",
+     "onset": null,
+     "ends": "2023-01-11T04:00:00-08:00",
+     "expires": "2023-01-11T04:00:00-08:00",
+     "references": [],
+     "sender": "NWS HNX",
+     "ugc": [],
+     "archive_url": "https://mesonet.agron.iastate.edu/vtec/?wfo=HNX&year=2023&phenomena=FA&significance=A&etn=2"
+    }
+   ]
+  },
+  {
+   "id": "warning_night",
+   "at_local": "2023-01-09T22:00:00-08:00",
+   "label": "Night of Jan 9: flood warnings issued",
+   "hours": [
+    {
+     "time": "2023-01-09T22:00:00-08:00",
+     "temp_f": 54,
+     "rh": 93,
+     "heat_index_f": 54,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-09T23:00:00-08:00",
+     "temp_f": 55,
+     "rh": 93,
+     "heat_index_f": 55,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T00:00:00-08:00",
+     "temp_f": 58,
+     "rh": 90,
+     "heat_index_f": 58,
+     "wind_mph": 17,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T01:00:00-08:00",
+     "temp_f": 57,
+     "rh": 93,
+     "heat_index_f": 57,
+     "wind_mph": 17,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T02:00:00-08:00",
+     "temp_f": 57,
+     "rh": 90,
+     "heat_index_f": 57,
+     "wind_mph": 21,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T03:00:00-08:00",
+     "temp_f": 58,
+     "rh": 84,
+     "heat_index_f": 58,
+     "wind_mph": 20,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T04:00:00-08:00",
+     "temp_f": 59,
+     "rh": 81,
+     "heat_index_f": 59,
+     "wind_mph": 23,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T05:00:00-08:00",
+     "temp_f": 52,
+     "rh": 89,
+     "heat_index_f": 52,
+     "wind_mph": 17,
+     "precip_prob": 90,
+     "precip_in": 0.33,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-10T06:00:00-08:00",
+     "temp_f": 54,
+     "rh": 74,
+     "heat_index_f": 54,
+     "wind_mph": 5,
+     "precip_prob": 90,
+     "precip_in": 0.06,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-10T07:00:00-08:00",
+     "temp_f": 53,
+     "rh": 86,
+     "heat_index_f": 53,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T08:00:00-08:00",
+     "temp_f": 52,
+     "rh": 80,
+     "heat_index_f": 52,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T09:00:00-08:00",
+     "temp_f": 53,
+     "rh": 79,
+     "heat_index_f": 53,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T10:00:00-08:00",
+     "temp_f": 55,
+     "rh": 80,
+     "heat_index_f": 55,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T11:00:00-08:00",
+     "temp_f": 55,
+     "rh": 74,
+     "heat_index_f": 55,
+     "wind_mph": 7,
+     "precip_prob": 90,
+     "precip_in": 0.03,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-10T12:00:00-08:00",
+     "temp_f": 56,
+     "rh": 69,
+     "heat_index_f": 56,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T13:00:00-08:00",
+     "temp_f": 57,
+     "rh": 62,
+     "heat_index_f": 57,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T14:00:00-08:00",
+     "temp_f": 57,
+     "rh": 64,
+     "heat_index_f": 57,
+     "wind_mph": 13,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T15:00:00-08:00",
+     "temp_f": 57,
+     "rh": 64,
+     "heat_index_f": 57,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T16:00:00-08:00",
+     "temp_f": 57,
+     "rh": 64,
+     "heat_index_f": 57,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T17:00:00-08:00",
+     "temp_f": 56,
+     "rh": 67,
+     "heat_index_f": 56,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T18:00:00-08:00",
+     "temp_f": 54,
+     "rh": 69,
+     "heat_index_f": 54,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T19:00:00-08:00",
+     "temp_f": 51,
+     "rh": 77,
+     "heat_index_f": 51,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T20:00:00-08:00",
+     "temp_f": 49,
+     "rh": 83,
+     "heat_index_f": 49,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T21:00:00-08:00",
+     "temp_f": 49,
+     "rh": 83,
+     "heat_index_f": 49,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T22:00:00-08:00",
+     "temp_f": 48,
+     "rh": 86,
+     "heat_index_f": 48,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T23:00:00-08:00",
+     "temp_f": 48,
+     "rh": 83,
+     "heat_index_f": 48,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T00:00:00-08:00",
+     "temp_f": 49,
+     "rh": 80,
+     "heat_index_f": 49,
+     "wind_mph": 14,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    }
+   ],
+   "aqi": {
+    "source": "airnow-archive+epa-airdata",
+    "current": {
+     "aqi": 28,
+     "category": "Good",
+     "pollutant": "O3",
+     "pm25_aqi": 18,
+     "observed_at": "2023-01-09T22:00:00-08:00",
+     "area": "Merced"
+    },
+    "forecast": [
+     {
+      "date": "2023-01-09",
+      "aqi": 31,
+      "category": "Good",
+      "pollutant": "Ozone",
+      "action_day": false
+     },
+     {
+      "date": "2023-01-10",
+      "aqi": 35,
+      "category": "Good",
+      "pollutant": "Ozone",
+      "action_day": false
+     }
+    ]
+   },
+   "alerts": [
+    {
+     "id": "HNX-FA.Y-12",
+     "event": "Flood Advisory",
+     "message_type": "Update",
+     "severity": "Minor",
+     "urgency": "Expected",
+     "certainty": "Likely",
+     "headline": "Flood Advisory issued by NWS HNX",
+     "description": "...FLOOD ADVISORY REMAINS IN EFFECT UNTIL 11 PM PST THIS EVENING... * WHAT...Flooding caused by excessive rainfall continues. * WHERE...A portion of central California, including the following counties, Madera, Mariposa and Merced. * WHEN...Until 1100 PM PST. * IMPACTS...Minor flooding in low-lying and poor drainage areas. Some low-water crossings may become impassable. * ADDITIONAL DETAILS... - At 628 PM PST, Doppler radar indicated heavy rain. Overflowing poor drainage areas will cause some flooding in the advisory area. Between 1.5 and 3 inches of rain have fallen. The canal near Planada elementary school is overflowing, and evacuations are recommended near there. - Additional rainfall amounts of up to 1 inch are possible over the area. This additional rain will result in minor flooding. - Some locations that will experience flooding include... Bootjack, Mariposa, Planada, Catheys Valley, Le Grand and Jerseydale. - http://www.weather.gov/safety/flood",
+     "instruction": "Turn around, don't drown when encountering flooded roads. Most flood deaths occur in vehicles. Please report observed flooding to local emergency services or law enforcement and request they pass this information to the National Weather Service when you can do so safely.",
+     "sent": "2023-01-09T18:33:00-08:00",
+     "onset": null,
+     "ends": "2023-01-09T23:00:00-08:00",
+     "expires": "2023-01-09T23:00:00-08:00",
+     "references": [],
+     "sender": "NWS HNX",
+     "ugc": [],
+     "archive_url": "https://mesonet.agron.iastate.edu/vtec/?wfo=HNX&year=2023&phenomena=FA&significance=Y&etn=12"
+    },
+    {
+     "id": "HNX-FA.W-7",
+     "event": "Flood Warning",
+     "message_type": "Alert",
+     "severity": "Severe",
+     "urgency": "Expected",
+     "certainty": "Likely",
+     "headline": "Flood Warning issued by NWS HNX",
+     "description": "...FLOOD WARNING IN EFFECT UNTIL 1115 PM PST THIS EVENING... * WHAT...Flooding caused by excessive rainfall is expected. * WHERE...A portion of central California, including the following counties, Mariposa and Merced. * WHEN...Until 1115 PM PST. * IMPACTS...Flooding of rivers, creeks, streams, and other low-lying and flood-prone locations is imminent or occurring. Numerous mud and rockslides are impacting roads. * ADDITIONAL DETAILS... - At 812 PM PST, Doppler radar indicated heavy rain. Flooding is already occurring in the warned area. - Some locations that will experience flooding include... Mariposa, Catheys Valley, Lake McClure and El Portal. - http://www.weather.gov/safety/flood",
+     "instruction": "Turn around, don't drown when encountering flooded roads. Most flood deaths occur in vehicles. Be especially cautious at night when it is harder to recognize the dangers of flooding. Please report observed flooding to local emergency services or law enforcement and request they pass this information to the National Weather Service when you can do so safely.",
+     "sent": "2023-01-09T20:12:00-08:00",
+     "onset": "2023-01-09T20:12:00-08:00",
+     "ends": "2023-01-09T23:15:00-08:00",
+     "expires": "2023-01-09T23:15:00-08:00",
+     "references": [],
+     "sender": "NWS HNX",
+     "ugc": [],
+     "archive_url": "https://mesonet.agron.iastate.edu/vtec/?wfo=HNX&year=2023&phenomena=FA&significance=W&etn=7"
+    },
+    {
+     "id": "HNX-FL.W-1",
+     "event": "Flood Warning",
+     "message_type": "Update",
+     "severity": "Severe",
+     "urgency": "Expected",
+     "certainty": "Likely",
+     "headline": "Flood Warning issued by NWS HNX",
+     "description": "...FLOOD WARNING NOW IN EFFECT FROM THIS EVENING TO LATE WEDNESDAY MORNING... * WHAT...Minor flooding is forecast. * WHERE...Bear Creek above Mckee Road. * WHEN...From this evening to late Wednesday morning. * IMPACTS...At 24.7 feet, Flood of record - 4/4/2006. * ADDITIONAL DETAILS... - At 2:45 PM PST Monday the stage was 17.0 feet. - Forecast...The river will rise above flood stage late this evening to 24.1 feet just after midnight tonight. It will then fall below flood stage tomorrow morning to 22.6 feet early tomorrow afternoon. It will rise above flood stage again tomorrow afternoon to 23.6 feet late tomorrow evening. It will then fall below flood stage again early Wednesday morning. - Flood stage is 23.0 feet. - Flood History...This crest compares to a previous crest of 24.7 feet on 04/04/2006. - http://www.weather.gov/safety/flood && Location Fld Observed Forecasts (4 pm PST) -------- Stg Stg Day/Time Tue Wed Thu Bear Creek Mckee Road 23.0 17.0 Mon 2 pm PST 23.1 21.2 19.6 && LAT...LON 3732 12071 3739 12042 3725 12036 3722 12063",
+     "instruction": "",
+     "sent": "2023-01-09T15:40:00-08:00",
+     "onset": "2023-01-09T21:10:00-08:00",
+     "ends": "2023-01-11T09:30:00-08:00",
+     "expires": "2023-01-11T09:30:00-08:00",
+     "references": [],
+     "sender": "NWS HNX",
+     "ugc": [],
+     "archive_url": "https://mesonet.agron.iastate.edu/vtec/?wfo=HNX&year=2023&phenomena=FL&significance=W&etn=1"
+    },
+    {
+     "id": "HNX-FA.A-2",
+     "event": "Flood Watch",
+     "message_type": "Update",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Likely",
+     "headline": "Flood Watch issued by NWS HNX",
+     "description": "...FLOOD WATCH REMAINS IN EFFECT THROUGH EARLY WEDNESDAY MORNING... * WHAT...Flooding caused by excessive rainfall continues to be possible. * WHERE...A portion of central California, including the following areas, Bakersfield, Buena Vista, Buttonwillow - Lost Hills - I5, Caruthers - San Joaquin - Selma, Coalinga - Avenal, Delano-Wasco-Shafter, Frazier Mountain Communities, Fresno-Clovis, Fresno-Tulare Foothills, Fresno-Tulare Lower Sierra, Grant Grove Area, Grapevine, Hanford - Corcoran - Lemoore, Kaiser to Rodgers Ridge, Kern River Valley, Los Banos - Dos Palos, Mariposa Madera Foothills, Mariposa-Madera Lower Sierra, Merced - Madera - Mendota, Mojave Desert Slopes, Piute Walker Basin, Planada - Le Grand - Snelling, San Joaquin River Canyon, Sequoia NP, South End San Joaquin Valley, South End Sierra Foothills, South End of the Lower Sierra, South End of the Upper Sierra, Southeast San Joaquin Valley, Tehachapi, Visalia - Porterville - Reedley, West Side Mountains South of 198, West Side Mountains north of 198, West Side of Fresno and Kings Counties, Yosemite NP outside of the valley and Yosemite Valley. * WHEN...Through early Wednesday morning. * IMPACTS...Excessive runoff may re",
+     "instruction": "You should monitor later forecasts and be alert for possible Flood Warnings. Those living in areas prone to flooding should be prepared to take action should flooding develop.",
+     "sent": "2023-01-09T17:37:00-08:00",
+     "onset": null,
+     "ends": "2023-01-11T04:00:00-08:00",
+     "expires": "2023-01-11T04:00:00-08:00",
+     "references": [],
+     "sender": "NWS HNX",
+     "ugc": [],
+     "archive_url": "https://mesonet.agron.iastate.edu/vtec/?wfo=HNX&year=2023&phenomena=FA&significance=A&etn=2"
+    }
+   ]
+  },
+  {
+   "id": "evacuation_morning",
+   "at_local": "2023-01-10T06:00:00-08:00",
+   "label": "Morning of Jan 10: Planada evacuated",
+   "hours": [
+    {
+     "time": "2023-01-10T06:00:00-08:00",
+     "temp_f": 54,
+     "rh": 74,
+     "heat_index_f": 54,
+     "wind_mph": 5,
+     "precip_prob": 90,
+     "precip_in": 0.06,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-10T07:00:00-08:00",
+     "temp_f": 53,
+     "rh": 86,
+     "heat_index_f": 53,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T08:00:00-08:00",
+     "temp_f": 52,
+     "rh": 80,
+     "heat_index_f": 52,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T09:00:00-08:00",
+     "temp_f": 53,
+     "rh": 79,
+     "heat_index_f": 53,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T10:00:00-08:00",
+     "temp_f": 55,
+     "rh": 80,
+     "heat_index_f": 55,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T11:00:00-08:00",
+     "temp_f": 55,
+     "rh": 74,
+     "heat_index_f": 55,
+     "wind_mph": 7,
+     "precip_prob": 90,
+     "precip_in": 0.03,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-10T12:00:00-08:00",
+     "temp_f": 56,
+     "rh": 69,
+     "heat_index_f": 56,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T13:00:00-08:00",
+     "temp_f": 57,
+     "rh": 62,
+     "heat_index_f": 57,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T14:00:00-08:00",
+     "temp_f": 57,
+     "rh": 64,
+     "heat_index_f": 57,
+     "wind_mph": 13,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T15:00:00-08:00",
+     "temp_f": 57,
+     "rh": 64,
+     "heat_index_f": 57,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T16:00:00-08:00",
+     "temp_f": 57,
+     "rh": 64,
+     "heat_index_f": 57,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T17:00:00-08:00",
+     "temp_f": 56,
+     "rh": 67,
+     "heat_index_f": 56,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T18:00:00-08:00",
+     "temp_f": 54,
+     "rh": 69,
+     "heat_index_f": 54,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T19:00:00-08:00",
+     "temp_f": 51,
+     "rh": 77,
+     "heat_index_f": 51,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T20:00:00-08:00",
+     "temp_f": 49,
+     "rh": 83,
+     "heat_index_f": 49,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T21:00:00-08:00",
+     "temp_f": 49,
+     "rh": 83,
+     "heat_index_f": 49,
+     "wind_mph": 7,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T22:00:00-08:00",
+     "temp_f": 48,
+     "rh": 86,
+     "heat_index_f": 48,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-10T23:00:00-08:00",
+     "temp_f": 48,
+     "rh": 83,
+     "heat_index_f": 48,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T00:00:00-08:00",
+     "temp_f": 49,
+     "rh": 80,
+     "heat_index_f": 49,
+     "wind_mph": 14,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T01:00:00-08:00",
+     "temp_f": 49,
+     "rh": 83,
+     "heat_index_f": 49,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T02:00:00-08:00",
+     "temp_f": 49,
+     "rh": 83,
+     "heat_index_f": 49,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T03:00:00-08:00",
+     "temp_f": 49,
+     "rh": 83,
+     "heat_index_f": 49,
+     "wind_mph": 14,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T04:00:00-08:00",
+     "temp_f": 50,
+     "rh": 77,
+     "heat_index_f": 50,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T05:00:00-08:00",
+     "temp_f": 50,
+     "rh": 77,
+     "heat_index_f": 50,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T06:00:00-08:00",
+     "temp_f": 50,
+     "rh": 77,
+     "heat_index_f": 50,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T07:00:00-08:00",
+     "temp_f": 50,
+     "rh": 77,
+     "heat_index_f": 50,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T08:00:00-08:00",
+     "temp_f": 50,
+     "rh": 77,
+     "heat_index_f": 50,
+     "wind_mph": 10,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T09:00:00-08:00",
+     "temp_f": 51,
+     "rh": 74,
+     "heat_index_f": 51,
+     "wind_mph": 13,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T10:00:00-08:00",
+     "temp_f": 52,
+     "rh": 71,
+     "heat_index_f": 52,
+     "wind_mph": 13,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T11:00:00-08:00",
+     "temp_f": 54,
+     "rh": 66,
+     "heat_index_f": 54,
+     "wind_mph": 21,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T12:00:00-08:00",
+     "temp_f": 55,
+     "rh": 64,
+     "heat_index_f": 55,
+     "wind_mph": 18,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T13:00:00-08:00",
+     "temp_f": 54,
+     "rh": 69,
+     "heat_index_f": 54,
+     "wind_mph": 18,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T14:00:00-08:00",
+     "temp_f": 52,
+     "rh": 83,
+     "heat_index_f": 52,
+     "wind_mph": 20,
+     "precip_prob": 90,
+     "precip_in": 0.01,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-11T15:00:00-08:00",
+     "temp_f": 51,
+     "rh": 89,
+     "heat_index_f": 51,
+     "wind_mph": 16,
+     "precip_prob": 90,
+     "precip_in": 0.02,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-11T16:00:00-08:00",
+     "temp_f": 52,
+     "rh": 86,
+     "heat_index_f": 52,
+     "wind_mph": 13,
+     "precip_prob": 90,
+     "precip_in": 0.01,
+     "short": "Rain"
+    },
+    {
+     "time": "2023-01-11T17:00:00-08:00",
+     "temp_f": 54,
+     "rh": 74,
+     "heat_index_f": 54,
+     "wind_mph": 15,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T18:00:00-08:00",
+     "temp_f": 53,
+     "rh": 71,
+     "heat_index_f": 53,
+     "wind_mph": 14,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T19:00:00-08:00",
+     "temp_f": 54,
+     "rh": 72,
+     "heat_index_f": 54,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T20:00:00-08:00",
+     "temp_f": 54,
+     "rh": 72,
+     "heat_index_f": 54,
+     "wind_mph": 15,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T21:00:00-08:00",
+     "temp_f": 55,
+     "rh": 69,
+     "heat_index_f": 55,
+     "wind_mph": 12,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T22:00:00-08:00",
+     "temp_f": 54,
+     "rh": 69,
+     "heat_index_f": 54,
+     "wind_mph": 9,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-11T23:00:00-08:00",
+     "temp_f": 53,
+     "rh": 74,
+     "heat_index_f": 53,
+     "wind_mph": 8,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-12T00:00:00-08:00",
+     "temp_f": 51,
+     "rh": 80,
+     "heat_index_f": 51,
+     "wind_mph": 6,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    }
+   ],
+   "aqi": {
+    "source": "airnow-archive+epa-airdata",
+    "current": {
+     "aqi": 31,
+     "category": "Good",
+     "pollutant": "O3",
+     "pm25_aqi": 13,
+     "observed_at": "2023-01-10T06:00:00-08:00",
+     "area": "Merced"
+    },
+    "forecast": [
+     {
+      "date": "2023-01-10",
+      "aqi": 35,
+      "category": "Good",
+      "pollutant": "Ozone",
+      "action_day": false
+     },
+     {
+      "date": "2023-01-11",
+      "aqi": 31,
+      "category": "Good",
+      "pollutant": "Ozone",
+      "action_day": false
+     }
+    ]
+   },
+   "alerts": [
+    {
+     "id": "HNX-FL.W-1",
+     "event": "Flood Warning",
+     "message_type": "Update",
+     "severity": "Severe",
+     "urgency": "Expected",
+     "certainty": "Likely",
+     "headline": "Flood Warning issued by NWS HNX",
+     "description": "...FLOOD WARNING REMAINS IN EFFECT UNTIL LATE TONIGHT... * WHAT...Major flooding is occurring and major flooding is forecast. * WHERE...Bear Creek above Mckee Road. * WHEN...Until late tonight. * IMPACTS...At 24.7 feet, Flood of record - 4/4/2006. * ADDITIONAL DETAILS... - At 3:56 AM PST Tuesday the stage was 26.1 feet. - Recent Activity...The maximum river stage in the 24 hours ending at 3:45 AM PST Tuesday was 26.2 feet. - Forecast...The river will rise to 26.0 feet this morning. It will then fall late this afternoon. It will rise to 24.7 feet late this evening. It will then fall below flood stage tomorrow morning. - Flood stage is 23.0 feet. - Flood History...This crest compares to a previous crest of 24.7 feet on 04/04/2006. - http://www.weather.gov/safety/flood && Location Fld Observed Forecasts (5 am PST) -------- Stg Stg Day/Time Wed Thu Fri Bear Creek Mckee Road 23.0 25.9 Tue 3 am PST 23.7 20.8 19.2 && LAT...LON 3732 12071 3739 12042 3725 12036 3722 12063",
+     "instruction": "",
+     "sent": "2023-01-10T04:45:00-08:00",
+     "onset": null,
+     "ends": "2023-01-11T05:00:00-08:00",
+     "expires": "2023-01-11T05:00:00-08:00",
+     "references": [],
+     "sender": "NWS HNX",
+     "ugc": [],
+     "archive_url": "https://mesonet.agron.iastate.edu/vtec/?wfo=HNX&year=2023&phenomena=FL&significance=W&etn=1"
+    },
+    {
+     "id": "HNX-FA.A-2",
+     "event": "Flood Watch",
+     "message_type": "Update",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Likely",
+     "headline": "Flood Watch issued by NWS HNX",
+     "description": "...FLOOD WATCH REMAINS IN EFFECT THROUGH LATE TONIGHT... * WHAT...Flooding caused by excessive rainfall continues to be possible. * WHERE...A portion of central California, including the following areas, Bakersfield, Buena Vista, Buttonwillow - Lost Hills - I5, Caruthers - San Joaquin - Selma, Coalinga - Avenal, Delano-Wasco-Shafter, Frazier Mountain Communities, Fresno-Clovis, Fresno-Tulare Foothills, Fresno-Tulare Lower Sierra, Grant Grove Area, Grapevine, Hanford - Corcoran - Lemoore, Kaiser to Rodgers Ridge, Kern River Valley, Los Banos - Dos Palos, Mariposa Madera Foothills, Mariposa-Madera Lower Sierra, Merced - Madera - Mendota, Mojave Desert Slopes, Piute Walker Basin, Planada - Le Grand - Snelling, San Joaquin River Canyon, Sequoia NP, South End San Joaquin Valley, South End Sierra Foothills, South End of the Lower Sierra, South End of the Upper Sierra, Southeast San Joaquin Valley, Tehachapi, Visalia - Porterville - Reedley, West Side Mountains South of 198, West Side Mountains north of 198, West Side of Fresno and Kings Counties, Yosemite NP outside of the valley and Yosemite Valley. * WHEN...Through late tonight. * IMPACTS...Excessive runoff may result in flooding of ri",
+     "instruction": "You should monitor later forecasts and be alert for possible Flood Warnings. Those living in areas prone to flooding should be prepared to take action should flooding develop.",
+     "sent": "2023-01-10T01:34:00-08:00",
+     "onset": null,
+     "ends": "2023-01-11T04:00:00-08:00",
+     "expires": "2023-01-11T04:00:00-08:00",
+     "references": [],
+     "sender": "NWS HNX",
+     "ugc": [],
+     "archive_url": "https://mesonet.agron.iastate.edu/vtec/?wfo=HNX&year=2023&phenomena=FA&significance=A&etn=2"
+    }
+   ]
+  },
+  {
+   "id": "after",
+   "at_local": "2023-01-20T12:00:00-08:00",
+   "label": "After the warnings ended",
+   "hours": [
+    {
+     "time": "2023-01-20T12:00:00-08:00",
+     "temp_f": 49,
+     "rh": 74,
+     "heat_index_f": 49,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-20T13:00:00-08:00",
+     "temp_f": 50,
+     "rh": 68,
+     "heat_index_f": 50,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-20T14:00:00-08:00",
+     "temp_f": 52,
+     "rh": 61,
+     "heat_index_f": 52,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-20T15:00:00-08:00",
+     "temp_f": 52,
+     "rh": 61,
+     "heat_index_f": 52,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-20T16:00:00-08:00",
+     "temp_f": 55,
+     "rh": 49,
+     "heat_index_f": 55,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-20T17:00:00-08:00",
+     "temp_f": 51,
+     "rh": 56,
+     "heat_index_f": 51,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-20T18:00:00-08:00",
+     "temp_f": 48,
+     "rh": 68,
+     "heat_index_f": 48,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-20T19:00:00-08:00",
+     "temp_f": 45,
+     "rh": 76,
+     "heat_index_f": 45,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-20T20:00:00-08:00",
+     "temp_f": 42,
+     "rh": 85,
+     "heat_index_f": 42,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-20T21:00:00-08:00",
+     "temp_f": 42,
+     "rh": 85,
+     "heat_index_f": 42,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-20T22:00:00-08:00",
+     "temp_f": 40,
+     "rh": 89,
+     "heat_index_f": 40,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-20T23:00:00-08:00",
+     "temp_f": 39,
+     "rh": 89,
+     "heat_index_f": 39,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T00:00:00-08:00",
+     "temp_f": 38,
+     "rh": 90,
+     "heat_index_f": 38,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T01:00:00-08:00",
+     "temp_f": 36,
+     "rh": 92,
+     "heat_index_f": 36,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T02:00:00-08:00",
+     "temp_f": 37,
+     "rh": 89,
+     "heat_index_f": 37,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T03:00:00-08:00",
+     "temp_f": 34,
+     "rh": 92,
+     "heat_index_f": 34,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T04:00:00-08:00",
+     "temp_f": 36,
+     "rh": 92,
+     "heat_index_f": 36,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T05:00:00-08:00",
+     "temp_f": 35,
+     "rh": 92,
+     "heat_index_f": 35,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T06:00:00-08:00",
+     "temp_f": 34,
+     "rh": 88,
+     "heat_index_f": 34,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T07:00:00-08:00",
+     "temp_f": 35,
+     "rh": 88,
+     "heat_index_f": 35,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T08:00:00-08:00",
+     "temp_f": 32,
+     "rh": 100,
+     "heat_index_f": 32,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T09:00:00-08:00",
+     "temp_f": 37,
+     "rh": 100,
+     "heat_index_f": 37,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T10:00:00-08:00",
+     "temp_f": 41,
+     "rh": 96,
+     "heat_index_f": 41,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T11:00:00-08:00",
+     "temp_f": 46,
+     "rh": 83,
+     "heat_index_f": 46,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T12:00:00-08:00",
+     "temp_f": 49,
+     "rh": 77,
+     "heat_index_f": 49,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T13:00:00-08:00",
+     "temp_f": 51,
+     "rh": 71,
+     "heat_index_f": 51,
+     "wind_mph": 3,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T14:00:00-08:00",
+     "temp_f": 53,
+     "rh": 59,
+     "heat_index_f": 53,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T15:00:00-08:00",
+     "temp_f": 54,
+     "rh": 61,
+     "heat_index_f": 54,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T16:00:00-08:00",
+     "temp_f": 54,
+     "rh": 61,
+     "heat_index_f": 54,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T17:00:00-08:00",
+     "temp_f": 52,
+     "rh": 63,
+     "heat_index_f": 52,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T18:00:00-08:00",
+     "temp_f": 48,
+     "rh": 73,
+     "heat_index_f": 48,
+     "wind_mph": 5,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T19:00:00-08:00",
+     "temp_f": 46,
+     "rh": 83,
+     "heat_index_f": 46,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T20:00:00-08:00",
+     "temp_f": 44,
+     "rh": 85,
+     "heat_index_f": 44,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T21:00:00-08:00",
+     "temp_f": 42,
+     "rh": 89,
+     "heat_index_f": 42,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T22:00:00-08:00",
+     "temp_f": 41,
+     "rh": 89,
+     "heat_index_f": 41,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-21T23:00:00-08:00",
+     "temp_f": 41,
+     "rh": 86,
+     "heat_index_f": 41,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    },
+    {
+     "time": "2023-01-22T00:00:00-08:00",
+     "temp_f": 40,
+     "rh": 89,
+     "heat_index_f": 40,
+     "wind_mph": 0,
+     "precip_prob": 5,
+     "precip_in": 0.0,
+     "short": null
+    }
+   ],
+   "aqi": {
+    "source": "airnow-archive+epa-airdata",
+    "current": {
+     "aqi": 42,
+     "category": "Good",
+     "pollutant": "PM2.5",
+     "pm25_aqi": 42,
+     "observed_at": "2023-01-20T12:00:00-08:00",
+     "area": "Merced"
+    },
+    "forecast": [
+     {
+      "date": "2023-01-20",
+      "aqi": 48,
+      "category": "Good",
+      "pollutant": "PM2.5",
+      "action_day": false
+     },
+     {
+      "date": "2023-01-21",
+      "aqi": 71,
+      "category": "Moderate",
+      "pollutant": "PM2.5",
+      "action_day": false
+     }
+    ]
+   },
+   "alerts": [
+    {
+     "id": "HNX-FZ.W-2",
+     "event": "Freeze Warning",
+     "message_type": "Alert",
+     "severity": "Severe",
+     "urgency": "Expected",
+     "certainty": "Likely",
+     "headline": "Freeze Warning issued by NWS HNX",
+     "description": "...A FREEZE WARNING IS IN EFFECT FROM 2 AM PST TONIGHT UNTIL 7 AM PST TUESDAY... * WHAT...Sub-freezing temperatures as low as 29 degrees expected. * WHERE...Most of the San Joaquin Valley * WHEN...From 2 AM PST tonight until 7 AM PST Tuesday morning. * IMPACTS...Frost and freeze conditions could kill sensitive vegetation.",
+     "instruction": "Bring pets indoors and cover sensitive, exposed vegetation.",
+     "sent": "2023-01-20T07:45:00-08:00",
+     "onset": "2023-01-21T02:00:00-08:00",
+     "ends": "2023-01-24T07:00:00-08:00",
+     "expires": "2023-01-24T07:00:00-08:00",
+     "references": [],
+     "sender": "NWS HNX",
+     "ugc": [],
+     "archive_url": "https://mesonet.agron.iastate.edu/vtec/?wfo=HNX&year=2023&phenomena=FZ&significance=W&etn=2"
+    }
+   ]
+  }
+ ]
+}

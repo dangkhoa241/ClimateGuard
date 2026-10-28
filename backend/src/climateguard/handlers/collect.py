@@ -11,7 +11,7 @@ Cost and scale controls:
 import logging
 from concurrent.futures import ThreadPoolExecutor
 
-from .. import config, subscriptions, zones
+from .. import config, stats, subscriptions, zones
 from ..snapshot import build_snapshot
 from ..sources import nws
 from ..store import get_store
@@ -81,7 +81,8 @@ def monitor_changed(result: dict) -> dict:
             if over and not budget.has_active_warning(store.get_latest(slug) or {}):
                 skip = f"daily model budget (${config.DAILY_MODEL_BUDGET_USD:.2f}) used up; only zones with an NWS Warning run"
             d = run_monitor(slug, skip_reason=skip)
-            return slug, {"action": d["action"], "reason": d["reason"], "cost_usd": d.get("cost_usd")}
+            return slug, {"action": d["action"], "reason": d["reason"], "cost_usd": d.get("cost_usd"),
+                          "alerts_sent": len(d.get("sent") or [])}
         except Exception as e:  # one zone's agent failure must not block the others
             log.exception("monitor failed for %s", slug)
             return slug, {"action": "error", "reason": str(e)}
@@ -99,5 +100,9 @@ def handler(event, context):
         log.exception("refreshing confirmed subscribers failed; using last known counts")
     result = collect()
     result["decisions"] = monitor_changed(result)
+    try:
+        stats.record(stats.summarize_run(result))
+    except Exception:
+        log.exception("recording daily stats failed")  # never fail a collection over counters
     log.info("collect result: %s", result)
     return result
