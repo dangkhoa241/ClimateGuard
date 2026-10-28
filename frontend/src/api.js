@@ -48,6 +48,25 @@ export const subscribe = ({ email, lang, location, website }) =>
     body: JSON.stringify({ email, lang, website, ...location }),
   })
 
+// A spoken question (16 kHz WAV from voice.js) -> {text, audio_ms}. The text goes into the question
+// box for the person to check before asking.
+export async function transcribeAudio(wav, lang) {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 25000)
+  try {
+    return await request(`/transcribe?lang=${encodeURIComponent(lang)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'audio/wav' },
+      body: wav,
+      signal: ctrl.signal,
+    })
+  } catch (err) {
+    throw ctrl.signal.aborted ? new ApiError('timeout', 0) : err
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 // One model call behind it: allow 25 s (API Gateway stops at 30 s), then show a friendly "try again".
 export async function askQuestion({ question, lang, zone }) {
   const ctrl = new AbortController()

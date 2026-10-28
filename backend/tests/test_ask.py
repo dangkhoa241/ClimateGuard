@@ -166,6 +166,25 @@ def test_mask_question_on_a_clean_or_ozone_day_gets_the_fixed_note(monkeypatch):
     assert ask.MASK_NOTE["en"] not in ask.answer("Do I need a mask?", "en", "CAZ159")["answer"]
 
 
+@pytest.mark.parametrize("question,model_text,want_211", [
+    ("Where is the nearest cooling center?", "It is 108°F today. Stay in air conditioning.", True),
+    ("Ở đâu có trung tâm làm mát?", "Hôm nay nóng tới 108°F.", True),
+    ("¿Hay refugio cerca?", "Hoy hace mucho calor. Llame al 211 para saber más.", True),
+    ("Gần đây có chỗ nào mát để nghỉ không?", "Tôi không biết chỗ mát cụ thể gần bạn.", True),
+    ("Can my family stay somewhere tonight?", "Hot tonight.\n[211]", True),  # the model's marker
+    ("Will there be a tornado next month?", "I don't know. Call 211 for more help.", False),
+    ("Is it hot today?", "Yes, up to 108°F. Drink water often.", False),
+])
+def test_211_is_a_fixed_sentence(monkeypatch, question, model_text, want_211):
+    _store()
+    _model_says(monkeypatch, model_text)
+    lang = "vi" if model_text.startswith(("Hôm", "Tôi")) else "es" if "¿" in question else "en"
+    text = ask.answer(question, lang, "CAZ159")["answer"]
+    assert text.endswith(ask.HELP_211[lang]) == want_211
+    assert "[211]" not in text and text.count("211") == int(want_211)  # the model's own 211 sentence is gone
+    assert not text.startswith("\n")
+
+
 @pytest.mark.parametrize("question,topic", [
     ("Ngày mai chất lượng không khí thế nào?", "air quality aqi smoke"),
     ("¿Hay riesgo de inundación esta noche?", "flood water"),

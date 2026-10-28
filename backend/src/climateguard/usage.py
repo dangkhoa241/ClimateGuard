@@ -82,6 +82,22 @@ def log_call(provider: str, model: str, prompt_tokens: int, completion_tokens: i
     return record
 
 
+AUDIO_USD_PER_HOUR = {"muse-voice-transcribe-1.0": 0.18}  # billed on whole seconds of audio
+
+
+def log_audio(model: str, audio_ms: int, purpose: str = "") -> dict:
+    """Speech-to-text is billed per second of audio, not per token."""
+    record = {"ts": time.time(), "provider": "meta", "model": model, "purpose": purpose,
+              "prompt_tokens": 0, "completion_tokens": 0, "cached_tokens": 0, "cache_hit": False,
+              "audio_seconds": audio_ms // 1000,
+              "cost_usd": (audio_ms // 1000) * AUDIO_USD_PER_HOUR.get(model, 0.0) / 3600}
+    try:
+        _write(record)
+    except Exception as e:
+        print(f"usage log write failed: {e}")
+    return record
+
+
 def totals() -> dict:
     """Spend per provider and model, plus call counts."""
     by_model = defaultdict(lambda: {"calls": 0, "cache_hits": 0, "prompt_tokens": 0,

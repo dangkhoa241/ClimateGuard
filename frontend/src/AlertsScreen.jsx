@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ALERT_LANGS, getZoneAlerts, subscribe } from './api.js'
 import LocationPicker from './LocationPicker.jsx'
+import ReadAloud from './ReadAloud.jsx'
 
 function NotCoveredNotice({ t }) {
   return (
@@ -40,6 +41,7 @@ function RecentAlerts({ zone, lang, t }) {
             </time>
           </div>
           <p>{a.messages[lang] || a.messages.en}</p>
+          <ReadAloud text={a.messages[lang] || a.messages.en} lang={a.messages[lang] ? lang : 'en'} t={t} />
         </article>
       ))}
     </section>

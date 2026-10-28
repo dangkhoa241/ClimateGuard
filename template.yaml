@@ -14,6 +14,10 @@ Parameters:
     Type: String
     Default: http://localhost:5173
     Description: Vite dev server origin, allowed by CORS in addition to FrontendUrl
+  LocalDevOrigin2:
+    Type: String
+    Default: http://localhost:5174
+    Description: Second Vite dev server origin (when 5173 is taken by another project)
   MaxSubscribers:
     Type: Number
     Default: 500
@@ -22,7 +26,7 @@ Parameters:
     Description: NWS asks for a User-Agent with contact info, e.g. "ClimateGuard/0.1 you@example.com"
 
 Conditions:
-  FrontendIsLocalDev: !Equals [!Ref FrontendUrl, !Ref LocalDevOrigin]
+  FrontendIsLocalDev: !Or [!Equals [!Ref FrontendUrl, !Ref LocalDevOrigin], !Equals [!Ref FrontendUrl, !Ref LocalDevOrigin2]]
 
 Globals:
   Function:
@@ -181,15 +185,15 @@ Resources:
   HttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
-      # API Gateway rejects duplicate origins, so localhost is only added when it isn't already FrontendUrl
+      # API Gateway rejects duplicate origins, so FrontendUrl is only added when it isn't a localhost origin
       # (deploy.ps1 also normalizes FrontendUrl and fails the preflight on duplicates). The !If wraps the
       # whole block: SAM mistranslates an !If placed on AllowOrigins alone (verified with samtranslator).
       CorsConfiguration: !If
         - FrontendIsLocalDev
-        - AllowOrigins: [!Ref FrontendUrl]
+        - AllowOrigins: [!Ref LocalDevOrigin, !Ref LocalDevOrigin2]
           AllowMethods: [GET, POST, OPTIONS]
           AllowHeaders: [Content-Type]
-        - AllowOrigins: [!Ref FrontendUrl, !Ref LocalDevOrigin]
+        - AllowOrigins: [!Ref FrontendUrl, !Ref LocalDevOrigin, !Ref LocalDevOrigin2]
           AllowMethods: [GET, POST, OPTIONS]
           AllowHeaders: [Content-Type]
       DefaultRouteSettings:  # whole-API safety net; per-IP limits are enforced in code
@@ -264,6 +268,9 @@ Resources:
         Ask:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /ask }
+        Transcribe:  # a spoken question (WAV) -> text, Muse Voice Transcribe
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /transcribe }
 
 Outputs:
   ApiUrl:

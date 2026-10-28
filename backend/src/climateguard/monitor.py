@@ -90,6 +90,8 @@ How to work:
      outdoors, avoid hard work, stay indoors with windows closed.
    - Floods: use strong wording, "Never walk or drive through floodwater" / "Nunca camine ni maneje por
      agua de inundación" / "Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập". Never "avoid"/"evite"/"tránh".
+   - Spanish NWS alert levels: Warning = "Aviso", Watch = "Vigilancia", Advisory = "Advertencia". Use each
+     only when that level is active; with no NWS alert, name no alert level.
    - Outdoor work timing: "early morning or evening" = "temprano en la mañana o al anochecer". Never "en la
      tarde"/"por la tarde" for work advice: the afternoon is the hottest time.
    Vietnamese (vi) style, reviewed by a native speaker:
@@ -108,7 +110,7 @@ How to work:
    Vietnamese examples (approved by the reviewer; match their tone and structure):
    - Heat: "Cảnh báo nắng nóng gay gắt có hiệu lực đến 8 giờ tối thứ Sáu. Hôm nay (thứ Ba), từ 11 giờ sáng đến 9 giờ tối, nhiệt độ có thể lên tới 114°F (46°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm. Nếu có thể, hãy chỉ làm việc ngoài trời vào sáng sớm hoặc chiều tối."
    - Ozone: "Hôm nay (thứ Ba), khí ôzôn tăng cao khiến không khí rất có hại cho sức khỏe (chỉ số AQI lên tới 208). Hãy hạn chế ra ngoài và tránh vận động mạnh. Nếu có thể, hãy ở trong nhà và đóng kín cửa sổ."
-   - Flood: "Cảnh báo lũ lụt có hiệu lực đến 9 giờ 30 sáng thứ Tư. Hiện đang có lũ lụt, và nước suối Bear Creek dự kiến dâng vượt mức báo động lũ ngay sau nửa đêm nay. Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập. Nếu bạn ở vùng trũng thấp, hãy di chuyển lên chỗ cao ngay và làm theo lệnh sơ tán."
+   - Flood: "Cảnh báo lũ lụt có hiệu lực đến 9 giờ 30 sáng thứ Tư. Hiện đang có lũ lụt, và nước suối Bear Creek dự kiến dâng vượt mức báo động lũ ngay sau nửa đêm nay. Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập. Hãy di chuyển lên chỗ cao ngay và làm theo lệnh sơ tán."
    - Smoke: "Cảnh báo khói cháy rừng có hiệu lực hôm nay (thứ Bảy) và Chủ Nhật. Chất lượng không khí rất có hại cho sức khỏe (chỉ số AQI lên tới 206). Hãy ở trong nhà và đóng kín cửa sổ. Tránh làm việc hoặc vận động ngoài trời. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
 5. Never give medical advice: no symptoms, diagnoses, or medicines. Protective actions only.
 6. Finish with a plain-text explanation of 1-3 sentences that starts with "SENT:" or "SKIPPED:" and says why."""
@@ -321,6 +323,7 @@ def _wording_issue(run: Run, hazard: str, msgs: dict) -> str | None:
     return (guardrails.vi_aqi_wording_issue(msgs["vi"], data_aqi)
             or guardrails.vi_level_issue(msgs["vi"], events)
             or guardrails.vi_past_morning_issue(msgs["vi"], run.now.hour)
+            or guardrails.es_level_issue(msgs["es"], events)
             or guardrails.es_afternoon_work_issue(msgs["es"]))
 
 

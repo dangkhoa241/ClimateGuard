@@ -142,3 +142,16 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 .ask-steps li { margin: 2px 0; }
 .ask-steps li.now { color: var(--fg); font-weight: 600; }
 .ask-steps li.done::marker { content: '✓  '; }
+
+.voice { display: flex; flex-direction: column; gap: 6px; }
+.mic {
+  align-self: flex-start; padding: 10px 16px; border-radius: 999px; border: 2px solid var(--accent);
+  background: #fff; color: var(--accent); font-size: 1rem; font-weight: 600; cursor: pointer;
+}
+.mic.recording { background: #b42318; border-color: #b42318; color: #fff; }
+.mic:disabled { opacity: 0.6; }
+.read-aloud {
+  margin-top: 10px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--muted);
+  background: transparent; color: var(--fg); font-size: 0.9rem; cursor: pointer;
+}
+.read-aloud[aria-pressed='true'] { border-color: var(--accent); color: var(--accent); }

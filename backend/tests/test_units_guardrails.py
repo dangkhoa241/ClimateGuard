@@ -270,6 +270,23 @@ def test_vi_alert_level_names(events, text, ok):
     assert (guardrails.vi_level_issue(text, events) is None) == ok
 
 
+@pytest.mark.parametrize("events,text,ok", [
+    (["Flood Warning"], "Aviso de inundación vigente hasta las 11:15 de la noche.", True),
+    (["Flood Warning"], "Advertencia de inundación vigente hasta la noche.", False),  # understates a warning
+    (["Flood Watch"], "Vigilancia de inundación hasta la noche del martes.", True),
+    (["Flood Watch"], "Aviso de inundación hasta la noche del martes.", False),  # overstates a watch
+    (["Heat Advisory"], "Advertencia de calor hoy hasta las 8 de la noche.", True),
+    (["Heat Advisory"], "Aviso de calor hoy hasta las 8 de la noche.", False),
+    (["Air Quality Alert"], "Aviso de calidad del aire hoy y mañana.", True),
+    (["Flood Advisory", "Flood Warning"], "Aviso de inundación vigente.", True),
+    ([], "Humo hoy, calidad del aire dañina. Quédese adentro.", True),
+    ([], "Aviso de humo hoy. Quédese adentro.", False),  # no NWS product: claim no level
+    ([], "Quédese adentro hasta nuevo aviso.", True),     # the everyday phrase, not the product
+])
+def test_es_alert_level_names(events, text, ok):
+    assert (guardrails.es_level_issue(text, events) is None) == ok
+
+
 def test_vi_time_after_midnight():
     text = "Cảnh báo băng giá có hiệu lực từ 2 giờ sáng nay đến 7 giờ sáng thứ Ba."
     assert guardrails.vi_past_morning_issue(text, hour_now=19)  # evening: "sáng nay" is past

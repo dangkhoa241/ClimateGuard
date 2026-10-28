@@ -54,7 +54,7 @@ backend/scripts/       smoke tests, collect_local.py, run_monitor.py, local_api.
                        build_replays.py, replay.py, run_eval.py + eval_cases.py
 backend/eval/results/  evaluation reports (.md + .json)
 backend/tests/         offline tests (pytest)
-frontend/              React + Vite, mobile-first, deployed on Vercel
+frontend/              React + Vite, mobile-first, deployed on Vercel (root directory `frontend`, env `VITE_API_URL`)
 ```
 
 ## Where ClimateGuard works: NWS forecast zones
@@ -126,7 +126,7 @@ The agent runs only for zones whose fingerprint changed. When NWS re-issues the 
 - **Messages:** all three reviewed languages are required, each at most 400 characters.
 - **No medical wording:** symptoms, diagnoses and medicines are blocked in English, Spanish and Vietnamese. Other languages are translated from the already-checked English.
 - **Masks only for particles (safety):** N95 masks filter smoke, dust and ash (PM2.5/PM10), not ozone. Mask advice in any language is rejected unless the data shows particle pollution (PM2.5/PM10 AQI 101+, or a smoke/dust alert). High ozone on top of smoke doesn't block it: AirNow's daily forecast names only the worst pollutant, so the particle reading is kept alongside it. An automatic translation that adds mask advice the English doesn't have falls back to English. Found in the Vietnamese review: the Sept 6 2022 ozone alert (AQI 208) had told people to wear an N95.
-- **Wording rules from the Vietnamese review:** a watch is never mentioned next to an active warning for the same hazard; heat index ("feels like") only when it's at least 5°F above the air temperature; flood alerts must use firm wording, never "avoid": Spanish "Nunca camine ni maneje por agua de inundación", Vietnamese "Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập". Vietnamese time words ("hôm nay", "tối nay") are lowercased mid-sentence in code.
+- **Wording rules from the Vietnamese review:** a watch is never mentioned next to an active warning for the same hazard; heat index ("feels like") only when it's at least 5°F above the air temperature; flood alerts must use firm wording, never "avoid": Spanish "Nunca camine ni maneje por agua de inundación", Vietnamese "Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập". Vietnamese time words ("hôm nay", "tối nay") are lowercased mid-sentence in code. Spanish NWS level names are checked in code: Warning "Aviso", Watch "Vigilancia", Advisory "Advertencia", each only when that level is active. Replayed over 113 Spanish messages from earlier eval runs, this check flagged 9, all real errors: 8 advisories called "Aviso", and 1 warning called "Advertencia".
 - **One zone per run:** the agent can only query or alert the zone under review.
 - **Bounded runs:** at most 8 model calls per run. Reasoning text is never fed back into the conversation; tested live, Baseten tool calling works without it.
 
@@ -152,8 +152,17 @@ python scripts/collect_local.py --monitor                   # real data for moni
 
 1. **Symptom guardrail (no model call).** Questions about symptoms, illness, medicine, pregnancy or chronic conditions, in all 7 languages, get a fixed, pre-written answer: call 911 in an emergency, otherwise a doctor or clinic. The model never sees them. Over-matching is the safe direction: "pesticide" in Chinese (农药) contains "medicine" (药) and gets the fixed answer too.
 2. **Grounded context.** The zone's latest snapshot (if under 2 hours old; otherwise a fresh one built on demand, so Ask works in zones nobody has subscribed to yet), the alerts ClimateGuard sent there, and 4 official guidance excerpts. The guidance corpus is English, so common words in the 7 languages are mapped to English search terms.
-3. **One model call**, told to answer only from that context in up to 4 short sentences. It never invents cooling centers, shelters, addresses or phone numbers; it suggests 211 instead. Vietnamese and Spanish answers get the reviewed wording rules.
+3. **One model call**, told to answer only from that context in up to 4 short sentences. It never names cooling centers, shelters, addresses or phone numbers, and never writes 211 itself. Vietnamese and Spanish answers get the reviewed wording rules.
+   - **211 is a fixed sentence written in code:** "To find a cooling center or shelter near you, call 211 or check your county's website", reviewed in EN/ES/VI. It's added when the question asks for a place (cooling center, shelter, where to go, in all 7 languages), or when the model marks its answer `[211]`. Any 211 sentence the model writes itself is removed.
+   - **Not added to plain "I don't know" answers:** live, a cooling-center sentence after "Will there be a tornado next month?" read wrong.
 4. **The answer is checked again.** Medical wording in any language replaces it with the fixed symptom answer. Mask advice when masks wouldn't help (no smoke, dust or ash) replaces it with a fallback. When someone asks about masks on such a day, a fixed sentence is added: "A mask won't help with the air here right now: N95 masks only filter smoke, dust or ash, not ozone."
+
+**Voice questions.** The mic button records the question. The browser converts it to a 16 kHz mono WAV, the only format the API takes, and posts it to `POST /transcribe?lang=` (`transcribe.py`). That calls Muse Voice Transcribe (`POST /v1/asr/transcribe`) with a language bias for the person's language plus English. The text goes into the question box, where the person can check and fix it before tapping Ask, so Ask and all its guardrails only ever see text.
+- Measured: a 4.4 s question takes 2.6–3.3 s.
+- Cost: $0.18 per hour of audio, about $0.0002 per question, logged in the usage log like model calls.
+- Limits: 60 s of audio; 30 recordings per IP per hour.
+
+**Read aloud** uses the phone's own voices (Web Speech API), because the Meta Model API has no text-to-speech model. Answers and alert cards get a read-aloud button only when the phone has a voice for that language. Desktop browsers often have no Vietnamese or Tagalog voice, so the button is hidden there rather than reading in the wrong voice.
 
 Every answer shows the place and time of the data it used, and its official sources. Limits: 20 questions per IP per hour; over the $5/day model budget, Ask returns the fallback message.
 
@@ -335,6 +344,8 @@ python scripts/run_eval.py edge_prompt_injection real_flood_warning
   | `GET /languages` | Supported alert languages |
   | `POST /subscribe {email, lang, zip or lat+lon}` | Sign-up (double opt-in) |
   | `GET /decisions?zone=&days=&limit=` | The live agent's real decisions + daily counters (public) |
+| `POST /ask {question, lang, zone}` | Answer a question from live data (Ask Lambda) |
+| `POST /transcribe?lang=` (body: WAV) | Spoken question → text (Ask Lambda) |
 
 ## Deploy (AWS SAM), step by step
 
@@ -392,6 +403,7 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass   # if scripts are bl
 .\deploy.ps1 -Contact you@example.com                         # preflight + sam build + sam deploy
 .\deploy.ps1 -Contact you@example.com -FrontendUrl https://<app>.vercel.app   # once the frontend is live
 ```
+CORS always allows `http://localhost:5173` and `http://localhost:5174` for local dev, plus `FrontendUrl`. `FrontendUrl` is also the link in alert emails, so every later deploy must pass `-FrontendUrl` again; without it, it goes back to localhost.
 The preflight checks three things, without creating anything:
 1. **Every permission the stack needs** in us-east-2: CloudFormation, S3, IAM, Lambda, DynamoDB, SNS, Scheduler, API Gateway, Logs and SSM.
 2. **That both SSM keys exist.**

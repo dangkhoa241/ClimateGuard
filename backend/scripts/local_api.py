@@ -3,6 +3,7 @@
 Uses local storage and NOTIFY_MODE=dryrun (sign-ups/alerts go to backend/.local/outbox.jsonl).
 Usage: python scripts/local_api.py
 """
+import base64
 import json
 import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -22,6 +23,7 @@ ROUTES = [  # (method, regex, routeKey)
     ("POST", r"^/subscribe$", "POST /subscribe"),
     ("GET", r"^/decisions$", "GET /decisions"),
     ("POST", r"^/ask$", "POST /ask"),  # its own Lambda in AWS (handlers/ask.py)
+    ("POST", r"^/transcribe$", "POST /transcribe"),  # same Lambda as /ask
 ]
 CORS = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type"}
@@ -44,11 +46,14 @@ class Handler(BaseHTTPRequestHandler):
             match = re.match(pattern, path)
             if m == method and match:
                 length = int(self.headers.get("Content-Length") or 0)
+                raw = self.rfile.read(length) if length else b""
+                binary = route == "POST /transcribe"  # audio: base64, as API Gateway sends it
                 event = {"routeKey": route, "pathParameters": match.groupdict(),
                          "queryStringParameters": {k: v[0] for k, v in parse_qs(query).items()} or None,
-                         "body": self.rfile.read(length).decode("utf-8") if length else None,
+                         "body": (base64.b64encode(raw).decode() if binary else raw.decode("utf-8")) if raw else None,
+                         "isBase64Encoded": binary,
                          "requestContext": {"http": {"sourceIp": self.client_address[0]}}}
-                r = (ask.handler if route == "POST /ask" else handler)(event, None)
+                r = (ask.handler if route in ("POST /ask", "POST /transcribe") else handler)(event, None)
                 return self._send(r["statusCode"], r["headers"], r["body"])
         self._send(404, {"Content-Type": "application/json"}, json.dumps({"error": "not found"}))
 

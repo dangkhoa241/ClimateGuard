@@ -94,7 +94,9 @@ Write-Host "`n[1/4] Template parameters"
 # Origins are compared exactly (API Gateway rejects duplicates), so normalize before deciding.
 $FrontendUrl = $FrontendUrl.Trim().TrimEnd("/").ToLowerInvariant()
 $tpl = Get-Content (Join-Path $PSScriptRoot "template.yaml") -Raw
-$localDev = if ($tpl -match "LocalDevOrigin:\s*\r?\n\s*Type: String\s*\r?\n\s*Default:\s*(\S+)") { $Matches[1].ToLowerInvariant() } else { "http://localhost:5173" }
+$localDev = @([regex]::Matches($tpl, "LocalDevOrigin2?:\s*\r?\n\s*Type: String\s*\r?\n\s*Default:\s*(\S+)") |
+    ForEach-Object { $_.Groups[1].Value.ToLowerInvariant() })
+if (-not $localDev) { $localDev = @("http://localhost:5173", "http://localhost:5174") }
 if ($FrontendUrl -notmatch "^https?://[a-z0-9.-]+(:\d{1,5})?$") {
     Report "FrontendUrl" "FAIL" "'$FrontendUrl' must be a bare origin like https://app.vercel.app (no path)"
 }
@@ -102,7 +104,7 @@ elseif ($tpl -notmatch "CorsConfiguration: !If\s*\r?\n\s*- FrontendIsLocalDev") 
     Report "CORS AllowOrigins" "FAIL" "template.yaml lost the FrontendIsLocalDev condition; origins could be duplicated"
 }
 else {
-    $origins = if ($FrontendUrl -eq $localDev) { @($FrontendUrl) } else { @($FrontendUrl, $localDev) }
+    $origins = if ($localDev -contains $FrontendUrl) { $localDev } else { @($FrontendUrl) + $localDev }
     $dupes = $origins | Group-Object | Where-Object { $_.Count -gt 1 } | ForEach-Object { $_.Name }
     if ($dupes) { Report "CORS AllowOrigins" "FAIL" "duplicate origin(s): $($dupes -join ', ')" }
     else { Report "CORS AllowOrigins" "OK" ($origins -join ", ") }

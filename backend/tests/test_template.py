@@ -22,11 +22,17 @@ def transformed():
     return transform(tpl, {}, _PolicyLoader())
 
 
+def _true(cond, params):
+    if "Fn::Or" in cond:
+        return any(_true(c, params) for c in cond["Fn::Or"])
+    a, b = (params[x["Ref"]] if isinstance(x, dict) else x for x in cond["Fn::Equals"])
+    return a == b
+
+
 def _resolve(value, params, conditions):
     if isinstance(value, dict) and "Fn::If" in value:
         cond, yes, no = value["Fn::If"]
-        a, b = (params[x["Ref"]] if isinstance(x, dict) else x for x in conditions[cond]["Fn::Equals"])
-        return _resolve(yes if a == b else no, params, conditions)
+        return _resolve(yes if _true(conditions[cond], params) else no, params, conditions)
     if isinstance(value, list):
         return [_resolve(v, params, conditions) for v in value]
     if isinstance(value, dict) and set(value) == {"Ref"}:
@@ -36,15 +42,17 @@ def _resolve(value, params, conditions):
     return value
 
 
-@pytest.mark.parametrize("frontend", ["http://localhost:5173", "https://example-demo.vercel.app"])
+@pytest.mark.parametrize("frontend", ["http://localhost:5173", "http://localhost:5174",
+                                      "https://example-demo.vercel.app"])
 def test_cors_origins_never_duplicated(transformed, frontend):
     api = next(r for r in transformed["Resources"].values() if r["Type"] == "AWS::ApiGatewayV2::Api")
     cors = _resolve(api["Properties"]["Body"]["x-amazon-apigateway-cors"],
-                    {"FrontendUrl": frontend, "LocalDevOrigin": "http://localhost:5173"},
+                    {"FrontendUrl": frontend, "LocalDevOrigin": "http://localhost:5173",
+                     "LocalDevOrigin2": "http://localhost:5174"},
                     transformed["Conditions"])
     origins = cors["allowOrigins"]
     assert len(origins) == len(set(origins)) and frontend in origins
-    assert "http://localhost:5173" in origins
+    assert {"http://localhost:5173", "http://localhost:5174"} <= set(origins)
     assert cors["allowMethods"] == ["GET", "POST", "OPTIONS"]  # SAM must not drop the rest of the block
 
 

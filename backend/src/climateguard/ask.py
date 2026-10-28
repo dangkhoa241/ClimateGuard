@@ -104,8 +104,8 @@ MASK_NOTE = {
     "en": "A mask won't help with the air here right now: N95 masks only filter smoke, dust or ash, not ozone.",
     "es": "Ahora una mascarilla no ayuda con el aire de aquí: las mascarillas N95 solo filtran humo, polvo o "
           "ceniza, no el ozono.",
-    "vi": "Hiện tại khẩu trang không giúp ích với không khí ở đây: khẩu trang N95 chỉ lọc khói, bụi hoặc tro, "
-          "không lọc được khí ôzôn.",
+    "vi": "Hôm nay khẩu trang không giúp bảo vệ bạn khỏi ô nhiễm không khí ở đây: khẩu trang N95 chỉ lọc được "
+          "khói, bụi hoặc tro, không lọc được khí ôzôn.",
     "zh": "目前戴口罩对这里的空气没有帮助：N95 口罩只能过滤烟雾、灰尘或灰烬，不能过滤臭氧。",
     "tl": "Hindi makakatulong ang mask sa hangin dito ngayon: ang N95 mask ay sumasala lang ng usok, alikabok o "
           "abo, hindi ng ozone.",
@@ -113,6 +113,37 @@ MASK_NOTE = {
           "걸러 주지 못합니다.",
     "ar": "الكمامة لن تساعد مع الهواء هنا الآن: كمامات N95 تنقّي الدخان والغبار والرماد فقط، وليس الأوزون.",
 }
+
+# Places to go (cooling centers, shelters): ClimateGuard has no list of them, so a fixed, reviewed sentence
+# points to 211. Added when the question asks for a place, or when the model marks the answer with [211]
+# (it saw a place request the regex missed). The model never writes 211 itself: its own 211 sentences are
+# removed. Not added to plain "I don't know" answers: a cooling-center sentence after "will there be a
+# tornado next month?" reads wrong (seen live).
+HELP_211 = {
+    "en": "To find a cooling center or shelter near you, call 211 or check your county's website.",
+    "es": "Para encontrar un centro de enfriamiento o un refugio cerca de usted, llame al 211 o visite el sitio "
+          "web de su condado (county).",
+    "vi": "Để tìm trung tâm làm mát hoặc nơi trú ẩn gần bạn, hãy gọi 211 hoặc xem trang web của quận (county).",
+    "zh": "要查找您附近的避暑中心或避难所，请拨打 211 或查看您所在县（county）的网站。",
+    "tl": "Para makahanap ng cooling center o silungan malapit sa inyo, tumawag sa 211 o tingnan ang website ng "
+          "inyong county.",
+    "ko": "가까운 무더위 쉼터나 대피소를 찾으려면 211에 전화하거나 카운티(county) 웹사이트를 확인하세요.",
+    "ar": "للعثور على مركز تبريد أو مأوى قريب منك، اتصل بالرقم 211 أو راجع الموقع الإلكتروني لمقاطعتك (county).",
+}
+PLACE_QUESTION = re.compile(
+    r"cooling cent|shelter|where (can|should|do) (i|we) go|where to go|address|phone number|\bclinic|"
+    r"centros? de enfriamiento|refugio|albergue|d[oó]nde (puedo|podemos|ir|hay)|direcci[oó]n|tel[eé]fono|"
+    r"trung tâm làm mát|nơi trú|chỗ trú|trú ẩn|(chỗ|nơi) (nào )?(mát|có máy lạnh)|đi đâu|ở đâu|địa chỉ|số điện thoại|"
+    r"避暑|纳凉|避难|庇护|去哪|哪里|地址|电话|silungan|evacuation cent|saan (ako|kami|pupunta|may)|"
+    r"쉼터|대피소|어디|주소|전화번호|مركز تبريد|ملجأ|مأوى|أين|عنوان|رقم هاتف", re.IGNORECASE)
+MARK_211 = "[211]"
+_SENTENCE = re.compile(r"[^.!?。！？؟\n]*(?:[.!?。！？؟]+|\n|$)")
+
+
+def _drop_211_sentences(text: str) -> str:
+    """Remove sentences the model wrote about 211 (the fixed sentence replaces them)."""
+    return "".join(s for s in _SENTENCE.findall(text) if "211" not in s).strip()
+
 
 # The guidance corpus is English: map common words in the 7 languages to English search terms.
 TOPICS = {
@@ -129,9 +160,9 @@ TOPICS = {
 SYSTEM_PROMPT = """You are ClimateGuard's assistant for farmworkers, outdoor workers and immigrant families in the United States.
 Answer in {language}, in at most 4 short, simple sentences that a non-expert understands. No abbreviations or jargon.
 Rules:
-- Use ONLY the DATA and GUIDANCE in the user message. If they don't answer the question, say you don't know and suggest calling 211 or checking the county website.
+- Use ONLY the DATA and GUIDANCE in the user message. If they don't answer the question, say you don't know.
 - Protective actions only. Never give medical advice: no symptoms, diagnoses, treatment or medicines. For health worries: 911 in an emergency, otherwise a doctor or clinic.
-- Never invent places, addresses or phone numbers (cooling centers, shelters, clinics). For those, say to call 211 or check the county website.
+- Never name places, addresses or phone numbers (cooling centers, shelters, clinics), and never write 211 yourself. If they ask where to go, end with the line [211]: a fixed sentence about 211 replaces it.
 - N95 masks help only against smoke, dust or ash (particles), never against ozone. Only mention masks if DATA says masks_help is true; otherwise don't mention masks at all (a fixed note about masks is added for you).
 - ClimateGuard does not send Tornado, Flash Flood, Severe Thunderstorm or Extreme Wind warnings: for those, point to Wireless Emergency Alerts on the phone and NOAA Weather Radio.
 - Temperatures in °F. Say how recent the data is if it matters (DATA gives the time).
@@ -142,7 +173,7 @@ LANG_RULES = {
     "vi": ("Vietnamese wording: NWS Warning = \"Cảnh báo\", Watch = \"Cảnh giác\", Advisory = \"Khuyến cáo\". "
            "Air quality from the AQI value: 101-150 \"có hại cho nhóm nhạy cảm\", 151-200 \"có hại cho sức khỏe\", "
            "201-300 \"rất có hại cho sức khỏe\", 301+ \"nguy hiểm cho sức khỏe\". Times after midnight: \"rạng sáng [weekday]\"."),
-    "es": "Spanish: use \"usted\". Outdoor work timing: \"temprano en la mañana o al anochecer\", never \"en la tarde\".",
+    "es": "Spanish: use \"usted\". NWS Warning = \"Aviso\", Watch = \"Vigilancia\", Advisory = \"Advertencia\". Outdoor work timing: \"temprano en la mañana o al anochecer\", never \"en la tarde\".",
 }
 
 
@@ -273,8 +304,11 @@ def answer(question: str, lang: str, zone_id: str) -> dict:
         return done({"kind": "symptom", "answer": SYMPTOM_ANSWER[lang], "blocked": "medical_wording"})
     if guardrails.mentions_mask(text) and not context["air"]["masks_help"]:
         return done({"kind": "fallback", "answer": FALLBACK_ANSWER[lang], "blocked": "mask_without_particles"})
-    if guardrails.mentions_mask(question) and not context["air"]["masks_help"]:
-        text = f"{text}\n{MASK_NOTE[lang]}"
+    wants_211 = MARK_211 in text or bool(PLACE_QUESTION.search(question))
+    text = "\n".join(p for p in (
+        _drop_211_sentences(text.replace(MARK_211, "")),
+        MASK_NOTE[lang] if guardrails.mentions_mask(question) and not context["air"]["masks_help"] else "",
+        HELP_211[lang] if wants_211 else "") if p)
     if ref and (first := timeref.note(ref, lang)):
         text = f"{first}\n{text}"  # written in code, never by the model
     lap("check")

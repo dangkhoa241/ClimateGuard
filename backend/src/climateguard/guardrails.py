@@ -115,6 +115,30 @@ def vi_level_issue(text: str, events: list[str]) -> str | None:
             + ("" if have else "; with no NWS alert, name no alert level"))
 
 
+# Spanish NWS level names (NWS's own Spanish products): Warning "Aviso", Watch "Vigilancia",
+# Advisory "Advertencia". Each name only when that level is active: "Advertencia de inundación" for a
+# Flood Warning would understate it, "Aviso" for a watch would overstate it.
+ES_LEVEL = {"Warning": "Aviso", "Watch": "Vigilancia", "Advisory": "Advertencia"}
+_ES_LEVEL_WORD = {"Warning": re.compile(r"\baviso\b(?<!nuevo aviso)(?<!previo aviso)", re.IGNORECASE),
+                  "Watch": re.compile(r"\bvigilancia\b", re.IGNORECASE),
+                  "Advisory": re.compile(r"\badvertencia\b", re.IGNORECASE)}
+
+
+def es_level_issue(text: str, events: list[str]) -> str | None:
+    """`events`: active NWS events for the alert's hazard. Each level name only when that level is active."""
+    active = {"Warning": any(is_warning_level(e) for e in events),
+              "Watch": any("Watch" in e for e in events), "Advisory": any("Advisory" in e for e in events)}
+    wrong = [k for k, rx in _ES_LEVEL_WORD.items() if rx.search(text) and not active[k]]
+    if not wrong:
+        return None
+    have = ", ".join(f'{e} = "{ES_LEVEL[k]}"' for e in events for k in ES_LEVEL
+                     if (is_warning_level(e) if k == "Warning" else k in e))
+    return (f'Spanish alert level: the message says "{ES_LEVEL[wrong[0]]}" (NWS {wrong[0]}), but no {wrong[0]} '
+            f'is active for this hazard' + (f" ({have})" if have else " (no NWS alert at all)")
+            + '. Use NWS Spanish names: Warning = "Aviso", Watch = "Vigilancia", Advisory = "Advertencia"'
+            + ("" if have else "; with no NWS alert, name no alert level"))
+
+
 def vi_past_morning_issue(text: str, hour_now: int) -> str | None:
     """After noon, "sáng nay" is already past: a time after midnight is "rạng sáng [weekday]"."""
     if hour_now >= 12 and "sáng nay" in _vi(text):

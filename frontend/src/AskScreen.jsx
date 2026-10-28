@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
-import { askQuestion } from './api.js'
+import { useEffect, useRef, useState } from 'react'
+import { askQuestion, transcribeAudio } from './api.js'
 import LocationPicker from './LocationPicker.jsx'
+import ReadAloud from './ReadAloud.jsx'
+import { canRecord, startRecording } from './voice.js'
 
 const MAX_CHARS = 500
 // The API can't stream (API Gateway HTTP API), so progress is shown in steps. Data takes well under a
@@ -18,10 +20,64 @@ function useAskStep(active) {
   return step
 }
 
-function Answer({ result, t }) {
+// Mic button: tap to record, tap again to stop. The text lands in the question box to check first.
+function VoiceInput({ lang, t, onText, disabled }) {
+  const [state, setState] = useState('idle') // idle | recording | working
+  const [error, setError] = useState(null)
+  const [secs, setSecs] = useState(0)
+  const recRef = useRef(null)
+
+  useEffect(() => {
+    if (state !== 'recording') return undefined
+    setSecs(0)
+    const id = setInterval(() => setSecs((s) => s + 1), 1000)
+    return () => clearInterval(id)
+  }, [state])
+
+  async function finish() {
+    setState('working')
+    try {
+      const wav = await recRef.current.stop()
+      const { text } = await transcribeAudio(wav, lang)
+      if (text) onText(text)
+      else setError('no_speech')
+    } catch (err) {
+      setError(err.code || 'transcribe_failed')
+    }
+    recRef.current = null
+    setState('idle')
+  }
+
+  async function toggle() {
+    if (state === 'recording') return finish()
+    setError(null)
+    try {
+      recRef.current = await startRecording({ onAutoStop: finish })
+      setState('recording')
+    } catch (err) {
+      setError(err.message === 'mic_denied' ? 'mic_denied' : 'default')
+    }
+    return undefined
+  }
+
+  if (!canRecord()) return null
+  return (
+    <div className="voice">
+      <button type="button" className={`mic ${state}`} onClick={toggle} disabled={disabled || state === 'working'}
+        aria-pressed={state === 'recording'}>
+        <span aria-hidden="true">{state === 'recording' ? '■' : '🎤'}</span>{' '}
+        {state === 'recording' ? `${t.voiceStop} (${secs}s)` : state === 'working' ? t.voiceWorking : t.voiceSpeak}
+      </button>
+      {error && <p className="notice error" role="alert">{t.errors[error] || t.errors.default}</p>}
+    </div>
+  )
+}
+
+function Answer({ result, lang, t }) {
   return (
     <article className="answer" aria-live="polite">
       <p className="answer-text">{result.answer}</p>
+      <ReadAloud text={result.answer} lang={lang} t={t} />
       {result.data_time_local && (
         <p className="muted small">{t.askDataFrom.replace('{place}', result.place).replace('{time}', result.data_time_local)}</p>
       )}
@@ -46,6 +102,7 @@ export default function AskScreen({ lang, t, zone, setZone }) {
   const [status, setStatus] = useState('idle') // idle | asking | done | error
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
+  const [fromVoice, setFromVoice] = useState(false)
   const step = useAskStep(status === 'asking')
   const stepText = [t.askStepData, t.askStepWriting, t.askStepAlmost][step]
 
@@ -53,6 +110,7 @@ export default function AskScreen({ lang, t, zone, setZone }) {
     e.preventDefault()
     setStatus('asking')
     setError(null)
+    setFromVoice(false)
     try {
       setResult(await askQuestion({ question: question.trim(), lang, zone: zone.zone }))
       setStatus('done')
@@ -77,6 +135,9 @@ export default function AskScreen({ lang, t, zone, setZone }) {
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
           />
+          <VoiceInput lang={lang} t={t} disabled={status === 'asking'}
+            onText={(text) => { setQuestion(text.slice(0, MAX_CHARS)); setFromVoice(true) }} />
+          {fromVoice && question && <p className="muted small">{t.voiceCheck}</p>}
           {status === 'error' && (
             <p className="notice error" role="alert">{t.errors[error] || t.errors.default}</p>
           )}
@@ -92,7 +153,7 @@ export default function AskScreen({ lang, t, zone, setZone }) {
           )}
         </form>
       )}
-      {status === 'done' && result && <Answer result={result} t={t} />}
+      {status === 'done' && result && <Answer result={result} lang={lang} t={t} />}
       <p className="muted small">{t.askNotMedical}</p>
     </>
   )
