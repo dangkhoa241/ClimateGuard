@@ -1,5 +1,7 @@
 # ClimateGuard
 
+[![Offline tests](https://github.com/dangkhoa241/ClimateGuard/actions/workflows/offline-tests.yml/badge.svg)](https://github.com/dangkhoa241/ClimateGuard/actions/workflows/offline-tests.yml)
+
 **Free heat, smoke, flood and storm alerts in your own language, and help with the paperwork after a disaster.** Built for farmworkers, outdoor workers and immigrant families in the United States. Stockton, California is the first area.
 
 - **Live app:** https://climate-guard-khaki.vercel.app
