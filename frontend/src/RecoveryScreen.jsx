@@ -19,8 +19,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const SAMPLES = [
   { id: 'storm', disaster: 'storm', credit: 'Greg Henshall / FEMA, Greensburg, Kansas, 2007',
     source: 'https://commons.wikimedia.org/wiki/File:FEMA_-_30163_-_Tornado_damaged_home_in_Kansas.jpg' },
-  { id: 'flood', disaster: 'flood', credit: 'U.S. Fish and Wildlife Service',
-    source: 'https://commons.wikimedia.org/wiki/File:Flooded_house_interior.jpg' },
+  { id: 'flood', disaster: 'flood', credit: 'Liz Roll / FEMA, Liberty, Kentucky, 2010',
+    source: 'https://commons.wikimedia.org/wiki/File:FEMA_-_44499_-_Liberty_Kentucky_water_damage.jpg' },
   { id: 'fire', disaster: 'wildfire', credit: 'Susie Shapira / FEMA, Pauma, California, 2007',
     source: 'https://commons.wikimedia.org/wiki/File:FEMA_-_33504_-_debris_from_a_burned_home_in_California.jpg' },
   { id: 'earthquake', disaster: 'earthquake', credit: 'J.K. Nakata / U.S. Geological Survey, Watsonville, California, 1989',

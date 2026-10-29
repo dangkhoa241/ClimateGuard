@@ -200,7 +200,7 @@ The demo's sample photos are US government works in the public domain, from Wiki
 | Photo | Credit | Source |
 |---|---|---|
 | Storm | Greg Henshall / FEMA, Greensburg, Kansas, 2007 | [FEMA 30163](https://commons.wikimedia.org/wiki/File:FEMA_-_30163_-_Tornado_damaged_home_in_Kansas.jpg) |
-| Flood | U.S. Fish and Wildlife Service | [Flooded house interior](https://commons.wikimedia.org/wiki/File:Flooded_house_interior.jpg) |
+| Flood | Liz Roll / FEMA, Liberty, Kentucky, 2010 (water line from the Green River flood) | [FEMA 44499](https://commons.wikimedia.org/wiki/File:FEMA_-_44499_-_Liberty_Kentucky_water_damage.jpg) |
 | Fire | Susie Shapira / FEMA, Pauma, California, 2007 (cropped to leave out a bystander) | [FEMA 33504](https://commons.wikimedia.org/wiki/File:FEMA_-_33504_-_debris_from_a_burned_home_in_California.jpg) |
 | Earthquake | J.K. Nakata / USGS, Watsonville, California, 1989 | [089srUSGSoffFoundation](https://commons.wikimedia.org/wiki/File:089srUSGSoffFoundation.jpg) |
 
