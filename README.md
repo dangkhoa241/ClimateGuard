@@ -19,7 +19,11 @@ Open the [demo](https://climate-guard-khaki.vercel.app/?demo=1) on your phone. P
 
 ## The problem
 
-Most official warnings are written in English. Many farmworkers and immigrant families miss them, or get them too late to act.
+This project started with a worry close to home. My aunt kept asking whether her daughter, a college student in Los Angeles, had water on hot days, a raincoat when it rained and a jacket when it was windy. Forecast apps give numbers, but she wanted a plain message about what to do. I built a [weather pipeline](https://github.com/dangkhoa241/us-weather-pipeline) for that, and ClimateGuard grew from it: alerts that tell you what to do, in the language you read best, for everyone in the community.
+
+ClimateGuard was built from scratch during the hackathon (Oct 26 to Nov 4, 2026); the earlier project is only where the idea started.
+
+Most official warnings are written in English. Farmworkers and immigrant families can miss them, or get them too late to act.
 
 In **September 2022**, Stockton was under an Excessive Heat Warning from Sept 4 to 9 and tied its all-time record of 115°F on Sept 6. That same day the county air quality index reached 208. In **January 2023**, floods in Merced County forced Planada to evacuate on Jan 10. These are real events, and the demo replays them. After a disaster like this, people also have to prove their damage to an insurer or FEMA, often in a second language.
 
@@ -143,10 +147,15 @@ The same diagram is in [docs/architecture.mmd](docs/architecture.mmd). It is not
 
 ## Engineering depth
 
-- **Evaluation.** The alert agent is tested on 34 cases (36 steps): 11 real archived moments, 9 hard judgment cases written without looking at the agent's rules, and 14 edge cases (including a prompt injection hidden in NWS text). Ask has its own check on real questions, recovery has 6 trick cases, and a **back-translation check** has a second model translate every Spanish and Vietnamese alert back to English to flag changes in meaning. **Final eval numbers: to be added after the final eval.** Earlier development runs and the bugs they found are in [docs/TECHNICAL.md](docs/TECHNICAL.md).
+- **Evaluation.** The alert agent is tested on 34 cases (36 steps): 11 real archived moments, 9 hard judgment cases written without looking at the agent's rules, and 14 edge cases (including a prompt injection hidden in NWS text). Ask has its own check on real questions, recovery has 6 trick cases, and a **back-translation check** has a second model translate every Spanish and Vietnamese alert back to English to flag changes in meaning. **Final eval, run once on Oct 28, 2026 (standard models, fresh samples):**
+  - **Alert agent: 35 of 36 steps passed** (real 11/11, edge 16/16, hard 8/9). No medical wording in 38/38 sent messages, Vietnamese written with accents 38/38, no mask advice without smoke 28/28, zero model calls on the 5 pre-filter cases. $0.0131 per alert, median 8.4 s per run. The one failure: `hard_warning_vs_mild_data`, where the warning text says 110°F but our data shows 82°F. The agent trusted the data and skipped; a person could reasonably want the opposite.
+  - **Ask: 8 of 8 passed**, median 2.4 s.
+  - **Recovery: 6 of 6 trick cases passed** (injected instructions, cost and medicine bait, a renter question), $0.046 for all six.
+  - **Back-translation: 54 of 62 Spanish and Vietnamese alerts kept the English meaning.** The 8 flagged: 4 are Vietnamese "chỉ" ("only") wording, 3 are small real changes (a dropped "immediately", "above" became "at", "stay off roads" softened to "limit going out"), and 1 is an end-time wording difference. They are flagged for a human, not scored.
+  - Earlier development runs and the bugs they found are in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 - **Tests.** 507 backend tests and 24 frontend tests, all offline.
 - **Cost logging.** Every model call goes through one wrapper that requires a token limit, caches repeats for an hour, and logs tokens and cost. The usage log drives the **$5/day budget**: over it, the alert agent runs only for areas with an active NWS Warning, and Ask, recovery and demo replays degrade to fixed or saved answers.
-- **Measured cost** (Oct 2026): about **$0.012 per alert** (3 to 6 model calls); about **$0.003 per Ask answer** ($0.02 to $0.03 when it searches the web for shelters); about **$0.004 per pre-shift talk**; about **$0.0002 per voice question**; about **$0.01 per recovery report with 1 photo and $0.07 with 6**. So far the whole project has used about $1.5 of the $150 Meta credit and $1.90 of the $100 Baseten credit. The demo's "How it works" strip shows the live total.
+- **Measured cost** (Oct 2026): about **$0.013 per alert** (4 to 6 model calls); about **$0.003 per Ask answer** ($0.02 to $0.03 when it searches the web for shelters); about **$0.004 per pre-shift talk**; about **$0.0002 per voice question**; about **$0.01 per recovery report with 1 photo and $0.07 with 6**. Total model spend so far, from our usage logs (development, evals and the live site, including the final eval): about **$2.12 of the $150 Meta credit and $2.33 of the $100 Baseten credit**, about $4.45 together. AWS is $0 on the Free plan. The demo's "How it works" strip shows the live total.
 - **AWS.** One SAM template in **us-east-2**: Lambda, DynamoDB, EventBridge Scheduler, SNS, S3, API Gateway, SSM. It stays inside the AWS Free plan, so AWS costs about $0. `deploy.ps1` checks permissions and free-tier capacity before every deploy.
 - **Bugs the tests found, now fixed:** missing accents in Spanish and Vietnamese, an ozone alert that told people to wear an N95, a model request that hung for 19 minutes (now a hard 60 s limit), and a collector permission that left the history counters at zero.
 
@@ -154,7 +163,7 @@ The same diagram is in [docs/architecture.mmd](docs/architecture.mmd). It is not
 
 - **Not for minutes-long warnings.** See above. Alerts are email only (no SMS), so they depend on someone checking email. The first confirmation email comes from AWS, in English.
 - **Spanish has no human reviewer yet,** and Vietnamese was reviewed for style, not every sentence. The newest Spanish and Vietnamese text (recovery, demo) was drafted with AI and is waiting for review (`docs/recovery-text-es-vi.md`).
-- **Chinese, Tagalog, Korean and Arabic are machine-translated.** The newest screens (recovery, demo) show English in those four languages until the screen-text translation is rerun.
+- **Chinese, Tagalog, Korean and Arabic are machine-translated,** screens and alerts, and labeled as such. The text was checked in code (same keys, same placeholders, 911/211/N95 unchanged) but no native speaker has read it.
 - **The agent is not deterministic.** The same data can give a different judgment on another run. In development, a few hard cases flipped between runs. The back-translation check is a flag for review, not proof of meaning, and was itself wrong on 5 of 13 flags in one run.
 - **Replays use observed weather,** because archived NWS forecasts do not exist. The agent sees "perfect forecasts" in a replay.
 - **Recovery is approximate.** The AI can misread a photo. SAM outlines cover a box, not exact pixels, and small items are dropped. It is one home, up to 6 photos, no video. It is not an estimate and not an inspection.
@@ -197,4 +206,4 @@ Data: NWS (alerts, forecasts), EPA AirNow, Open-Meteo, the IEM archives (replays
 
 ## License
 
-The SAM mask-decoding code in `backend/src/climateguard/sam_mask.py` is ported from the `meta-sam-parser` project; see [LICENSE-SAM](LICENSE-SAM). A license for the rest of the code has not been chosen yet.
+The project code is under the [MIT License](LICENSE). The SAM mask-decoding code in `backend/src/climateguard/sam_mask.py` is ported from the `meta-sam-parser` project and keeps its own terms: see [LICENSE-SAM](LICENSE-SAM).

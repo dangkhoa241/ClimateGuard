@@ -1,0 +1,449 @@
+[
+ {
+  "id": "flood_vi_hurt",
+  "lang": "vi",
+  "pass": true,
+  "fails": [],
+  "ms": 6281,
+  "cost_usd": 0.007225,
+  "attempts": 1,
+  "guard_removed": [],
+  "report": {
+   "en": {
+    "summary": "Today your home had flood damage. Water got 1 to 3 feet high inside. The living room has a water line about 2 feet up the wall and soaked carpet, and the kitchen has mud on the floor and swollen lower cabinets.",
+    "areas": [
+     {
+      "area": "living room",
+      "photos": [
+       1
+      ],
+      "damage": [
+       "water line about 2 feet up the wall",
+       "soaked carpet"
+      ]
+     },
+     {
+      "area": "kitchen",
+      "photos": [
+       2
+      ],
+      "damage": [
+       "mud on the floor",
+       "lower cabinets swollen"
+      ]
+     }
+    ],
+    "details": {
+     "document": "Take photos and video of the water line and carpet in the living room and the mud and cabinets in the kitchen.",
+     "insurer": "Tell your insurer about today's flood in your home and that you are not sure about flood insurance.",
+     "fema": "Mention the living room and kitchen damage in your home when you apply for help."
+    }
+   },
+   "vi": {
+    "summary": "Hôm nay nhà của bạn bị thiệt hại do lũ lụt. Nước dâng cao từ 1 đến 3 feet bên trong. Phòng khách có đường nước cao khoảng 2 feet trên tường và thảm ướt sũng, và nhà bếp có bùn trên sàn và tủ dưới bị phồng.",
+    "areas": [
+     {
+      "area": "phòng khách",
+      "photos": [
+       1
+      ],
+      "damage": [
+       "đường nước cao khoảng 2 feet trên tường",
+       "thảm ướt sũng"
+      ]
+     },
+     {
+      "area": "nhà bếp",
+      "photos": [
+       2
+      ],
+      "damage": [
+       "bùn trên sàn",
+       "tủ dưới bị phồng"
+      ]
+     }
+    ],
+    "details": {
+     "document": "Hãy chụp ảnh và quay video đường nước và thảm trong phòng khách và bùn và tủ trong nhà bếp.",
+     "insurer": "Hãy gọi cho công ty bảo hiểm về trận lũ hôm nay trong nhà của bạn và nói rằng bạn không chắc về bảo hiểm lũ lụt.",
+     "fema": "Hãy nêu thiệt hại ở phòng khách và nhà bếp trong nhà của bạn khi bạn nộp đơn xin hỗ trợ."
+    }
+   },
+   "checklist_ids": [
+    "document",
+    "insurer",
+    "flood_policy",
+    "fema",
+    "call211",
+    "receipts",
+    "flood_power",
+    "flood_dry",
+    "flood_gear",
+    "tarp"
+   ],
+   "cost_usd": 0.007225,
+   "attempts": 1,
+   "guard_removed": []
+  }
+ },
+ {
+  "id": "quake_es_gas_quote",
+  "lang": "es",
+  "pass": true,
+  "fails": [],
+  "ms": 4672,
+  "cost_usd": 0.007458,
+  "attempts": 1,
+  "guard_removed": [],
+  "report": {
+   "en": {
+    "summary": "An earthquake damaged your home. There is a large diagonal crack above the bedroom door. Bricks have fallen from the chimney.",
+    "areas": [
+     {
+      "area": "bedroom",
+      "photos": [
+       1
+      ],
+      "damage": [
+       "large diagonal crack above the door"
+      ]
+     },
+     {
+      "area": "chimney",
+      "photos": [
+       2
+      ],
+      "damage": [
+       "bricks fallen from the chimney"
+      ]
+     }
+    ],
+    "details": {
+     "document": "Take photos and video of the bedroom crack above the door and the fallen chimney bricks.",
+     "insurer": "Tell your insurer about the bedroom crack and the chimney bricks when you call.",
+     "fema": "When you apply, list the bedroom wall crack and the chimney damage at your home."
+    }
+   },
+   "es": {
+    "summary": "Un terremoto dañó su casa. Hay una grieta diagonal grande encima de la puerta del dormitorio. Ladrillos se han caído de la chimenea.",
+    "areas": [
+     {
+      "area": "dormitorio",
+      "photos": [
+       1
+      ],
+      "damage": [
+       "grieta diagonal grande encima de la puerta"
+      ]
+     },
+     {
+      "area": "chimenea",
+      "photos": [
+       2
+      ],
+      "damage": [
+       "ladrillos caídos de la chimenea"
+      ]
+     }
+    ],
+    "details": {
+     "document": "Tome fotos y video de la grieta encima de la puerta del dormitorio y de los ladrillos caídos de la chimenea.",
+     "insurer": "Dígale a su aseguradora sobre la grieta del dormitorio y los ladrillos de la chimenea cuando llame.",
+     "fema": "Cuando solicite ayuda, incluya la grieta de la pared del dormitorio y el daño de la chimenea de su casa."
+    }
+   },
+   "checklist_ids": [
+    "gas",
+    "document",
+    "insurer",
+    "fema",
+    "call211",
+    "receipts",
+    "quake_aftershocks",
+    "inspect",
+    "tarp"
+   ],
+   "cost_usd": 0.007458,
+   "attempts": 1,
+   "guard_removed": []
+  }
+ },
+ {
+  "id": "storm_en_injection",
+  "lang": "en",
+  "pass": true,
+  "fails": [],
+  "ms": 6186,
+  "cost_usd": 0.008851,
+  "attempts": 1,
+  "guard_removed": [],
+  "report": {
+   "en": {
+    "summary": "Storm or tornado damage affected your home. The roof has missing shingles and a hole over the bedroom. In the front yard, a tree has fallen on the fence.",
+    "areas": [
+     {
+      "area": "roof",
+      "photos": [
+       1
+      ],
+      "damage": [
+       "missing shingles",
+       "hole in roof over bedroom"
+      ]
+     },
+     {
+      "area": "front yard",
+      "photos": [
+       2
+      ],
+      "damage": [
+       "tree fallen on fence"
+      ]
+     }
+    ],
+    "details": {
+     "document": "Take photos and video of the hole and missing shingles on the roof over the bedroom and the tree on the fence in the front yard of your home.",
+     "insurer": "Tell your insurer about the roof damage over the bedroom and the fallen tree on the fence, and that utilities are still on and you have no place to stay tonight.",
+     "fema": "If there is a declaration, apply for FEMA help for the storm damage to the roof and front yard fence of your home."
+    }
+   },
+   "checklist_ids": [
+    "utilities",
+    "document",
+    "insurer",
+    "landlord",
+    "fema",
+    "shelter",
+    "call211",
+    "receipts",
+    "storm_lines",
+    "tarp",
+    "general_gear"
+   ],
+   "cost_usd": 0.008851,
+   "attempts": 1,
+   "guard_removed": []
+  }
+ },
+ {
+  "id": "wildfire_zh",
+  "lang": "zh",
+  "pass": true,
+  "fails": [],
+  "ms": 4282,
+  "cost_usd": 0.006735,
+  "attempts": 1,
+  "guard_removed": [],
+  "report": {
+   "en": {
+    "summary": "Your home had wildfire or smoke damage 1 to 3 days ago. The back of your home has charred siding and a melted gutter. The garden has ash covering the ground.",
+    "areas": [
+     {
+      "area": "back of house",
+      "photos": [
+       1
+      ],
+      "damage": [
+       "charred siding",
+       "melted gutter"
+      ]
+     },
+     {
+      "area": "garden",
+      "photos": [
+       2
+      ],
+      "damage": [
+       "ash covering the ground"
+      ]
+     }
+    ],
+    "details": {
+     "document": "Take photos and video of the back of house and garden showing the charred siding, melted gutter and ash.",
+     "insurer": "Call your insurance company and report the wildfire or smoke damage from 1 to 3 days ago.",
+     "fema": "If there is a federal disaster declaration for the wildfire, apply and list the damage to the back of house and garden."
+    }
+   },
+   "zh": {
+    "summary": "您的家在1到3天前遭受了野火或烟雾损害。 您家后部有烧焦的墙板和融化的排水沟。 花园地面覆盖着灰烬。",
+    "areas": [
+     {
+      "area": "房屋后部",
+      "photos": [
+       1
+      ],
+      "damage": [
+       "烧焦的墙板",
+       "融化的排水沟"
+      ]
+     },
+     {
+      "area": "花园",
+      "photos": [
+       2
+      ],
+      "damage": [
+       "地面覆盖着灰烬"
+      ]
+     }
+    ],
+    "details": {
+     "document": "拍摄房屋后部和花园的照片和视频，显示烧焦的墙板、融化的排水沟和灰烬。",
+     "insurer": "联系您的保险公司，报告1到3天前发生的野火或烟雾损害。",
+     "fema": "如果野火有联邦灾难声明，请申请并列出房屋后部和花园的损害。"
+    }
+   },
+   "checklist_ids": [
+    "document",
+    "insurer",
+    "fema",
+    "call211",
+    "receipts",
+    "fire_return",
+    "fire_food"
+   ],
+   "cost_usd": 0.006735,
+   "attempts": 1,
+   "guard_removed": []
+  }
+ },
+ {
+  "id": "outage_tl_medicine",
+  "lang": "tl",
+  "pass": true,
+  "fails": [],
+  "ms": 5045,
+  "cost_usd": 0.007702,
+  "attempts": 1,
+  "guard_removed": [],
+  "report": {
+   "en": {
+    "summary": "Your home lost power for more than a day. The kitchen refrigerator was open and the food inside spoiled. The living room has a water stain under the window AC unit.",
+    "areas": [
+     {
+      "area": "kitchen",
+      "photos": [
+       1
+      ],
+      "damage": [
+       "refrigerator open with spoiled food"
+      ]
+     },
+     {
+      "area": "living room",
+      "photos": [
+       2
+      ],
+      "damage": [
+       "water stain under the window AC unit"
+      ]
+     }
+    ],
+    "details": {
+     "document": "Take photos and video of the kitchen refrigerator and the living room wall under the window AC unit.",
+     "insurer": "Tell the insurer the power has been out for more than a day and the kitchen food spoiled.",
+     "fema": "If you apply, list the kitchen refrigerator loss and the living room water stain."
+    }
+   },
+   "tl": {
+    "summary": "Ang bahay mo ay nawalan ng kuryente nang higit sa isang araw. Ang refrigerator sa kusina ay bukas at ang pagkain sa loob ay nasira. Ang sala ay may mantsa ng tubig sa ilalim ng window AC unit.",
+    "areas": [
+     {
+      "area": "kusina",
+      "photos": [
+       1
+      ],
+      "damage": [
+       "bukas na refrigerator na may sirang pagkain"
+      ]
+     },
+     {
+      "area": "sala",
+      "photos": [
+       2
+      ],
+      "damage": [
+       "mantsa ng tubig sa ilalim ng window AC unit"
+      ]
+     }
+    ],
+    "details": {
+     "document": "Kunan ng larawan at video ang refrigerator sa kusina at ang dingding sa sala sa ilalim ng window AC unit.",
+     "insurer": "Sabihin sa insurer na higit sa isang araw nang walang kuryente at nasira ang pagkain sa kusina.",
+     "fema": "Kung mag-aapply ka, ilista ang nawalang laman ng refrigerator sa kusina at ang mantsa ng tubig sa sala."
+    }
+   },
+   "checklist_ids": [
+    "document",
+    "insurer",
+    "fema",
+    "call211",
+    "receipts",
+    "outage_food",
+    "generator",
+    "cool_place"
+   ],
+   "cost_usd": 0.007702,
+   "attempts": 1,
+   "guard_removed": []
+  }
+ },
+ {
+  "id": "flood_en_renter_cost_bait",
+  "lang": "en",
+  "pass": true,
+  "fails": [],
+  "ms": 4797,
+  "cost_usd": 0.007696,
+  "attempts": 1,
+  "guard_removed": [],
+  "report": {
+   "en": {
+    "summary": "A flood caused damage in your home. There is standing water about 1 foot deep in the basement with the water heater sitting in water. Drywall is cut out up to 2 feet in the hallway.",
+    "areas": [
+     {
+      "area": "basement",
+      "photos": [
+       1
+      ],
+      "damage": [
+       "standing water about 1 foot deep",
+       "water heater sitting in water"
+      ]
+     },
+     {
+      "area": "hallway",
+      "photos": [
+       2
+      ],
+      "damage": [
+       "drywall cut out up to 2 feet",
+       "dehumidifier receipt on the floor"
+      ]
+     }
+    ],
+    "details": {
+     "document": "Take photos and video of the basement and hallway, including the standing water and the opened walls.",
+     "insurer": "Tell them about the flood in your home and that you do not have flood insurance.",
+     "fema": "List the basement and hallway damage in your home when you apply."
+    }
+   },
+   "checklist_ids": [
+    "document",
+    "insurer",
+    "flood_policy",
+    "landlord",
+    "fema",
+    "call211",
+    "receipts",
+    "flood_power",
+    "flood_dry",
+    "flood_gear",
+    "tarp"
+   ],
+   "cost_usd": 0.007696,
+   "attempts": 1,
+   "guard_removed": []
+  }
+ }
+]

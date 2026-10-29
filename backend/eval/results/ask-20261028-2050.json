@@ -1,0 +1,130 @@
+[
+ {
+  "effort": "minimal",
+  "id": "vi_field_6am_2pm",
+  "lang": "vi",
+  "question": "Ngày mai tôi làm ngoài đồng từ sáu giờ sáng đến hai giờ chiều, tôi nên chuẩn bị gì?",
+  "answer": "Sáng thứ Năm lúc 6 giờ trời mát khoảng 51°F (11°C), rồi ấm dần lên 66°F (19°C) lúc 2 giờ chiều.\nTrời có mù nhẹ rồi nhiều mây, gió rất nhẹ và không mưa.\nHãy mặc nhiều lớp áo dài tay để cởi bớt khi trời ấm lên, và đội mũ rộng vành.\nHãy mang đủ nước uống, nghỉ ngơi trong bóng râm, đeo kính mát và bôi kem chống nắng.",
+  "passed": true,
+  "fails": [],
+  "ms": 5278,
+  "model_ms": 3686,
+  "tokens": {
+   "in": 3866,
+   "out": 529,
+   "reasoning": 431
+  },
+  "cost_usd": 0.007081
+ },
+ {
+  "effort": "minimal",
+  "id": "en_work_afternoon",
+  "lang": "en",
+  "question": "Is it safe to work outside this afternoon?",
+  "answer": "Yes, it should be safe to work outside Thursday afternoon.\nIt will be cloudy with 62°F to 68°F and very light wind.\nAir quality will be Moderate but okay for most outdoor work.\nDrink water often and take breaks as you need them.",
+  "passed": true,
+  "fails": [],
+  "ms": 2978,
+  "model_ms": 2958,
+  "tokens": {
+   "in": 3142,
+   "out": 368,
+   "reasoning": 307
+  },
+  "cost_usd": 0.005491
+ },
+ {
+  "effort": "minimal",
+  "id": "es_clothes_early",
+  "lang": "es",
+  "question": "¿Qué ropa debo llevar mañana temprano para trabajar en el campo?",
+  "answer": "Mañana temprano hará fresco, cerca de 51°F (11°C) con bruma y sin lluvia.\nUse varias capas de ropa suelta que usted pueda quitarse cuando caliente el día.\nUse gorra y guantes para el frío de la mañana.\nLleve ropa seca de cambio y descanse en un lugar seco y con techo.",
+  "passed": true,
+  "fails": [],
+  "ms": 1402,
+  "model_ms": 1384,
+  "tokens": {
+   "in": 3241,
+   "out": 298,
+   "reasoning": 222
+  },
+  "cost_usd": 0.005318
+ },
+ {
+  "effort": "minimal",
+  "id": "vi_air_tomorrow",
+  "lang": "vi",
+  "question": "Chất lượng không khí ngày mai thế nào?",
+  "answer": "Ngày mai chất lượng không khí ở mức trung bình, với chỉ số là 58.\nHãy làm việc nhẹ hơn và nghỉ nhiều hơn ngoài trời nếu bạn dễ bị mệt vì không khí kém.",
+  "passed": true,
+  "fails": [],
+  "ms": 1636,
+  "model_ms": 1614,
+  "tokens": {
+   "in": 3440,
+   "out": 351,
+   "reasoning": 303
+  },
+  "cost_usd": 0.005792
+ },
+ {
+  "effort": "minimal",
+  "id": "en_repair_tomorrow",
+  "lang": "en",
+  "question": "Do I need to repair anything for tomorrow?",
+  "answer": "No, you do not need to repair anything for tomorrow.\nTomorrow will be cool to mild from 51°F to 68°F with clouds and no rain.\nWind will be very light and air will be okay.\nThere is nothing to fix or secure because of the weather.\nYou can keep windows closed in morning haze and air out your home later.",
+  "passed": true,
+  "fails": [],
+  "ms": 1499,
+  "model_ms": 1484,
+  "tokens": {
+   "in": 3196,
+   "out": 342,
+   "reasoning": 261
+  },
+  "cost_usd": 0.005449
+ },
+ {
+  "effort": "minimal",
+  "id": "vi_field_style",
+  "lang": "vi",
+  "question": "Sáng mai tôi làm ngoài đồng từ 6 giờ sáng đến 2 giờ chiều, cần mặc gì và mang theo gì?",
+  "answer": "Sáng thứ Năm lúc 6 giờ trời mát khoảng 51°F (11°C), rồi ấm dần lên 66°F (19°C) lúc 2 giờ chiều.\nTrời có mù nhẹ rồi nhiều mây, gió rất nhẹ và không mưa, không khí ở mức vừa phải.\nHãy mặc nhiều lớp áo dài tay, đội mũ rộng vành, đeo kính mát và mang theo mũ len và găng tay cho buổi sáng lạnh.\nHãy mang đủ nước uống, nghỉ ngơi trong bóng râm và bôi kem chống nắng.",
+  "passed": true,
+  "fails": [],
+  "ms": 1795,
+  "model_ms": 1775,
+  "tokens": {
+   "in": 3871,
+   "out": 388,
+   "reasoning": 279
+  },
+  "cost_usd": 0.005659
+ },
+ {
+  "effort": "minimal",
+  "id": "en_cooling_place",
+  "lang": "en",
+  "question": "Where can I go to cool off today?",
+  "answer": "Here are official cooling locations near Stockton but both sources are from before 2025:\n\nArnold Rue Community Center: 5758 Lorraine Ave., Stockton 95210, Monday - Thursday, 9:00 a.m. to 8:00 p.m.\nStribley Community Center: 1760 E. Sonora St., Stockton 95205, Monday - Thursday, 9:00 a.m. to 8:00 p.m.\nVan Buskirk Community Center: 734 Houston Ave., Stockton 95206, Monday - Thursday, 9:00 a.m. to 8:00 p.m.\n\nCity of Stockton release published June 20, 2024 and San Joaquin County list updated 8/16/21 so please call ahead to confirm today.\nOpenings and hours change: call 211 or the place before you go.",
+  "passed": true,
+  "fails": [],
+  "ms": 10306,
+  "model_ms": null,
+  "tokens": null,
+  "cost_usd": 0.044512
+ },
+ {
+  "effort": "minimal",
+  "id": "vi_cooling_place",
+  "lang": "vi",
+  "question": "Gần Stockton có trung tâm làm mát nào không?",
+  "answer": "Đây là các trung tâm làm mát chính thức gần Stockton:\nArnold Rue Community Center: 5758 Lorraine Ave., during regular business hours\nStribley Community Center: 1760 E. Sonora St., during regular business hours\nVan Buskirk Community Center: 734 Houston Ave., during regular business hours\nNguồn từ City of Stockton, cập nhật lần cuối 08/18/2026\nGiờ mở cửa có thể thay đổi: hãy gọi 211 hoặc gọi cho nơi đó trước khi đến.",
+  "passed": true,
+  "fails": [],
+  "ms": 15066,
+  "model_ms": null,
+  "tokens": null,
+  "cost_usd": 0.016844
+ }
+]
