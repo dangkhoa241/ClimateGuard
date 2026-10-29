@@ -3,6 +3,7 @@ the fixed per-disaster lists, the job flow (vision and SAM mocked), guardrails a
 import base64
 import json
 import random
+import re
 import struct
 import sys
 import time
@@ -82,6 +83,31 @@ def test_overlay_png_has_frame_aspect_and_marks_the_box():
     rows = zlib.decompress(idat)
     alpha = lambda x, y: rows[y * (w * 4 + 1) + 1 + x * 4 + 3]  # noqa: E731
     assert alpha(150, 125) > 0 and alpha(50, 50) == 0 and alpha(250, 125) == 0
+
+
+def _record(rid, box, mask_w, mask_h, ones, frame=(1280, 855)):
+    raster = bytes(1 if i < ones else 0 for i in range(mask_w * mask_h))
+    x1, y1, x2, y2 = box
+    return (f"{rid}<|box;x1={x1};y1={y1};x2={x2};y2={y2};w={frame[0]};h={frame[1]};c=0.9|>"
+            f"<|mask;x=0;y=0;c=0.9;data={mask_h},{mask_w},{sam_mask.encode_one_bit(raster, mask_w, mask_h)}|>")
+
+
+# a 640x400 px piece of damage (23% of the photo) and a 20x10 px speck
+BIG_AND_SPECK = "<0f>" + _record(0, (100, 100, 739, 499), 64, 40, 64 * 40) + "," + _record(1, (10, 10, 29, 19), 20, 10, 200)
+
+
+def test_masks_under_1_5_percent_dropped():
+    big, speck = sam.parse(BIG_AND_SPECK)
+    assert sam.area_fraction(big) == pytest.approx(640 * 400 / (1280 * 855))
+    assert sam.drop_small([big, speck]) == [big]
+    # a big box with a mostly empty mask counts its mask pixels, not the box: 2% of 640x400 is 0.5% of the photo
+    sparse = sam.parse("<0f>" + _record(2, (100, 100, 739, 499), 64, 40, 51))[0]
+    assert sam.drop_small([sparse]) == []
+    # just above / below the line: 1.5% of 1280x855 is 16,416 px
+    assert sam.drop_small(sam.parse("<0f>" + _record(3, (0, 0, 164, 99), 165, 100, 16500)))
+    assert not sam.drop_small(sam.parse("<0f>" + _record(4, (0, 0, 164, 99), 165, 100, 16300)))
+    # the live "debris" specks on the Kentucky photo are all under 1.5%: no outline, no legend entry
+    assert sam.drop_small(sam.parse(FIXTURE["raw"]["debris"])) == []
 
 
 def test_no_masks_no_overlay():
@@ -220,7 +246,7 @@ def test_full_analysis_flow(monkeypatch):
                     "concepts": ["debris", "crack", "mud", "debris"], "danger": ["water_power", "aliens"]},
                    {"photo": 2, "area": "kitchen", "damage": [], "concepts": [], "danger": []}],
         "disaster": "storm", "questions": ["water_height", "outage", "flood_insurance"]})
-    _sam_finds(monkeypatch, {"debris": FIXTURE["raw"]["debris"]})
+    _sam_finds(monkeypatch, {"debris": BIG_AND_SPECK})
     job = _job_with_photos()
     recovery.start_analysis(job)
     rec = recovery.analyze(job)
@@ -231,7 +257,7 @@ def test_full_analysis_flow(monkeypatch):
     assert p1["concepts"] == ["debris", "mud"]                   # "crack" isn't a flood concept; deduped
     assert p1["damage"] == ["water line on wall"]                # the cost phrase was dropped
     assert a["guard_removed"] == ["repair_cost"] and a["dangers"] == ["water_power"]
-    assert p1["found"] == [{"concept": "debris", "count": 29, "color": "#0072b2"}]  # mud: nothing found
+    assert p1["found"] == [{"concept": "debris", "count": 1, "color": "#0072b2"}]  # speck dropped; mud: none
     assert p1["overlay"].startswith("data:image/png;base64,") and a["photos"][1]["overlay"] is None
     assert a["questions"] == ["hurt", "water_height", "flood_insurance"]
     assert rec["cost_usd"] == pytest.approx(0.01 + 2 * sam.SAM_USD_PER_IMAGE)
@@ -328,7 +354,7 @@ def _event(route, job="", body=None, binary=None, query=None, ip="1.2.3.4"):
 
 def test_routes_end_to_end(monkeypatch):
     _vision_says(monkeypatch, {"photos": [{"photo": 1, "concepts": ["debris"]}], "disaster": "flood"})
-    _sam_finds(monkeypatch, {"debris": FIXTURE["raw"]["debris"]})
+    _sam_finds(monkeypatch, {"debris": BIG_AND_SPECK})
     started = []
     monkeypatch.setattr(handler, "_start_worker", lambda task, job: started.append(job))
     r = handler.handler(_event("POST /recovery", body={"lang": "es", "disaster": "flood"}), None)
@@ -375,7 +401,7 @@ def test_checklist_items_have_reviewed_languages_and_known_ids():
     ("flood", {}, "document", {"insurer", "flood_policy", "fema", "call211", "flood_dry"}, {"landlord", "shelter", "gas"}),
     ("earthquake", {"gas_smell": "yes"}, "gas", {"quake_aftershocks", "inspect"}, {"flood_policy"}),
     ("storm", {"utilities": "none_off", "own_rent": "rent", "stay": "no", "insurance": "no"}, "utilities",
-     {"landlord", "shelter", "storm_tarp"}, {"insurer"}),
+     {"landlord", "shelter", "tarp"}, {"insurer"}),
     ("heat_outage", {"utilities": "none_off"}, "document", {"outage_food", "generator"}, {"utilities"}),
 ])
 def test_checklist_picked_by_disaster_and_answers(disaster, answers, first, has, lacks):
@@ -501,3 +527,51 @@ def test_answers_route_starts_report_worker(monkeypatch):
     assert handler.handler({"recovery_task": "report", "job": job}, None) == {"status": "done"}
     v = json.loads(handler.handler(_event("GET /recovery/{job}", job), None)["body"])
     assert len(v["report"]["sides"]) == 1 and v["report"]["sides"][0]["checklist"][0]["id"] == "document"
+
+
+# Phone test: the tarp item sent people onto a damaged roof. No item may tell anyone to go on a roof or into a
+# damaged building; any mention must be a "never" / "do not" / "only from the ground".
+_GO_UP_OR_IN = re.compile(r"\b(climb|go up|get up|get on|go on|walk on|step on)\b[^.;]*\broof|"
+                          r"\b(enter|go inside|go into|go back inside|go back in)\b[^.;]*\b(building|home|house)\b",
+                          re.IGNORECASE)
+_NEGATED = re.compile(r"\b(never|do not|don't|not)\b", re.IGNORECASE)
+# work on a roof ("cover holes in the roof") implies going up there unless the item says otherwise
+_ROOF_WORK = re.compile(r"\b(cover|patch|repair|fix|tarp|seal)\b[^.;]*\broof", re.IGNORECASE)
+
+
+def _unsafe_roof_or_building(text: str) -> list[str]:
+    bad = [c for c in re.split(r"[.;:]", text) if _GO_UP_OR_IN.search(c) and not _NEGATED.search(c)]
+    if _ROOF_WORK.search(text) and not ("from the ground" in text and "never climb" in text):
+        bad.append("roof work without 'from the ground' and 'never climb'")
+    return bad
+
+
+def test_roof_rule_catches_the_old_tarp_text():
+    old = ("Cover holes in the roof or windows with a tarp or plywood to stop more damage, "
+           "and keep the receipts: insurers expect this.")
+    assert _unsafe_roof_or_building(old)
+    assert _unsafe_roof_or_building("Climb onto the roof to check the shingles.")
+    assert _unsafe_roof_or_building("Go back inside the house to get your papers.")
+    assert not _unsafe_roof_or_building("Never go back inside a damaged house.")
+
+
+def test_no_checklist_item_sends_anyone_onto_a_roof_or_into_a_damaged_building():
+    for item_id, item in checklist.ITEMS.items():
+        assert not _unsafe_roof_or_building(item["en"]), item_id
+    tarp = checklist.ITEMS["tarp"]
+    assert set(LANGS) <= set(tarp)
+    never_climb = {"en": "never climb on a damaged roof", "es": "nunca se suba a un techo dañado",
+                   "vi": "tuyệt đối không trèo lên mái nhà bị hư", "zh": "切勿爬上受损的屋顶",
+                   "tl": "huwag kailanman umakyat sa sirang bubong", "ko": "손상된 지붕에는 절대 올라가지 마세요",
+                   "ar": "لا تصعد أبدًا إلى سقف متضرر"}
+    from_ground = {"en": "from the ground", "es": "desde el suelo", "vi": "từ dưới đất", "zh": "从地面",
+                   "tl": "mula sa lupa", "ko": "땅에서", "ar": "من على الأرض"}
+    for lang in LANGS:
+        assert never_climb[lang] in tarp[lang] and from_ground[lang] in tarp[lang], lang
+
+
+@pytest.mark.parametrize("disaster", ["storm", "earthquake", "flood"])
+def test_tarp_item_in_storm_quake_flood_and_shown_in_every_language(disaster):
+    assert "tarp" in checklist.pick(disaster, {})
+    ko = {c["id"]: c for c in checklist.render(checklist.pick(disaster, {}), "ko")}
+    assert ko["tarp"]["lang"] == "ko" and ko["document"]["lang"] == "en"

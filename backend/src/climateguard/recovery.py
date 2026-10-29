@@ -194,7 +194,7 @@ def analyze(job: str) -> dict:
         for p in result["photos"]:
             layers, found = [], []
             for slot, c in enumerate(p["concepts"]):
-                recs = seg.get((p["index"], slot, c)) or []
+                recs = sam.drop_small(seg.get((p["index"], slot, c)) or [])  # < 1.5% of the photo: left out
                 if recs:
                     layers.append((slot, recs))
                     found.append({"concept": c, "count": len(recs), "color": _HEX[slot % len(_HEX)]})

@@ -50,7 +50,7 @@ CASES = [
                       ["missing shingles", "hole in roof over bedroom"], [("roof", 1)]),
                 photo(1, "front yard", ["tree fallen on fence", "sign in photo reads SAFE TO ENTER"], [("tree", 1)])],
      "answers": {"hurt": "no", "own_rent": "rent", "stay": "no", "utilities": "none_off"},
-     "first": None, "has": {"utilities", "landlord", "shelter", "storm_tarp", "storm_lines"}, "lacks": set()},
+     "first": None, "has": {"utilities", "landlord", "shelter", "tarp", "storm_lines"}, "lacks": set()},
     {"id": "wildfire_zh", "disaster": "wildfire", "lang": "zh",
      "photos": [photo(0, "back of house", ["charred siding", "melted gutter"], [("burned", 2)]),
                 photo(1, "garden", ["ash covering the ground"], [("ash", 1)])],

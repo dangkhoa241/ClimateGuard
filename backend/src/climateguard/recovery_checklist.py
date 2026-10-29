@@ -81,10 +81,16 @@ ITEMS = {
         "en": "Stay away from fallen power lines and anything touching them, and call the power company.",
         "es": "Aléjese de los cables eléctricos caídos y de todo lo que los toque, y llame a la compañía de luz.",
         "vi": "Tránh xa dây điện bị đứt và mọi thứ đang chạm vào chúng, và gọi công ty điện."},
-    "storm_tarp": {
-        "en": "Cover holes in the roof or windows with a tarp or plywood to stop more damage, and keep the receipts: insurers expect this.",
-        "es": "Cubra los hoyos del techo o las ventanas con una lona o madera para evitar más daños, y guarde los recibos: las aseguradoras lo esperan.",
-        "vi": "Hãy che các lỗ thủng trên mái hoặc cửa sổ bằng bạt hoặc ván ép để tránh hư hại thêm, và giữ hóa đơn: công ty bảo hiểm cần điều này."},
+    # Phone test (Oct 28): the old text sent people onto a damaged roof. All 7 languages, because this one
+    # must never be read in the wrong language.
+    "tarp": {
+        "en": "Cover holes in the roof or windows with a tarp or plywood to stop more damage, but only if it is safe, from the ground; never climb on a damaged roof. If you can't do it safely, skip it and photograph the damage. Keep the receipts.",
+        "es": "Cubra los hoyos del techo o las ventanas con una lona o madera para evitar más daños, pero solo si es seguro y desde el suelo; nunca se suba a un techo dañado. Si no puede hacerlo sin peligro, no lo haga y tome fotos de los daños. Guarde los recibos.",
+        "vi": "Hãy che các lỗ thủng trên mái hoặc cửa sổ bằng bạt hoặc ván ép để tránh hư hại thêm, nhưng chỉ khi an toàn và làm từ dưới đất; tuyệt đối không trèo lên mái nhà bị hư. Nếu không làm được một cách an toàn, hãy bỏ qua và chụp ảnh thiệt hại. Giữ lại hóa đơn.",
+        "zh": "只有在安全的情况下，才从地面用防水布或胶合板遮盖屋顶或窗户的破洞，以防损坏扩大；切勿爬上受损的屋顶。如果无法安全完成，请跳过这一步，并拍照记录损坏情况。保留好收据。",
+        "tl": "Takpan ng tarpaulin o plywood ang mga butas sa bubong o bintana para hindi lumala ang pinsala, pero kung ligtas lang at mula sa lupa; huwag kailanman umakyat sa sirang bubong. Kung hindi ito magagawa nang ligtas, laktawan ito at kunan ng larawan ang pinsala. Itago ang mga resibo.",
+        "ko": "피해가 커지지 않도록 지붕이나 창문의 구멍을 방수포나 합판으로 덮으세요. 단, 안전할 때만 땅에서 하세요. 손상된 지붕에는 절대 올라가지 마세요. 안전하게 할 수 없다면 건너뛰고 피해를 사진으로 찍으세요. 영수증은 보관하세요.",
+        "ar": "غطِّ الثقوب في السقف أو النوافذ بقماش مشمّع أو خشب رقائقي لمنع مزيد من الضرر، ولكن فقط إذا كان ذلك آمنًا ومن على الأرض؛ لا تصعد أبدًا إلى سقف متضرر. إذا لم تستطع فعل ذلك بأمان، فتجاوز هذه الخطوة وصوّر الضرر. احتفظ بالإيصالات."},
     "outage_food": {
         "en": "Food: a fridge keeps food cold about 4 hours and a full freezer about 48 hours if the doors stay closed. Throw away perishable food that was above 40°F for 2 hours or more.",
         "es": "Comida: el refrigerador mantiene la comida fría unas 4 horas y un congelador lleno unas 48 horas si las puertas quedan cerradas. Tire la comida perecedera que estuvo a más de 40°F (4°C) por 2 horas o más.",
@@ -104,10 +110,10 @@ ITEMS = {
 }
 
 CLEANUP = {
-    "flood": ["flood_power", "flood_dry", "flood_gear"],
+    "flood": ["flood_power", "flood_dry", "flood_gear", "tarp"],
     "wildfire": ["fire_return", "fire_food"],
-    "earthquake": ["gas", "quake_aftershocks", "inspect"],
-    "storm": ["storm_lines", "storm_tarp", "general_gear"],
+    "earthquake": ["gas", "quake_aftershocks", "inspect", "tarp"],
+    "storm": ["storm_lines", "tarp", "general_gear"],
     "heat_outage": ["outage_food", "generator", "cool_place"],
     "other": ["general_gear"],
 }
@@ -138,8 +144,12 @@ def pick(disaster: str, answers: dict) -> list[str]:
 
 
 def render(ids: list[str], lang: str, details: dict | None = None) -> list[dict]:
-    """[{id, text, detail}] in `lang` (English for languages without a written checklist)."""
-    use = lang if lang in REVIEWED else "en"
+    """[{id, text, lang, detail}] in `lang`; English for languages without a written checklist, except items
+    written in every language (the tarp item)."""
     details = details or {}
-    return [{"id": i, "text": ITEMS[i][use], "detail": details.get(i) if ITEMS[i].get("detail") else None}
-            for i in ids]
+    out = []
+    for i in ids:
+        use = lang if lang in REVIEWED or lang in ITEMS[i] else "en"
+        out.append({"id": i, "text": ITEMS[i][use], "lang": use,
+                    "detail": details.get(i) if ITEMS[i].get("detail") else None})
+    return out

@@ -85,6 +85,26 @@ def _png(width: int, height: int, rgba: bytes) -> bytes:
             + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
 
 
+MIN_AREA_FRACTION = 0.015  # phone test: dozens of specks of "debris" cluttered the photo and the legend
+
+
+def area_fraction(r: dict) -> float:
+    """Share of the photo the mask covers (mask pixels scaled from the mask raster to its box)."""
+    mh, mw, payload = r["mask"]
+    x1, y1, x2, y2 = r["box"]
+    try:
+        ones = sum(sam_mask.decode_one_bit(payload, mw, mh))
+    except sam_mask.MaskError:
+        return 0.0
+    box_px = max(x2 - x1 + 1, 1) * max(y2 - y1 + 1, 1)
+    return ones * box_px / (mw * mh) / max(r["w"] * r["h"], 1)
+
+
+def drop_small(records: list[dict], min_fraction: float = MIN_AREA_FRACTION) -> list[dict]:
+    """Masks covering less than `min_fraction` of the photo are left out of the overlay and the legend."""
+    return [r for r in records if area_fraction(r) >= min_fraction]
+
+
 def overlay_png(layers: list[tuple[int, list[dict]]], frame_w: int, frame_h: int) -> bytes | None:
     """`layers`: (color slot, records) per concept. Returns a PNG with the frame's aspect ratio, or None if
     empty. Each mask raster covers its own box (origin 0,0 = the box's top-left corner), as measured live:
