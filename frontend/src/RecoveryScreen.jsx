@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import {
   createRecovery, deleteRecovery, getRecovery, sendRecoveryAnswers, startRecoveryAnalysis, uploadRecoveryPhoto,
 } from './api.js'
-import { STRINGS } from './i18n.js'
 import { preparePhoto } from './photoPrep.js'
-import { deletesAtLine, formatReportDate, reportDateLine } from './reportDate.js'
+import { deletesAtLine } from './reportDate.js'
+import { ResultsView, fill } from './RecoveryReport.jsx'
 
 // Recovery agent: pick the disaster (or let the agent decide), add 1-6 photos, see the damage outlined by
 // SAM 3.1, answer a few questions. The analysis is an async job: start it, then poll every 2 s.
@@ -12,7 +12,6 @@ const DISASTERS = ['flood', 'wildfire', 'earthquake', 'storm', 'heat_outage', 'o
 const MAX_PHOTOS = 6
 const POLL_MS = 2000
 const GIVE_UP_MS = 180000
-const fill = (s, vars) => Object.entries(vars).reduce((out, [k, v]) => out.replaceAll(`{${k}}`, v), s)
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 function DisasterPicker({ t, value, onChange, disabled }) {
@@ -31,96 +30,6 @@ function DisasterPicker({ t, value, onChange, disabled }) {
         </button>
       ))}
     </fieldset>
-  )
-}
-
-function DangerBanner({ lines }) {
-  if (!lines?.length) return null
-  return (
-    <div className="notice error rec-danger" role="alert">
-      <p><strong>{lines[0]}</strong></p>
-      {lines.slice(1).map((l) => <p key={l}>{l}</p>)}
-      <a className="big call911" href="tel:911">911</a>
-    </div>
-  )
-}
-
-function PhotoResult({ t, photo, url, n, outlines }) {
-  return (
-    <figure className="rec-photo">
-      <div className="rec-photo-frame">
-        <img src={url} alt={fill(t.recPhotoN, { n })} />
-        {outlines && photo.overlay && <img className="rec-overlay" src={photo.overlay} alt="" />}
-      </div>
-      <figcaption>
-        <strong>{fill(t.recPhotoN, { n })}</strong>
-        {photo.found.length ? (
-          <ul className="rec-legend">
-            {photo.found.map((f) => (
-              <li key={f.concept}>
-                <span className="swatch" style={{ background: f.color }} aria-hidden="true" />
-                {f.label}{f.count > 1 ? ` (${f.count})` : ''}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <span className="muted small"> {t.recNothingOutlined}</span>
-        )}
-      </figcaption>
-    </figure>
-  )
-}
-
-// Printed at the bottom of every page (position: fixed repeats on each printed page in Chrome, Safari and
-// Firefox): "Not an official damage estimate", the date and the area, in the person's language plus English.
-function PrintFooter({ t, lang, created, place }) {
-  const line = (s, l) => [s.recNotEstimate, formatReportDate(created, l), place].filter(Boolean).join(' · ')
-  return (
-    <div className="print-footer print-only" aria-hidden="true">
-      <span lang={lang}>{line(t, lang)}</span>
-      {lang !== 'en' && <span lang="en" dir="ltr">{line(STRINGS.en, 'en')}</span>}
-    </div>
-  )
-}
-
-// One side of the report: the person's language, or the English copy for the insurer.
-function ReportSide({ t, side, created }) {
-  return (
-    <article className="answer rec-report" lang={side.lang} dir={side.lang === 'ar' ? 'rtl' : 'ltr'}>
-      <h2>{t.recReportTitle}</h2>
-      <p className="muted small">{reportDateLine(t.recReportDate, side.lang, created)} · {side.disaster_label}</p>
-      <p className="rec-not-estimate">{t.recNotEstimate}</p>
-      {side.fallback_en && <p className="muted small">{t.recFallbackEn}</p>}
-      {side.danger_lines.map((l) => <p key={l}><strong>{l}</strong></p>)}
-      <h3>{t.recSummary}</h3>
-      <p>{side.summary}</p>
-      <h3>{t.recAreas}</h3>
-      <ul className="rec-areas">
-        {side.areas.map((a) => (
-          <li key={a.area}>
-            <strong>{a.area}</strong>
-            {a.photos.length > 0 && <span className="muted small"> · {fill(t.recPhotosRef, { list: a.photos.join(', ') })}</span>}
-            <ul>{a.damage.map((d) => <li key={d}>{d}</li>)}</ul>
-          </li>
-        ))}
-      </ul>
-      {side.answers.length > 0 && (
-        <>
-          <h3>{t.recYourAnswers}</h3>
-          <dl className="rec-answers">
-            {side.answers.map((x) => <div key={x.q}><dt>{x.q}</dt><dd>{x.a}</dd></div>)}
-          </dl>
-        </>
-      )}
-      <h3>{t.recNextSteps}</h3>
-      {side.checklist_lang !== side.lang && <p className="muted small">{t.checklistEnglishNote}</p>}
-      <ol className="checklist" lang={side.checklist_lang}>
-        {side.checklist.map((c) => (
-          <li key={c.id} lang={c.lang}>{c.text}{c.detail && <><br /><em>{c.detail}</em></>}</li>
-        ))}
-      </ol>
-      <p className="muted small">{t.recAiNote}</p>
-    </article>
   )
 }
 
@@ -254,7 +163,6 @@ export default function RecoveryScreen({ lang, t, zone }) {
     setPhase('pick')
   }
 
-
   return (
     <>
       {(phase === 'pick' || phase === 'working') && <p>{t.recIntro}</p>}
@@ -308,44 +216,8 @@ export default function RecoveryScreen({ lang, t, zone }) {
       )}
 
       {['results', 'reporting', 'report'].includes(phase) && view && (
-        // print: a CSS table whose empty footer group repeats on every page and keeps text clear of the footer
-        <div className="print-table">
-          <div className="print-body">
-          <DangerBanner lines={view.danger_lines} />
-          {phase === 'report' && view.report && (
-            <>
-              <section className="print-hint no-print">
-                <button className="mid" type="button" onClick={() => window.print()}>{t.recPrintButton}</button>
-                <p className="muted small">{t.recPrintHintDesktop}</p>
-                <p className="muted small">{t.recPrintHintIphone}</p>
-              </section>
-              <PrintFooter t={t} lang={lang} created={view.report.created} place={place} />
-              <ReportSide t={t} side={view.report.sides[0]} created={view.report.created} />
-              {view.report.sides[1] && (
-                <>
-                  {/* on screen: collapsed (the person reads their own language; the insurer gets the English copy) */}
-                  <details className="rec-english no-print">
-                    <summary>{t.recShowEnglish}</summary>
-                    <ReportSide t={STRINGS.en} side={view.report.sides[1]} created={view.report.created} />
-                  </details>
-                  {/* on paper: always printed, on its own page; a closed <details> wouldn't print */}
-                  <div className="print-only page-break">
-                    <ReportSide t={STRINGS.en} side={view.report.sides[1]} created={view.report.created} />
-                  </div>
-                </>
-              )}
-            </>
-          )}
-          <p className="rec-disaster">
-            <strong>{fill(t.recDisasterSeen, { label: view.disaster_label })}</strong>
-            {view.inferred_label && <span className="muted small"> · {fill(t.recInferredNote, { label: view.inferred_label })}</span>}
-          </p>
-          <button className="mid no-print" type="button" aria-pressed={outlines} onClick={() => setOutlines(!outlines)}>
-            {outlines ? t.recHideOutlines : t.recShowOutlines}
-          </button>
-          {view.photos.map((p) => (
-            <PhotoResult key={p.index} t={t} photo={p} url={photos[p.index]?.url} n={p.index + 1} outlines={outlines} />
-          ))}
+        <ResultsView t={t} lang={lang} view={view} showReport={phase === 'report'} place={place}
+                     photoUrls={photos.map((p) => p.url)} outlines={outlines} setOutlines={setOutlines}>
           {phase !== 'report' && (
             <>
               <Questions t={t} questions={view.questions} answers={answers}
@@ -358,9 +230,7 @@ export default function RecoveryScreen({ lang, t, zone }) {
           <p className="muted small">{t.recNotEstimate}</p>
           <p className="muted small">{deletesAtLine(t.recDeletesAt, lang, view.expires_at)}</p>
           <button className="secondary" type="button" onClick={removeAll}>{t.recDeleteNow}</button>
-          </div>
-          <div className="print-space" aria-hidden="true" />
-        </div>
+        </ResultsView>
       )}
     </>
   )

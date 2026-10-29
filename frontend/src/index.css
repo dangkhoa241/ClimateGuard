@@ -252,30 +252,43 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 [dir='rtl'] .rec-english summary::before { transform: scaleX(-1); }
 .rec-english[open] summary::before { transform: rotate(90deg); }
 
-/* Recovery report: print / save as PDF (all 7 languages; Arabic keeps dir="rtl" from <html>) */
-.print-only, .print-space { display: none; }
+/* Recovery report: print / save as PDF (all 7 languages; Arabic keeps dir="rtl" from <html>).
+   On screen the print table is plain blocks and the print-only lines are hidden. */
+.print-table, .print-table > tbody, .print-table > tbody > tr, .print-table > tbody > tr > td { display: block; width: 100%; }
+.print-table { border-collapse: collapse; }
+.print-table td { padding: 0; }
+.print-only, .print-only-group { display: none; }
 .print-hint { margin: 16px 0 0; }
 .print-hint .mid { width: 100%; }
+.list-head { margin-bottom: 0; }
+.list-rest { margin-top: 0; }
+.rec-areas.list-rest > li:first-child, .checklist.list-rest > li:first-child { margin-top: 6px; }
+
 @media print {
-  @page { margin: 14mm 12mm; }
+  @page { margin: 12mm 12mm 14mm; }
   :root { font-size: 11pt; background: #fff; }
   body, .app { background: #fff; max-width: none; padding: 0; margin: 0; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } /* outlines, swatches, danger box */
-  .no-print, button, .lang-picker, .back, .call911, input, details, .app > .muted.small { display: none !important; }
+  .no-print, button, .lang-picker, .back, .call911, input, details, .app > h1, .app > .muted.small { display: none !important; }
   .print-only { display: block; }
+  /* a real table: its <thead> (the disclaimer) repeats at the top of every printed page in Safari and Chrome */
   .print-table { display: table; width: 100%; }
-  .print-body { display: table-row-group; }
-  .print-space { display: table-footer-group; height: 16mm; }
-  .print-footer {
-    position: fixed; bottom: 0; left: 0; right: 0; display: flex; flex-direction: column; gap: 1mm;
-    padding-top: 2mm; border-top: 1px solid #999; background: #fff; font-size: 8.5pt; font-weight: 700; color: #7a1a12;
+  .print-table > thead.print-only-group { display: table-header-group; }
+  .print-table > tbody { display: table-row-group; }
+  .print-table > tbody > tr { display: table-row; }
+  .print-table > tbody > tr > td, .print-table > thead > tr > td { display: table-cell; }
+  .print-disclaimer { margin: 0 0 3mm; padding-bottom: 1.5mm; border-bottom: 1px solid #999; }
+  .print-disclaimer p { margin: 0; font-size: 8.5pt; font-weight: 700; color: #7a1a12; line-height: 1.35; }
+  .page-break { break-before: page; page-break-before: always; }
+  /* keep headings with what follows, questions with answers, items whole (Safari honors break-inside on blocks) */
+  .keep, .rec-answer, .rec-areas li, .checklist li, .rec-danger, .rec-photo {
+    break-inside: avoid; page-break-inside: avoid;
   }
-  .page-break { break-before: page; }
-  h1 { margin-top: 0; }
-  .answer, .rec-report { border: none; padding: 0; background: none; }
-  .rec-report h3, .rec-report h2 { break-after: avoid; }
-  .rec-areas li, .checklist li, .rec-answers div, .rec-danger { break-inside: avoid; }
-  .rec-photo { break-inside: avoid; max-width: 70%; }
-  .rec-overlay { height: 100% !important; }
+  h2, h3, .rec-disaster { break-after: avoid; page-break-after: avoid; }
+  .answer, .rec-report { border: none; padding: 0; margin: 0; background: none; }
+  /* two landscape photos per page; the frame shrinks to the image so the outline overlay still lines up */
+  .rec-photo-frame { display: inline-block; max-width: 100%; }
+  .rec-photo-frame > img:first-child { width: auto; max-width: 100%; max-height: 80mm; }
+  .rec-overlay { width: 100% !important; height: 100% !important; }
   a { color: inherit; text-decoration: none; }
 }
