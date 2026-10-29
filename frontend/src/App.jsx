@@ -101,7 +101,7 @@ export default function App() {
           {screen === 'ask' && <AskScreen lang={lang} t={t} zone={zone} setZone={setZone} />}
           {screen === 'alerts' && <AlertsScreen lang={lang} t={t} zone={zone} setZone={setZone} />}
           {screen === 'supervisor' && <SupervisorScreen lang={lang} t={t} zone={zone} setZone={setZone} />}
-          {screen === 'recovery' && <RecoveryScreen lang={lang} t={t} />}
+          {screen === 'recovery' && <RecoveryScreen lang={lang} t={t} zone={zone} />}
           {screen === 'history' && <HistoryScreen lang={lang} t={t} zone={zone} />}
         </>
       )}

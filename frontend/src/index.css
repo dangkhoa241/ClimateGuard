@@ -251,3 +251,31 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 .rec-english summary::before { content: '▸'; font-size: 1.1rem; transition: transform 0.15s; }
 [dir='rtl'] .rec-english summary::before { transform: scaleX(-1); }
 .rec-english[open] summary::before { transform: rotate(90deg); }
+
+/* Recovery report: print / save as PDF (all 7 languages; Arabic keeps dir="rtl" from <html>) */
+.print-only, .print-space { display: none; }
+.print-hint { margin: 16px 0 0; }
+.print-hint .mid { width: 100%; }
+@media print {
+  @page { margin: 14mm 12mm; }
+  :root { font-size: 11pt; background: #fff; }
+  body, .app { background: #fff; max-width: none; padding: 0; margin: 0; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } /* outlines, swatches, danger box */
+  .no-print, button, .lang-picker, .back, .call911, input, details, .app > .muted.small { display: none !important; }
+  .print-only { display: block; }
+  .print-table { display: table; width: 100%; }
+  .print-body { display: table-row-group; }
+  .print-space { display: table-footer-group; height: 16mm; }
+  .print-footer {
+    position: fixed; bottom: 0; left: 0; right: 0; display: flex; flex-direction: column; gap: 1mm;
+    padding-top: 2mm; border-top: 1px solid #999; background: #fff; font-size: 8.5pt; font-weight: 700; color: #7a1a12;
+  }
+  .page-break { break-before: page; }
+  h1 { margin-top: 0; }
+  .answer, .rec-report { border: none; padding: 0; background: none; }
+  .rec-report h3, .rec-report h2 { break-after: avoid; }
+  .rec-areas li, .checklist li, .rec-answers div, .rec-danger { break-inside: avoid; }
+  .rec-photo { break-inside: avoid; max-width: 70%; }
+  .rec-overlay { height: 100% !important; }
+  a { color: inherit; text-decoration: none; }
+}

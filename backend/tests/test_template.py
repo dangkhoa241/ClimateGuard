@@ -72,7 +72,14 @@ def test_collector_can_write_daily_counters(transformed):
 def test_recovery_photos_private_and_cleaned_up(transformed):
     import json
     bucket = transformed["Resources"]["RecoveryBucket"]["Properties"]
-    assert all(bucket["PublicAccessBlockConfiguration"].values())
+    assert bucket["PublicAccessBlockConfiguration"] == {"BlockPublicAcls": True, "BlockPublicPolicy": True,
+                                                        "IgnorePublicAcls": True, "RestrictPublicBuckets": True}
+    assert not any(r["Type"] == "AWS::S3::BucketPolicy" for r in transformed["Resources"].values())
+    # photos never leave S3 through a URL (no presigned links): only the Lambdas read them, with their roles;
+    # the app shows the person's own copy from the phone
+    src = Path(__file__).resolve().parents[1] / "src"
+    code = "\n".join(p.read_text(encoding="utf-8") for p in src.rglob("*.py"))
+    assert "presigned" not in code and "generate_presigned_url" not in code and "s3.amazonaws.com" not in code
     assert bucket["LifecycleConfiguration"]["Rules"][0]["ExpirationInDays"] == 1
     # the collector deletes photos older than 24 h; the recovery function invokes itself for the worker
     assert "RecoveryBucket" in json.dumps(transformed["Resources"]["CollectFunctionRole"]["Properties"]["Policies"])

@@ -4,7 +4,7 @@ import {
 } from './api.js'
 import { STRINGS } from './i18n.js'
 import { preparePhoto } from './photoPrep.js'
-import { reportDateLine } from './reportDate.js'
+import { formatReportDate, reportDateLine } from './reportDate.js'
 
 // Recovery agent: pick the disaster (or let the agent decide), add 1-6 photos, see the damage outlined by
 // SAM 3.1, answer a few questions. The analysis is an async job: start it, then poll every 2 s.
@@ -68,6 +68,18 @@ function PhotoResult({ t, photo, url, n, outlines }) {
         )}
       </figcaption>
     </figure>
+  )
+}
+
+// Printed at the bottom of every page (position: fixed repeats on each printed page in Chrome, Safari and
+// Firefox): "Not an official damage estimate", the date and the area, in the person's language plus English.
+function PrintFooter({ t, lang, created, place }) {
+  const line = (s, l) => [s.recNotEstimate, formatReportDate(created, l), place].filter(Boolean).join(' · ')
+  return (
+    <div className="print-footer print-only" aria-hidden="true">
+      <span lang={lang}>{line(t, lang)}</span>
+      {lang !== 'en' && <span lang="en" dir="ltr">{line(STRINGS.en, 'en')}</span>}
+    </div>
   )
 }
 
@@ -139,7 +151,8 @@ function Questions({ t, questions, answers, setAnswer }) {
   )
 }
 
-export default function RecoveryScreen({ lang, t }) {
+export default function RecoveryScreen({ lang, t, zone }) {
+  const place = zone?.place || null // "Stockton, CA" when the person picked an area elsewhere in the app
   const [disaster, setDisaster] = useState('auto')
   const [photos, setPhotos] = useState([]) // {url, blob}
   const [phase, setPhase] = useState('pick') // pick | working | results | deleted
@@ -298,17 +311,31 @@ export default function RecoveryScreen({ lang, t }) {
       )}
 
       {['results', 'reporting', 'report'].includes(phase) && view && (
-        <>
+        // print: a CSS table whose empty footer group repeats on every page and keeps text clear of the footer
+        <div className="print-table">
+          <div className="print-body">
           <DangerBanner lines={view.danger_lines} />
           {phase === 'report' && view.report && (
             <>
+              <section className="print-hint no-print">
+                <button className="mid" type="button" onClick={() => window.print()}>{t.recPrintButton}</button>
+                <p className="muted small">{t.recPrintHintDesktop}</p>
+                <p className="muted small">{t.recPrintHintIphone}</p>
+              </section>
+              <PrintFooter t={t} lang={lang} created={view.report.created} place={place} />
               <ReportSide t={t} side={view.report.sides[0]} created={view.report.created} />
               {view.report.sides[1] && (
-                // collapsed by default: the person reads their own language; the insurer gets the English copy
-                <details className="rec-english">
-                  <summary>{t.recShowEnglish}</summary>
-                  <ReportSide t={STRINGS.en} side={view.report.sides[1]} created={view.report.created} />
-                </details>
+                <>
+                  {/* on screen: collapsed (the person reads their own language; the insurer gets the English copy) */}
+                  <details className="rec-english no-print">
+                    <summary>{t.recShowEnglish}</summary>
+                    <ReportSide t={STRINGS.en} side={view.report.sides[1]} created={view.report.created} />
+                  </details>
+                  {/* on paper: always printed, on its own page; a closed <details> wouldn't print */}
+                  <div className="print-only page-break">
+                    <ReportSide t={STRINGS.en} side={view.report.sides[1]} created={view.report.created} />
+                  </div>
+                </>
               )}
             </>
           )}
@@ -316,7 +343,7 @@ export default function RecoveryScreen({ lang, t }) {
             <strong>{fill(t.recDisasterSeen, { label: view.disaster_label })}</strong>
             {view.inferred_label && <span className="muted small"> · {fill(t.recInferredNote, { label: view.inferred_label })}</span>}
           </p>
-          <button className="mid" type="button" aria-pressed={outlines} onClick={() => setOutlines(!outlines)}>
+          <button className="mid no-print" type="button" aria-pressed={outlines} onClick={() => setOutlines(!outlines)}>
             {outlines ? t.recHideOutlines : t.recShowOutlines}
           </button>
           {view.photos.map((p) => (
@@ -334,7 +361,9 @@ export default function RecoveryScreen({ lang, t }) {
           <p className="muted small">{t.recNotEstimate}</p>
           <p className="muted small">{fill(t.recDeletesAt, { time: expires })}</p>
           <button className="secondary" type="button" onClick={removeAll}>{t.recDeleteNow}</button>
-        </>
+          </div>
+          <div className="print-space" aria-hidden="true" />
+        </div>
       )}
     </>
   )

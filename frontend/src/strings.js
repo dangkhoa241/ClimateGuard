@@ -138,6 +138,9 @@ export const REVIEWED_STRINGS = {
     recNextSteps: 'What to do next',
     recAiNote: 'Written by AI from your photos and answers. Check it before you share it.',
     recShowEnglish: 'Show English copy',
+    recPrintButton: 'Print or save as PDF',
+    recPrintHintDesktop: 'On a computer: tap the button above and choose "Save as PDF" as the printer.',
+    recPrintHintIphone: 'On iPhone: tap the button above, then tap Share (the square with an arrow) and choose Save to Files.',
     recFallbackEn: 'The report could not be written in your language, so it is shown in English.',
     recDisasters: {
       flood: 'Flood',
@@ -317,6 +320,9 @@ export const REVIEWED_STRINGS = {
     recNextSteps: 'Qué hacer ahora',
     recAiNote: 'Escrito por IA a partir de sus fotos y respuestas. Revíselo antes de compartirlo.',
     recShowEnglish: 'Mostrar la copia en inglés',
+    recPrintButton: 'Imprimir o guardar como PDF',
+    recPrintHintDesktop: 'En una computadora: toque el botón de arriba y elija "Guardar como PDF" como impresora.',
+    recPrintHintIphone: 'En iPhone: toque el botón de arriba, luego toque Compartir (el cuadro con una flecha) y elija Guardar en Archivos.',
     recFallbackEn: 'No se pudo escribir el reporte en su idioma, así que se muestra en inglés.',
     recDisasters: {
       flood: 'Inundación',
@@ -495,6 +501,9 @@ export const REVIEWED_STRINGS = {
     recNextSteps: 'Việc cần làm tiếp theo',
     recAiNote: 'Do AI viết dựa trên ảnh và câu trả lời của bạn. Hãy đọc lại trước khi chia sẻ.',
     recShowEnglish: 'Xem bản tiếng Anh',
+    recPrintButton: 'In hoặc lưu thành PDF',
+    recPrintHintDesktop: 'Trên máy tính: bấm nút ở trên và chọn "Lưu dưới dạng PDF" (Save as PDF) làm máy in.',
+    recPrintHintIphone: 'Trên iPhone: bấm nút ở trên, sau đó bấm Chia sẻ (hình vuông có mũi tên) và chọn Lưu vào Tệp.',
     recFallbackEn: 'Không viết được báo cáo bằng ngôn ngữ của bạn, nên báo cáo được hiển thị bằng tiếng Anh.',
     recDisasters: {
       flood: 'Lũ lụt',
