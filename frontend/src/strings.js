@@ -137,7 +137,7 @@ export const REVIEWED_STRINGS = {
     recYourAnswers: 'Your answers',
     recNextSteps: 'What to do next',
     recAiNote: 'Written by AI from your photos and answers. Check it before you share it.',
-    recEnglishVersion: 'English version',
+    recShowEnglish: 'Show English copy',
     recFallbackEn: 'The report could not be written in your language, so it is shown in English.',
     recDisasters: {
       flood: 'Flood',
@@ -316,7 +316,7 @@ export const REVIEWED_STRINGS = {
     recYourAnswers: 'Sus respuestas',
     recNextSteps: 'Qué hacer ahora',
     recAiNote: 'Escrito por IA a partir de sus fotos y respuestas. Revíselo antes de compartirlo.',
-    recEnglishVersion: 'Versión en inglés',
+    recShowEnglish: 'Mostrar la copia en inglés',
     recFallbackEn: 'No se pudo escribir el reporte en su idioma, así que se muestra en inglés.',
     recDisasters: {
       flood: 'Inundación',
@@ -494,7 +494,7 @@ export const REVIEWED_STRINGS = {
     recYourAnswers: 'Câu trả lời của bạn',
     recNextSteps: 'Việc cần làm tiếp theo',
     recAiNote: 'Do AI viết dựa trên ảnh và câu trả lời của bạn. Hãy đọc lại trước khi chia sẻ.',
-    recEnglishVersion: 'Bản tiếng Anh',
+    recShowEnglish: 'Xem bản tiếng Anh',
     recFallbackEn: 'Không viết được báo cáo bằng ngôn ngữ của bạn, nên báo cáo được hiển thị bằng tiếng Anh.',
     recDisasters: {
       flood: 'Lũ lụt',

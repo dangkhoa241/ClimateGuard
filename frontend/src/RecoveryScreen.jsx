@@ -4,6 +4,7 @@ import {
 } from './api.js'
 import { STRINGS } from './i18n.js'
 import { preparePhoto } from './photoPrep.js'
+import { reportDateLine } from './reportDate.js'
 
 // Recovery agent: pick the disaster (or let the agent decide), add 1-6 photos, see the damage outlined by
 // SAM 3.1, answer a few questions. The analysis is an async job: start it, then poll every 2 s.
@@ -72,11 +73,10 @@ function PhotoResult({ t, photo, url, n, outlines }) {
 
 // One side of the report: the person's language, or the English copy for the insurer.
 function ReportSide({ t, side, created }) {
-  const date = new Date(created * 1000).toLocaleDateString(side.lang, { year: 'numeric', month: 'long', day: 'numeric' })
   return (
     <article className="answer rec-report" lang={side.lang} dir={side.lang === 'ar' ? 'rtl' : 'ltr'}>
       <h2>{t.recReportTitle}</h2>
-      <p className="muted small">{fill(t.recReportDate, { date })} · {side.disaster_label}</p>
+      <p className="muted small">{reportDateLine(t.recReportDate, side.lang, created)} · {side.disaster_label}</p>
       <p className="rec-not-estimate">{t.recNotEstimate}</p>
       {side.fallback_en && <p className="muted small">{t.recFallbackEn}</p>}
       {side.danger_lines.map((l) => <p key={l}><strong>{l}</strong></p>)}
@@ -104,7 +104,7 @@ function ReportSide({ t, side, created }) {
       {side.checklist_lang !== side.lang && <p className="muted small">{t.checklistEnglishNote}</p>}
       <ol className="checklist" lang={side.checklist_lang}>
         {side.checklist.map((c) => (
-          <li key={c.id}>{c.text}{c.detail && <><br /><em>{c.detail}</em></>}</li>
+          <li key={c.id} lang={c.lang}>{c.text}{c.detail && <><br /><em>{c.detail}</em></>}</li>
         ))}
       </ol>
       <p className="muted small">{t.recAiNote}</p>
@@ -304,8 +304,9 @@ export default function RecoveryScreen({ lang, t }) {
             <>
               <ReportSide t={t} side={view.report.sides[0]} created={view.report.created} />
               {view.report.sides[1] && (
+                // collapsed by default: the person reads their own language; the insurer gets the English copy
                 <details className="rec-english">
-                  <summary>{t.recEnglishVersion}</summary>
+                  <summary>{t.recShowEnglish}</summary>
                   <ReportSide t={STRINGS.en} side={view.report.sides[1]} created={view.report.created} />
                 </details>
               )}

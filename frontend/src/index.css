@@ -241,4 +241,13 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 .rec-answers dd { margin: 0; font-weight: 600; }
 .rec-report .checklist em { color: var(--muted); }
 .rec-english { margin-top: 12px; }
-.rec-english summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+/* display:flex on <summary> hid the browser's own triangle (phone test: "nothing visible under Bản tiếng Anh"),
+   so the arrow is drawn here and turns when the section opens */
+.rec-english summary {
+  cursor: pointer; font-weight: 600; min-height: 48px; display: flex; align-items: center; gap: 8px;
+  padding: 0 12px; border: 2px solid var(--accent); border-radius: 10px; color: var(--accent); list-style: none;
+}
+.rec-english summary::-webkit-details-marker { display: none; }
+.rec-english summary::before { content: '▸'; font-size: 1.1rem; transition: transform 0.15s; }
+[dir='rtl'] .rec-english summary::before { transform: scaleX(-1); }
+.rec-english[open] summary::before { transform: rotate(90deg); }
