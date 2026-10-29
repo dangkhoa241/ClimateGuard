@@ -26,7 +26,7 @@ DISASTER_LABELS = {
 # SAM 3.1 takes one short noun phrase per request ($0.0025 each). `sam` is the phrase sent; labels are shown.
 # Things work better than adjectives: live, "damaged drywall" found nothing on walls stripped to the studs.
 CONCEPTS = {
-    "water_line": {"sam": "water stain", "en": "Water line or stain", "es": "Marca o mancha de agua",
+    "water_line": {"sam": "water stain line on wall", "en": "Water line or stain", "es": "Marca o mancha de agua",
                    "vi": "Vệt nước", "zh": "水渍线", "tl": "Marka ng tubig", "ko": "물 자국", "ar": "أثر الماء"},
     "standing_water": {"sam": "standing water", "en": "Standing water", "es": "Agua estancada", "vi": "Nước đọng",
                        "zh": "积水", "tl": "Nakatigil na tubig", "ko": "고인 물", "ar": "مياه راكدة"},
@@ -63,7 +63,7 @@ CONCEPTS = {
 
 # Which concepts the model may ask SAM for, per disaster. "other" may use any.
 CONCEPTS_BY_DISASTER = {
-    "flood": ["water_line", "standing_water", "mud", "mold", "drywall", "debris", "furniture"],
+    "flood": ["water_line", "standing_water", "mud", "mold", "drywall", "crack", "debris", "furniture"],
     "wildfire": ["burned", "soot", "ash", "window", "roof", "debris"],
     "earthquake": ["crack", "collapsed", "debris", "window", "drywall", "furniture"],
     "storm": ["tree", "roof", "window", "debris", "collapsed", "water_line"],
@@ -73,9 +73,12 @@ CONCEPTS_BY_DISASTER = {
 MAX_CONCEPTS_PER_PHOTO = 3
 
 # Smallest mask drawn and listed, as a share of the photo. Debris and furniture came back as dozens of specks
-# (phone test), so they need 1.5%; a broken window or a crack can be small and still matter: 0.3%.
+# (phone test), so they need 1.5%; a broken window can be small and still matter: 0.3%. Thin things (a water
+# line, a crack, mold, mud) are small by nature: on the demo flood photo SAM's water-line masks cover 0.19% and
+# 0.61% and its crack masks 0.07% to 0.61%, so they need only 0.05%.
 MIN_AREA_DEFAULT = 0.003
-MIN_AREA = {"debris": 0.015, "furniture": 0.015}
+MIN_AREA = {"debris": 0.015, "furniture": 0.015, "water_line": 0.0005, "mold": 0.0005, "mud": 0.0005,
+            "crack": 0.0005}
 
 
 def min_area(concept: str) -> float:

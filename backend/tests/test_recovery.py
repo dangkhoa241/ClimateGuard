@@ -114,8 +114,27 @@ def test_masks_under_the_minimum_dropped():
 
 def test_minimum_area_per_label():
     assert data.min_area("debris") == data.min_area("furniture") == 0.015
-    for concept in set(data.CONCEPTS) - {"debris", "furniture"}:
+    for concept in ("water_line", "mold", "mud", "crack"):  # thin by nature: 0.05%
+        assert data.min_area(concept) == 0.0005, concept
+    for concept in set(data.CONCEPTS) - {"debris", "furniture", "water_line", "mold", "mud", "crack"}:
         assert data.min_area(concept) == 0.003, concept
+
+
+def test_thin_water_line_and_crack_masks_kept_specks_dropped():
+    # live on the demo flood photo (1200x797 = 956,400 px): water-line masks of 0.61% and 0.19%, crack masks of
+    # 0.18% and 0.07% are outlined; a 0.03% speck is not; the same 0.19% as "debris" would be dropped
+    def mask(px):  # a full box of `px` pixels, mask all ones
+        return sam.parse("<0f>" + _record(9, (0, 0, px - 1, 0), px, 1, px))[0]
+    total = 1200 * 797
+    wide = [dict(mask(round(total * f)), w=1200, h=797) for f in (0.0061, 0.0019, 0.0007, 0.0003)]
+    kept = sam.drop_small(wide, data.min_area("water_line"))
+    assert [round(sam.area_fraction(r) * 100, 2) for r in kept] == [0.61, 0.19, 0.07]
+    assert sam.drop_small(wide[:2], data.min_area("debris")) == []
+
+
+def test_flood_photos_can_ask_sam_for_cracks_and_the_water_line_prompt():
+    assert "crack" in data.CONCEPTS_BY_DISASTER["flood"]
+    assert data.CONCEPTS["water_line"]["sam"] == "water stain line on wall"  # plain "water stain" found nothing
 
 
 def test_small_crack_kept_small_debris_dropped(monkeypatch):
@@ -285,7 +304,7 @@ def _job_with_photos(n=2, lang="vi", disaster="flood"):
 def test_full_analysis_flow(monkeypatch):
     calls = _vision_says(monkeypatch, {
         "photos": [{"photo": 1, "area": "living room", "damage": ["water line on wall", "repair will cost $900"],
-                    "concepts": ["debris", "crack", "mud", "debris"], "danger": ["water_power", "aliens"]},
+                    "concepts": ["debris", "burned", "mud", "debris"], "danger": ["water_power", "aliens"]},
                    {"photo": 2, "area": "kitchen", "damage": [], "concepts": [], "danger": []}],
         "disaster": "storm", "questions": ["water_height", "outage", "flood_insurance"]})
     _sam_finds(monkeypatch, {"debris": BIG_AND_SPECK})
@@ -296,7 +315,7 @@ def test_full_analysis_flow(monkeypatch):
     a = rec["analysis"]
     assert a["disaster"] == "flood" and a["inferred"] == "storm"  # the person's choice wins
     p1 = a["photos"][0]
-    assert p1["concepts"] == ["debris", "mud"]                   # "crack" isn't a flood concept; deduped
+    assert p1["concepts"] == ["debris", "mud"]                   # "burned" isn't a flood concept; deduped
     assert p1["damage"] == ["water line on wall"]                # the cost phrase was dropped
     assert a["guard_removed"] == ["repair_cost"] and a["dangers"] == ["water_power"]
     assert p1["found"] == [{"concept": "debris", "count": 1, "color": "#0072b2"}]  # speck dropped; mud: none
