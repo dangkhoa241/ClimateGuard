@@ -31,12 +31,12 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 - recDeleteNow: Borrar mis fotos ahora
 - recDeleted: Sus fotos se borraron.
 - recStartOver: Empezar de nuevo
-- recDeletesAt: Sus fotos se borrarán automáticamente a las {time}.
+- recDeletesAt: Sus fotos se borrarán automáticamente el {day} {time}. (ejemplo: el jueves a las 6:30 p. m.)
 - recSkipNote: Puede saltar cualquier pregunta.
 - recMakeReport: Hacer mi reporte
 - recStepReport: Escribiendo su reporte…
 - recReportTitle: Reporte de daños en la vivienda
-- recReportDate: Hecho el {date}
+- recReportDate: Preparado el {date}
 - recSummary: Resumen
 - recAreas: Daños por área
 - recPhotosRef: Fotos: {list}
@@ -45,7 +45,7 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 - recAiNote: Escrito por IA a partir de sus fotos y respuestas. Revíselo antes de compartirlo.
 - recShowEnglish: Mostrar la copia en inglés
 - recPrintButton: Imprimir o guardar como PDF
-- recPrintHintDesktop: En una computadora: toque el botón de arriba y elija "Guardar como PDF" como impresora.
+- recPrintHintDesktop: En una computadora: haga clic en el botón de arriba y elija "Guardar como PDF" como impresora.
 - recPrintHintIphone: En iPhone: toque el botón de arriba, luego toque Compartir (el cuadro con una flecha) y elija Guardar en Archivos.
 - recFallbackEn: No se pudo escribir el reporte en su idioma, así que se muestra en inglés.
 - recDisasters.flood: Inundación
@@ -115,7 +115,7 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 ### Checklist
 - document: Documente los daños: tome fotos y video de cada cuarto y de cada cosa dañada antes de limpiar o tirar algo. Guarde este reporte con ellos.
 - insurer: Llame a su compañía de seguros lo antes posible y pregunte cómo hacer un reclamo. Anote el número de reclamo y el nombre de cada persona con quien hable.
-- flood_policy: El seguro de vivienda normal casi nunca cubre inundaciones; el seguro contra inundaciones (NFIP o privado) sí. Con NFIP, envíe su prueba de pérdida (proof of loss) dentro de 60 días.
+- flood_policy: El seguro de vivienda regular normalmente no cubre inundaciones; el seguro contra inundaciones (NFIP o privado) sí. Con NFIP, envíe su prueba de pérdida (proof of loss) dentro de 60 días.
 - landlord: Avise a su arrendador de los daños por escrito (mensaje de texto o correo) y guarde una copia. El seguro de inquilino puede cubrir sus pertenencias.
 - fema: Si su zona tiene una declaración federal de desastre, solicite ayuda de FEMA en DisasterAssistance.gov o al 1-800-621-3362. Puede solicitarla aunque tenga seguro: FEMA puede ayudar con lo que el seguro no cubre.
 - call211: Llame al 211 para ayuda local: refugios, comida, equipos de limpieza y programas de reparación.
@@ -166,7 +166,7 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 - recDeleteNow: Xóa ảnh của tôi ngay
 - recDeleted: Ảnh của bạn đã được xóa.
 - recStartOver: Làm lại từ đầu
-- recDeletesAt: Ảnh của bạn sẽ tự động bị xóa lúc {time}.
+- recDeletesAt: Ảnh của bạn sẽ tự động bị xóa lúc {time} {day}. (ví dụ: lúc 18:30 thứ Năm)
 - recSkipNote: Bạn có thể bỏ qua bất kỳ câu hỏi nào.
 - recMakeReport: Làm báo cáo của tôi
 - recStepReport: Đang viết báo cáo…
@@ -214,7 +214,7 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 - standing_water: Nước đọng
 - mud: Bùn
 - mold: Nấm mốc
-- drywall: Tường bị lột trơ khung
+- drywall: Tường lộ khung
 - debris: Mảnh vụn
 - furniture: Đồ đạc hư hại
 - burned: Chỗ bị cháy
@@ -249,7 +249,7 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 
 ### Checklist
 - document: Ghi lại thiệt hại: hãy chụp ảnh và quay video từng phòng và từng món đồ bị hư trước khi dọn dẹp hay vứt bỏ bất cứ thứ gì. Giữ bản báo cáo này cùng với chúng.
-- insurer: Hãy gọi cho công ty bảo hiểm càng sớm càng tốt và hỏi cách nộp yêu cầu bồi thường. Ghi lại số hồ sơ và tên của mọi người bạn đã nói chuyện.
+- insurer: Hãy gọi cho công ty bảo hiểm càng sớm càng tốt và hỏi cách nộp yêu cầu bồi thường. Ghi lại số hồ sơ yêu cầu bồi thường và tên của mọi người bạn đã nói chuyện.
 - flood_policy: Bảo hiểm nhà thông thường thường không chi trả thiệt hại do lũ lụt; bảo hiểm lũ lụt (NFIP hoặc tư nhân) thì có. Với NFIP, hãy gửi giấy chứng minh thiệt hại (proof of loss) trong vòng 60 ngày.
 - landlord: Hãy báo cho chủ nhà về thiệt hại bằng văn bản (tin nhắn hoặc email) và giữ một bản. Bảo hiểm cho người thuê nhà có thể chi trả đồ đạc của bạn.
 - fema: Nếu khu vực của bạn được liên bang công bố thảm họa, hãy xin trợ giúp của FEMA tại DisasterAssistance.gov hoặc số 1-800-621-3362. Bạn vẫn có thể xin dù có bảo hiểm: FEMA có thể giúp phần bảo hiểm không chi trả.
@@ -264,7 +264,7 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 - fire_return: Chỉ quay về khi chính quyền cho phép. Khi dọn tro, hãy đeo khẩu trang N95, găng tay, mặc áo dài tay và mang giày chắc chắn; xịt chút nước lên tro trước khi quét và không bao giờ dùng máy thổi lá.
 - fire_food: Vứt bỏ thực phẩm đã tiếp xúc với nhiệt, khói hoặc muội than, kể cả đồ hộp đã bị nóng nhiều.
 - quake_aftershocks: Sẽ có dư chấn: Cúi xuống, Che chắn và Bám chặt. Hãy mang giày chắc chắn và găng tay khi ở gần kính vỡ.
-- inspect: Hãy nhờ thanh tra có giấy phép hoặc sở xây dựng của thành phố hay quận xem các vết nứt ở tường, móng nhà hoặc ống khói trước khi sửa.
+- inspect: Hãy nhờ người kiểm tra xây dựng có giấy phép hoặc sở xây dựng của thành phố hay quận xem các vết nứt ở tường, móng nhà hoặc ống khói trước khi sửa.
 - storm_lines: Tránh xa dây điện bị đứt và mọi thứ đang chạm vào chúng, và gọi công ty điện.
 - tarp: Hãy che các lỗ thủng trên mái hoặc cửa sổ bằng bạt hoặc ván ép để tránh hư hại thêm, nhưng chỉ khi an toàn và làm từ dưới đất; tuyệt đối không trèo lên mái nhà bị hư. Nếu không làm được một cách an toàn, hãy bỏ qua và chụp ảnh thiệt hại. Giữ lại hóa đơn.
 - outage_food: Thực phẩm: tủ lạnh giữ lạnh khoảng 4 giờ và ngăn đá đầy khoảng 48 giờ nếu không mở cửa. Vứt bỏ thực phẩm dễ hỏng đã ở trên 40°F (4°C) từ 2 giờ trở lên.

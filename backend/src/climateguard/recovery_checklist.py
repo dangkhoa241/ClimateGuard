@@ -15,10 +15,10 @@ ITEMS = {
     "insurer": {"detail": True,
         "en": "Call your insurance company as soon as you can and ask how to file a claim. Write down the claim number and the name of everyone you talk to.",
         "es": "Llame a su compañía de seguros lo antes posible y pregunte cómo hacer un reclamo. Anote el número de reclamo y el nombre de cada persona con quien hable.",
-        "vi": "Hãy gọi cho công ty bảo hiểm càng sớm càng tốt và hỏi cách nộp yêu cầu bồi thường. Ghi lại số hồ sơ và tên của mọi người bạn đã nói chuyện."},
+        "vi": "Hãy gọi cho công ty bảo hiểm càng sớm càng tốt và hỏi cách nộp yêu cầu bồi thường. Ghi lại số hồ sơ yêu cầu bồi thường và tên của mọi người bạn đã nói chuyện."},
     "flood_policy": {
         "en": "Regular home insurance usually does not cover flooding; flood insurance (NFIP or private) does. With NFIP, send your proof of loss within 60 days.",
-        "es": "El seguro de vivienda normal casi nunca cubre inundaciones; el seguro contra inundaciones (NFIP o privado) sí. Con NFIP, envíe su prueba de pérdida (proof of loss) dentro de 60 días.",
+        "es": "El seguro de vivienda regular normalmente no cubre inundaciones; el seguro contra inundaciones (NFIP o privado) sí. Con NFIP, envíe su prueba de pérdida (proof of loss) dentro de 60 días.",
         "vi": "Bảo hiểm nhà thông thường thường không chi trả thiệt hại do lũ lụt; bảo hiểm lũ lụt (NFIP hoặc tư nhân) thì có. Với NFIP, hãy gửi giấy chứng minh thiệt hại (proof of loss) trong vòng 60 ngày."},
     "landlord": {"detail": True,
         "en": "Tell your landlord about the damage in writing (text or email) and keep a copy. Renters insurance may cover your belongings.",
@@ -76,7 +76,7 @@ ITEMS = {
     "inspect": {
         "en": "Ask a licensed inspector or your city or county building department to look at cracks in walls, the foundation or the chimney before repairs.",
         "es": "Pida a un inspector con licencia o al departamento de construcción de su ciudad o condado que revise las grietas en paredes, cimientos o chimenea antes de reparar.",
-        "vi": "Hãy nhờ thanh tra có giấy phép hoặc sở xây dựng của thành phố hay quận xem các vết nứt ở tường, móng nhà hoặc ống khói trước khi sửa."},
+        "vi": "Hãy nhờ người kiểm tra xây dựng có giấy phép hoặc sở xây dựng của thành phố hay quận xem các vết nứt ở tường, móng nhà hoặc ống khói trước khi sửa."},
     "storm_lines": {
         "en": "Stay away from fallen power lines and anything touching them, and call the power company.",
         "es": "Aléjese de los cables eléctricos caídos y de todo lo que los toque, y llame a la compañía de luz.",

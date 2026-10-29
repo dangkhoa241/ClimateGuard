@@ -85,7 +85,7 @@ def _png(width: int, height: int, rgba: bytes) -> bytes:
             + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
 
 
-MIN_AREA_FRACTION = 0.015  # phone test: dozens of specks of "debris" cluttered the photo and the legend
+MIN_AREA_FRACTION = 0.003  # per-concept minimums (1.5% for debris and furniture) are in recovery_data.MIN_AREA
 
 
 def area_fraction(r: dict) -> float:

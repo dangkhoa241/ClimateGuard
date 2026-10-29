@@ -26,7 +26,7 @@ from . import llm, photos, recovery_checklist as checklist, recovery_report, rec
 from .languages import LANGS
 from .recovery_data import (CONCEPTS, CONCEPTS_BY_DISASTER, DANGERS, DISASTER_LABELS, DISASTERS,
                             MAX_CONCEPTS_PER_PHOTO, OPTIONS, QUESTIONS, QUESTIONS_BY_DISASTER, danger_lines,
-                            pick_questions, question_view)
+                            min_area, pick_questions, question_view)
 from .recovery_guard import keep_clean
 
 log = logging.getLogger(__name__)
@@ -194,7 +194,7 @@ def analyze(job: str) -> dict:
         for p in result["photos"]:
             layers, found = [], []
             for slot, c in enumerate(p["concepts"]):
-                recs = sam.drop_small(seg.get((p["index"], slot, c)) or [])  # < 1.5% of the photo: left out
+                recs = sam.drop_small(seg.get((p["index"], slot, c)) or [], min_area(c))  # specks left out
                 if recs:
                     layers.append((slot, recs))
                     found.append({"concept": c, "count": len(recs), "color": _HEX[slot % len(_HEX)]})

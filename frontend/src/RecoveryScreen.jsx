@@ -4,7 +4,7 @@ import {
 } from './api.js'
 import { STRINGS } from './i18n.js'
 import { preparePhoto } from './photoPrep.js'
-import { formatReportDate, reportDateLine } from './reportDate.js'
+import { deletesAtLine, formatReportDate, reportDateLine } from './reportDate.js'
 
 // Recovery agent: pick the disaster (or let the agent decide), add 1-6 photos, see the damage outlined by
 // SAM 3.1, answer a few questions. The analysis is an async job: start it, then poll every 2 s.
@@ -254,9 +254,6 @@ export default function RecoveryScreen({ lang, t, zone }) {
     setPhase('pick')
   }
 
-  const expires = view && new Date(view.expires_at * 1000).toLocaleString(lang, {
-    weekday: 'short', hour: 'numeric', minute: '2-digit',
-  })
 
   return (
     <>
@@ -359,7 +356,7 @@ export default function RecoveryScreen({ lang, t, zone }) {
             </>
           )}
           <p className="muted small">{t.recNotEstimate}</p>
-          <p className="muted small">{fill(t.recDeletesAt, { time: expires })}</p>
+          <p className="muted small">{deletesAtLine(t.recDeletesAt, lang, view.expires_at)}</p>
           <button className="secondary" type="button" onClick={removeAll}>{t.recDeleteNow}</button>
           </div>
           <div className="print-space" aria-hidden="true" />

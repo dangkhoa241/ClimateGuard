@@ -96,18 +96,37 @@ def _record(rid, box, mask_w, mask_h, ones, frame=(1280, 855)):
 BIG_AND_SPECK = "<0f>" + _record(0, (100, 100, 739, 499), 64, 40, 64 * 40) + "," + _record(1, (10, 10, 29, 19), 20, 10, 200)
 
 
-def test_masks_under_1_5_percent_dropped():
+def test_masks_under_the_minimum_dropped():
     big, speck = sam.parse(BIG_AND_SPECK)
     assert sam.area_fraction(big) == pytest.approx(640 * 400 / (1280 * 855))
-    assert sam.drop_small([big, speck]) == [big]
-    # a big box with a mostly empty mask counts its mask pixels, not the box: 2% of 640x400 is 0.5% of the photo
+    assert sam.drop_small([big, speck]) == [big] and sam.drop_small([big, speck], 0.015) == [big]
+    # a big box with a mostly empty mask counts its mask pixels, not the box: 2% of 640x400 is 0.47% of the photo
     sparse = sam.parse("<0f>" + _record(2, (100, 100, 739, 499), 64, 40, 51))[0]
-    assert sam.drop_small([sparse]) == []
-    # just above / below the line: 1.5% of 1280x855 is 16,416 px
-    assert sam.drop_small(sam.parse("<0f>" + _record(3, (0, 0, 164, 99), 165, 100, 16500)))
-    assert not sam.drop_small(sam.parse("<0f>" + _record(4, (0, 0, 164, 99), 165, 100, 16300)))
+    assert sam.drop_small([sparse], 0.015) == [] and sam.drop_small([sparse], 0.003) == [sparse]
+    # just above / below 1.5% (16,416 px of 1280x855) and 0.3% (3,283 px)
+    assert sam.drop_small(sam.parse("<0f>" + _record(3, (0, 0, 164, 99), 165, 100, 16500)), 0.015)
+    assert not sam.drop_small(sam.parse("<0f>" + _record(4, (0, 0, 164, 99), 165, 100, 16300)), 0.015)
+    assert sam.drop_small(sam.parse("<0f>" + _record(5, (0, 0, 99, 39), 100, 40, 3300)))
+    assert not sam.drop_small(sam.parse("<0f>" + _record(6, (0, 0, 99, 39), 100, 40, 3250)))
     # the live "debris" specks on the Kentucky photo are all under 1.5%: no outline, no legend entry
-    assert sam.drop_small(sam.parse(FIXTURE["raw"]["debris"])) == []
+    assert sam.drop_small(sam.parse(FIXTURE["raw"]["debris"]), data.min_area("debris")) == []
+
+
+def test_minimum_area_per_label():
+    assert data.min_area("debris") == data.min_area("furniture") == 0.015
+    for concept in set(data.CONCEPTS) - {"debris", "furniture"}:
+        assert data.min_area(concept) == 0.003, concept
+
+
+def test_small_crack_kept_small_debris_dropped(monkeypatch):
+    # the same 0.47% mask: a crack (0.3% minimum) is outlined and listed, debris (1.5%) is not
+    small = "<0f>" + _record(0, (100, 100, 739, 499), 64, 40, 51)
+    _vision_says(monkeypatch, {"photos": [{"photo": 1, "concepts": ["crack", "debris"]}], "disaster": "earthquake"})
+    _sam_finds(monkeypatch, {"crack": small, "debris": small})
+    job = _job_with_photos(1, "en", "earthquake")
+    recovery.start_analysis(job)
+    p = recovery.analyze(job)["analysis"]["photos"][0]
+    assert [f["concept"] for f in p["found"]] == ["crack"] and p["overlay"]
 
 
 def test_no_masks_no_overlay():

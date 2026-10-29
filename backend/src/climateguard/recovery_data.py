@@ -35,7 +35,7 @@ CONCEPTS = {
     "mold": {"sam": "mold", "en": "Mold", "es": "Moho", "vi": "Nấm mốc", "zh": "霉菌", "tl": "Amag", "ko": "곰팡이",
              "ar": "عفن"},
     "drywall": {"sam": "exposed wall studs", "en": "Wall opened to the studs", "es": "Pared abierta hasta la estructura",
-                "vi": "Tường bị lột trơ khung", "zh": "墙面拆到龙骨", "tl": "Pader na tinanggalan hanggang sa poste",
+                "vi": "Tường lộ khung", "zh": "墙面拆到龙骨", "tl": "Pader na tinanggalan hanggang sa poste",
                 "ko": "골조가 드러난 벽", "ar": "جدار مكشوف حتى الهيكل"},
     "debris": {"sam": "debris", "en": "Debris", "es": "Escombros", "vi": "Mảnh vụn", "zh": "碎片杂物",
                "tl": "Mga kalat at pira-piraso", "ko": "잔해", "ar": "حطام"},
@@ -71,6 +71,15 @@ CONCEPTS_BY_DISASTER = {
     "other": list(CONCEPTS),
 }
 MAX_CONCEPTS_PER_PHOTO = 3
+
+# Smallest mask drawn and listed, as a share of the photo. Debris and furniture came back as dozens of specks
+# (phone test), so they need 1.5%; a broken window or a crack can be small and still matter: 0.3%.
+MIN_AREA_DEFAULT = 0.003
+MIN_AREA = {"debris": 0.015, "furniture": 0.015}
+
+
+def min_area(concept: str) -> float:
+    return MIN_AREA.get(concept, MIN_AREA_DEFAULT)
 
 # --- follow-up questions ------------------------------------------------------------------------
 # `hurt` is always asked (code adds it); the model picks up to 3 more from the disaster's list.
