@@ -86,7 +86,10 @@ export default function App() {
     save('lang', lang)
   }, [lang, meta.rtl])
   useEffect(() => save('zone', zone ? JSON.stringify(zone) : null), [zone])
-  useEffect(() => window.scrollTo(0, 0), [screen])
+  useEffect(() => {
+    // braces: current Chrome's scrollTo() returns a Promise, and an effect must return a function or nothing
+    window.scrollTo(0, 0)
+  }, [screen])
 
   function startDemo() {
     setDemo(true)

@@ -208,6 +208,10 @@ export const REVIEWED_STRINGS = {
     demoHowRecovery: 'Recovery agent: reads damage photos, outlines the damage, asks questions and writes a report.',
     demoHowHistory: 'See every decision the live agent made',
     demoCostSoFar: 'Real AI cost of the live site since {date}: ${total}',
+    crashTitle: 'Something went wrong',
+    crashBody: 'The page hit a problem. Reloading usually fixes it.',
+    crashReload: 'Reload',
+    crashDemo: 'If this keeps happening, try the demo link',
     errors: {
       mic_denied: 'Microphone not allowed. Allow it in your browser settings, or type your question.',
       transcribe_failed: 'Could not understand the recording. Please try again or type your question.',
@@ -448,6 +452,10 @@ export const REVIEWED_STRINGS = {
     demoHowRecovery: 'Agente de recuperación: lee las fotos de los daños, los marca, hace preguntas y escribe un informe.',
     demoHowHistory: 'Ver cada decisión del agente en vivo',
     demoCostSoFar: 'Costo real de IA del sitio en vivo desde el {date}: ${total}',
+    crashTitle: 'Algo salió mal',
+    crashBody: 'La página tuvo un problema. Recargarla suele solucionarlo.',
+    crashReload: 'Recargar',
+    crashDemo: 'Si esto sigue pasando, pruebe el enlace de la demostración',
     errors: {
       mic_denied: 'No se permitió el micrófono. Actívelo en la configuración del navegador o escriba su pregunta.',
       transcribe_failed: 'No se pudo entender la grabación. Intente de nuevo o escriba su pregunta.',
@@ -687,6 +695,10 @@ export const REVIEWED_STRINGS = {
     demoHowRecovery: 'Trợ lý phục hồi: đọc ảnh hư hại, khoanh vùng hư hại, đặt câu hỏi và viết báo cáo.',
     demoHowHistory: 'Xem mọi quyết định của trợ lý đang chạy thật',
     demoCostSoFar: 'Chi phí AI thật của trang đang chạy từ ngày {date}: ${total}',
+    crashTitle: 'Đã xảy ra lỗi',
+    crashBody: 'Trang gặp sự cố. Tải lại trang thường sẽ khắc phục được.',
+    crashReload: 'Tải lại',
+    crashDemo: 'Nếu lỗi cứ lặp lại, hãy thử đường dẫn bản demo',
     errors: {
       mic_denied: 'Micrô chưa được cho phép. Hãy bật micrô trong phần cài đặt trình duyệt, hoặc gõ câu hỏi.',
       transcribe_failed: 'Không nhận ra được đoạn ghi âm. Hãy thử lại hoặc gõ câu hỏi.',
