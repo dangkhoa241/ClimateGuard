@@ -11,6 +11,8 @@ jobs:
   backend:
     name: Backend tests
     runs-on: ubuntu-latest
+    env:
+      AWS_DEFAULT_REGION: us-east-2
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
