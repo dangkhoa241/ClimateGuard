@@ -1,0 +1,70 @@
+flowchart LR
+  subgraph DATA["Public data"]
+    NWS["NWS alerts + hourly forecast"]
+    AIR["AirNow air quality"]
+    OM["Open-Meteo (fallback)"]
+  end
+
+  subgraph ALERTS["Alerts: runs by itself every 15 minutes"]
+    EB["EventBridge Scheduler<br/>every 15 min"]
+    COL["Collector Lambda<br/>one snapshot per monitored zone"]
+    PRE{"Pre-filter + change check<br/>any risk? did the data change?"}
+    SKIP["Skip: no AI call, $0"]
+    BUD{"Under $5/day?"}
+    AGENT["Monitoring agent<br/>Muse Spark Open on Baseten<br/>tools: alerts, forecast, AQI, sent alerts, safety guidance"]
+    GUARD["Guardrails in code (send_alert)<br/>no duplicates, daily cap, no medical advice,<br/>N95 only for smoke, NWS level names, accents"]
+    TR["Muse Spark 1.3<br/>translates the checked English alert<br/>(zh, tl, ko, ar)"]
+    SNS["SNS email<br/>one topic per zone + language"]
+    PERSON(("Person's inbox"))
+  end
+
+  subgraph STORE["DynamoDB"]
+    DB[("snapshots, alerts and decisions,<br/>usage and cost, rate limits, zones")]
+  end
+
+  subgraph APP["App"]
+    FE["React app on Vercel<br/>7 languages, phone first"]
+    API["API Gateway (HTTP API)"]
+    L1["API Lambda<br/>locate, zones, subscribe,<br/>decisions, demo setup"]
+    L2["Ask Lambda<br/>ask, voice, pre-shift talk,<br/>demo replay"]
+    L3["Recovery Lambda<br/>async photo jobs"]
+  end
+
+  subgraph MODELS["Meta models (Meta Model API)"]
+    MS["Muse Spark 1.3<br/>answers, vision, reports, web search"]
+    VT["Muse Voice Transcribe"]
+    SAM["SAM 3.1<br/>damage outlines"]
+  end
+
+  S3[("S3 private bucket<br/>photos kept 24 h, GPS removed")]
+
+  NWS --> COL
+  AIR --> COL
+  OM -.-> COL
+  EB --> COL
+  COL --> DB
+  COL --> PRE
+  PRE -- "no risk or no change" --> SKIP
+  PRE -- "risk and changed" --> BUD
+  BUD -- "under budget, or an active Warning" --> AGENT
+  AGENT --> GUARD
+  GUARD --> TR
+  TR --> SNS
+  GUARD --> SNS
+  SNS --> PERSON
+  AGENT --> DB
+  COL -- "deletes photos older than 24 h" --> S3
+
+  FE --> API
+  API --> L1
+  API --> L2
+  API --> L3
+  L1 --> DB
+  L2 --> DB
+  L2 --> MS
+  L2 --> VT
+  L2 -. "demo replay" .-> AGENT
+  L3 --> S3
+  L3 --> MS
+  L3 --> SAM
+  L3 --> DB

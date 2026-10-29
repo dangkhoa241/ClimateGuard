@@ -47,7 +47,7 @@
    - Review text for Spanish and Vietnamese: `docs/recovery-text-es-vi.md`. zh/tl/ko/ar recovery screen text shows in English until `translate_ui.py` is rerun.
 2. **Phase 6, polish:**
    - **Demo mode: built (Oct 28), needs a backend deploy** (`deploy.ps1`; new routes `GET /demo`, `POST /demo/replay`, and the Ask Lambda now reads the Baseten key and writes `DEMO-*` decisions). Until then the live site shows the demo page, but replay buttons fail and the cost line is hidden. See README "Demo mode". Spanish and Vietnamese demo text (`demo*` keys in `strings.js`) still needs human review.
-   - Next: **README with an architecture diagram**.
+   - **README: rewritten for judges (Oct 28).** The old detailed README is now `docs/TECHNICAL.md` (plus a new recovery section). Diagram: `docs/architecture.mmd` (no SVG/PNG, no `mmdc` installed). To do after the final eval: put its numbers in the README "Engineering depth" line; decide on a project license (only `LICENSE-SAM` exists); Spanish reviewer wording.
 3. **Final eval ("final polish"):** `run_eval.py --fresh`, the back-translation check, the recovery eval, and the **zh/tl/ko/ar screen text: rerun `translate_ui.py`** (recovery and demo keys show in English until then).
 4. **Demo video:**
    - **Open:** the true Stockton story.
