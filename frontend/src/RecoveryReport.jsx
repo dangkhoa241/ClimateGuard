@@ -66,7 +66,7 @@ function PhotoResult({ t, photo, url, n, outlines }) {
 
 // One side of the report: the person's language, or the English copy for the insurer.
 // Each heading prints together with the first item after it (.keep); the rest follows in a continued list.
-function ReportSide({ t, side, created, place }) {
+function ReportSide({ t, side, created, place, headingRef }) {
   const [firstArea, ...areas] = side.areas
   const [firstAnswer, ...answers] = side.answers
   const [firstItem, ...items] = side.checklist
@@ -83,7 +83,7 @@ function ReportSide({ t, side, created, place }) {
     <article className="answer rec-report" lang={side.lang} dir={side.lang === 'ar' ? 'rtl' : 'ltr'}>
       <div className="keep">
         <Disclaimer t={t} lang={side.lang} created={created} place={place} />
-        <h2>{t.recReportTitle}</h2>
+        <h2 ref={headingRef}>{t.recReportTitle}</h2>
         <p className="muted small">{reportDateLine(t.recReportDate, side.lang, created)} · {side.disaster_label}</p>
         <p className="rec-not-estimate no-print">{t.recNotEstimate}</p>
         {side.fallback_en && <p className="muted small">{t.recFallbackEn}</p>}
@@ -127,7 +127,8 @@ function ReportSide({ t, side, created, place }) {
 
 // Results (outlined photos) and, once written, the report. `children`: what only the screen needs after the
 // photos (questions, buttons). `photoUrls[i]` is the person's own copy of photo i on the phone.
-export function ResultsView({ t, lang, view, showReport, photoUrls, place, outlines, setOutlines, children }) {
+export function ResultsView({ t, lang, view, showReport, photoUrls, place, outlines, setOutlines, reportHeadingRef,
+  children }) {
   const report = showReport && view.report
   const created = report ? report.created : Date.now() / 1000
   const [firstPhoto, ...photos] = view.photos
@@ -150,7 +151,7 @@ export function ResultsView({ t, lang, view, showReport, photoUrls, place, outli
                   <p className="muted small">{t.recPrintHintDesktop}</p>
                   <p className="muted small">{t.recPrintHintIphone}</p>
                 </section>
-                <ReportSide t={t} side={report.sides[0]} created={created} place={place} />
+                <ReportSide t={t} side={report.sides[0]} created={created} place={place} headingRef={reportHeadingRef} />
                 {report.sides[1] && (
                   <>
                     {/* on screen: collapsed (the person reads their own language; the insurer gets the English copy) */}

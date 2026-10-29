@@ -232,6 +232,29 @@ def test_guard_allows_plain_damage(text):
     assert recovery_guard.issues(text) == []
 
 
+@pytest.mark.parametrize("text", [
+    "A storm damaged the owned home.", "The house you own has a fallen tree.", "Water entered the rented home.",
+    "Since you own the house, call your insurer.", "La casa propia tiene daños en el techo.",
+    "Su vivienda alquilada tiene agua.", "Nhà riêng của bạn bị cây đổ.", "Nhà bạn thuê bị ngập nước."])
+def test_guard_blocks_owned_or_rented_wording(text):
+    assert "ownership" in recovery_guard.issues(text)
+
+
+@pytest.mark.parametrize("text", [
+    "A storm damaged your home.", "La tormenta dañó su casa.", "Cơn bão làm hư hại nhà của bạn.",
+    "Tell your landlord in writing about the roof.", "Do you have home or renters insurance?",
+    "Hãy báo cho chủ nhà về mái nhà bị hư."])
+def test_guard_allows_your_home(text):
+    assert recovery_guard.issues(text) == []
+
+
+def test_landlord_detail_may_mention_renting():
+    text = "Since you rent, send your landlord the photos of the roof."
+    assert recovery_guard.issues(text) == ["ownership"]
+    assert recovery_guard.issues(text, ownership_ok=True) == []
+    assert recovery_guard.OWNERSHIP_OK_ITEMS == {"landlord", "flood_policy"}
+
+
 # --- job flow (vision and SAM mocked) ---------------------------------------------------------------
 
 def _vision_says(monkeypatch, parsed, cost=0.01):
@@ -594,3 +617,24 @@ def test_tarp_item_in_storm_quake_flood_and_shown_in_every_language(disaster):
     assert "tarp" in checklist.pick(disaster, {})
     ko = {c["id"]: c for c in checklist.render(checklist.pick(disaster, {}), "ko")}
     assert ko["tarp"]["lang"] == "ko" and ko["document"]["lang"] == "en"
+
+
+def test_report_prompt_says_your_home_and_hides_own_rent(monkeypatch):
+    calls = _chat_returns(monkeypatch, _report_json())
+    recovery_report.write("flood", ANALYSIS_PHOTOS, {"own_rent": "own", "when": "today"}, "es")
+    prompt = calls[0][0]["content"]
+    assert '"your home"' in prompt and '"su casa"' in prompt and '"nhà của bạn"' in prompt
+    assert "never \"the owned home\"" in prompt and "except in a detail for the landlord item" in prompt
+    assert "own or rent" not in prompt and "I own it" not in prompt  # the answer only picks checklist items
+
+
+def test_owned_home_lines_dropped_but_landlord_detail_kept(monkeypatch):
+    raw = json.loads(_report_json())
+    raw["en"]["summary"] = "Flood water entered the owned home. A water line shows on the living room wall."
+    raw["en"]["details"]["landlord"] = "Since you rent, send your landlord the living room photos."
+    raw["en"]["details"]["fema"] = "Tell FEMA the house you own was flooded."
+    _chat_returns(monkeypatch, json.dumps(raw), json.dumps(raw))
+    out = recovery_report.write("flood", ANALYSIS_PHOTOS, {"own_rent": "rent"}, "en")
+    assert out["guard_removed"] == ["ownership"] and out["attempts"] == 2
+    assert out["en"]["summary"] == "A water line shows on the living room wall."
+    assert out["en"]["details"]["landlord"].startswith("Since you rent") and "fema" not in out["en"]["details"]

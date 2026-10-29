@@ -4,6 +4,7 @@ import {
 } from './api.js'
 import { preparePhoto } from './photoPrep.js'
 import { deletesAtLine } from './reportDate.js'
+import { reveal } from './reveal.js'
 import { ResultsView, fill } from './RecoveryReport.jsx'
 
 // Recovery agent: pick the disaster (or let the agent decide), add 1-6 photos, see the damage outlined by
@@ -33,10 +34,10 @@ function DisasterPicker({ t, value, onChange, disabled }) {
   )
 }
 
-function Questions({ t, questions, answers, setAnswer }) {
+function Questions({ t, questions, answers, setAnswer, headingRef }) {
   return (
     <section className="recent">
-      <h2>{t.recQuestionsTitle}</h2>
+      <h2 ref={headingRef}>{t.recQuestionsTitle}</h2>
       <p className="muted small">{t.recQuestionsIntro} {t.recSkipNote}</p>
       {questions.map((q) => (
         <fieldset key={q.id} className="rec-question">
@@ -72,6 +73,21 @@ export default function RecoveryScreen({ lang, t, zone }) {
   const [answers, setAnswers] = useState({})
   const fileInput = useRef(null)
   const alive = useRef(true)
+  // Scroll to what just appeared: the questions after the photo check, the report once written (both also get
+  // focus, for screen readers), and any error. `revealNext` is set only by a step that finished successfully.
+  const [revealNext, setRevealNext] = useState(null) // 'questions' | 'report'
+  const questionsRef = useRef(null)
+  const reportRef = useRef(null)
+  const errorRef = useRef(null)
+
+  useEffect(() => {
+    if (!revealNext) return
+    reveal((revealNext === 'report' ? reportRef : questionsRef).current, { focus: true })
+    setRevealNext(null)
+  }, [revealNext, phase])
+  useEffect(() => {
+    if (error) reveal(errorRef.current)
+  }, [error])
 
   useEffect(() => () => { alive.current = false }, [])
 
@@ -123,6 +139,7 @@ export default function RecoveryScreen({ lang, t, zone }) {
       if (!alive.current) return
       setView(v)
       setPhase('results')
+      setRevealNext('questions')
     } catch (err) {
       if (!alive.current) return
       setError(err.code || 'default')
@@ -138,6 +155,7 @@ export default function RecoveryScreen({ lang, t, zone }) {
       if (!alive.current) return
       setView(v)
       setPhase('report')
+      setRevealNext('report')
     } catch (err) {
       if (!alive.current) return
       setError(err.code || 'default')
@@ -167,7 +185,7 @@ export default function RecoveryScreen({ lang, t, zone }) {
     <>
       {(phase === 'pick' || phase === 'working') && <p>{t.recIntro}</p>}
       <p className="muted small">{t.recPrivacy}</p>
-      {error && <p className="notice error" role="alert">{t.errors[error] || t.errors.default}</p>}
+      {error && <p ref={errorRef} className="notice error" role="alert">{t.errors[error] || t.errors.default}</p>}
 
       {phase === 'deleted' && (
         <>
@@ -216,11 +234,11 @@ export default function RecoveryScreen({ lang, t, zone }) {
       )}
 
       {['results', 'reporting', 'report'].includes(phase) && view && (
-        <ResultsView t={t} lang={lang} view={view} showReport={phase === 'report'} place={place}
+        <ResultsView t={t} lang={lang} view={view} showReport={phase === 'report'} place={place} reportHeadingRef={reportRef}
                      photoUrls={photos.map((p) => p.url)} outlines={outlines} setOutlines={setOutlines}>
           {phase !== 'report' && (
             <>
-              <Questions t={t} questions={view.questions} answers={answers}
+              <Questions t={t} questions={view.questions} answers={answers} headingRef={questionsRef}
                          setAnswer={(q, a) => setAnswers((x) => ({ ...x, [q]: a }))} />
               <button className="big rec-make" onClick={makeReport} disabled={phase === 'reporting'}>
                 {phase === 'reporting' ? t.recStepReport : t.recMakeReport}

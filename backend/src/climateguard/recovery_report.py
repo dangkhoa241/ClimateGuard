@@ -13,7 +13,7 @@ import re
 from . import guardrails, llm, recovery_checklist as checklist
 from .languages import LANGS
 from .recovery_data import CONCEPTS, DISASTER_LABELS, OPTIONS, QUESTIONS
-from .recovery_guard import issues
+from .recovery_guard import OWNERSHIP_OK_ITEMS, issues
 
 log = logging.getLogger(__name__)
 
@@ -36,6 +36,7 @@ Write in English:
 - "areas": the damage grouped by area of the home, merging photos of the same area: [{{"area": "...", "photos": [photo numbers], "damage": ["short phrase", ...]}}]. Only damage listed above.
 - "details": for each checklist item above, at most one short sentence that makes it specific to this home (for example which rooms or items to photograph, or what to tell the insurer); leave an item out if there is nothing specific.
 Rules: only the facts above; never say whether the home or any room is safe or unsafe to enter or live in; never give repair costs, prices or estimates; nothing about health, injuries or medicine; no blame; no markdown.
+Always call it "your home" (Spanish "su casa", Vietnamese "nhà của bạn", the plain equivalent in other languages), never "the owned home", "the house you own", "the rented home" or similar; never say whether the person owns or rents it, except in a detail for the landlord item.
 {lang_rule}Return only JSON: {json_shape}"""
 
 STYLE = {"es": ' Spanish: address the person as "usted".',
@@ -48,7 +49,10 @@ def _prompt(disaster: str, photos: list[dict], answers: dict, lang: str, detail_
         outlined = ", ".join(f"{CONCEPTS[f['concept']]['en'].lower()} x{f['count']}" for f in p.get("found") or [])
         photo_lines.append(f"Photo {p['index'] + 1}: area: {p['area']}; damage: {'; '.join(p['damage']) or 'none seen'}"
                            + (f"; outlined: {outlined}" if outlined else ""))
-    answer_lines = [f"- {QUESTIONS[q]['en']} {OPTIONS[a]['en']}" for q, a in answers.items() if q != "hurt"]
+    # not "hurt" (911 is fixed text) and not "own_rent" (it only picks the landlord item, in code): the model
+    # wrote "the owned home" from it
+    answer_lines = [f"- {QUESTIONS[q]['en']} {OPTIONS[a]['en']}" for q, a in answers.items()
+                    if q not in ("hurt", "own_rent")]
     shape = '{"en": {"summary": "...", "areas": [...], "details": {"item_id": "..."}}'
     rule = ""
     if lang != "en":
@@ -71,8 +75,8 @@ def _part(raw: dict, lang: str, n_photos: int, detail_ids: list[str]) -> tuple[d
     """One language of the model's report, checked line by line. Returns (part, broken rule names)."""
     broken = []
 
-    def ok(text):
-        found = issues(text)
+    def ok(text, ownership_ok=False):
+        found = issues(text, ownership_ok)
         broken.extend(found)
         return text if text and not found else None
 
@@ -88,7 +92,7 @@ def _part(raw: dict, lang: str, n_photos: int, detail_ids: list[str]) -> tuple[d
             areas.append({"area": name, "photos": nums, "damage": damage})
     details = {}
     for i, d in (raw.get("details") or {}).items():
-        if i in detail_ids and (text := ok(_clean_text(d, lang)[:200])):
+        if i in detail_ids and (text := ok(_clean_text(d, lang)[:200], i in OWNERSHIP_OK_ITEMS)):
             details[i] = text
     return {"summary": " ".join(summary), "areas": areas, "details": details}, sorted(set(broken))
 
@@ -122,6 +126,7 @@ def write(disaster: str, photos: list[dict], answers: dict, lang: str) -> dict:
         messages += [{"role": "assistant", "content": res.text},
                      {"role": "user", "content": f"Some lines broke the rules ({', '.join(sorted(set(broken)))}): "
                       "never safe/unsafe verdicts, never costs, prices or estimates, nothing about health or "
-                      "injuries. Rewrite the whole JSON without them."}]
+                      "injuries, and always \"your home\", never whether it is owned or rented. "
+                      "Rewrite the whole JSON without them."}]
     return {**parts, "checklist_ids": ids, "cost_usd": round(cost, 6), "attempts": attempt,
             "guard_removed": removed}

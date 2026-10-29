@@ -41,13 +41,25 @@ INJURY_CARE = re.compile(
     r"primeros auxilios|vendaje|\bheridas?\b|t[eé]tanos|antibi[oó]tico|"
     r"sơ cứu|băng bó|vết thương|uốn ván|kháng sinh", re.IGNORECASE)
 
+# Phone test: reports said "the owned home" / "the house you own". The home is always "your home" ("su casa",
+# "nhà của bạn"); owning or renting is mentioned only in the checklist items that need it.
+OWNERSHIP = re.compile(
+    r"\b(owned|rented|rental) (home|house|property)\b|\b(home|house|property) (that )?you (own|rent)\b|"
+    r"\byou (own|rent)\b|\bhomeowner|\brenter\b|"
+    r"(casa|vivienda) (propia|alquilada|que (usted )?(posee|alquila|renta))|\b(es dueñ[oa]|alquila|renta) (la|su) (casa|vivienda)|"
+    r"nhà (riêng|thuê|sở hữu)|nhà (mà )?bạn (sở hữu|thuê)|bạn (là chủ|thuê) nhà|"
+    r"自有住房|您拥有的房|租住的房|您租的房|sariling bahay|inuupahang bahay|소유한 집|임차한 집|자가 주택|"
+    r"المنزل المملوك|المنزل المستأجر",
+    re.IGNORECASE)
+OWNERSHIP_OK_ITEMS = {"landlord", "flood_policy"}  # checklist items whose detail may mention owning or renting
+
 RULES = (("safety_verdict", SAFETY_VERDICT), ("repair_cost", COST), ("medical", ANSWER_MEDICAL),
-         ("medical", INJURY_CARE))
+         ("medical", INJURY_CARE), ("ownership", OWNERSHIP))
 
 
-def issues(text: str) -> list[str]:
-    """Names of the rules this text breaks (empty = fine)."""
-    return sorted({name for name, rx in RULES if rx.search(text or "")})
+def issues(text: str, ownership_ok: bool = False) -> list[str]:
+    """Names of the rules this text breaks (empty = fine). `ownership_ok`: a landlord / flood-policy detail."""
+    return sorted({name for name, rx in RULES if rx.search(text or "") and not (ownership_ok and name == "ownership")})
 
 
 def keep_clean(lines: list[str]) -> tuple[list[str], list[str]]:

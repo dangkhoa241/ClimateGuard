@@ -23,7 +23,7 @@ import _path  # noqa: F401
 from climateguard import recovery_report
 from climateguard.recovery import report_view
 from climateguard.recovery_data import HURT_CALL, LEAVE_AND_CALL
-from climateguard.recovery_guard import issues
+from climateguard.recovery_guard import OWNERSHIP_OK_ITEMS, issues
 
 RESULTS = Path(__file__).resolve().parents[1] / "eval" / "results"
 
@@ -73,9 +73,11 @@ CASES = [
 VI_DIACRITICS = set("ăâđêôơưàảãáạằẳẵắặầẩẫấậèẻẽéẹềểễếệìỉĩíịòỏõóọồổỗốộờởỡớợùủũúụừửữứựỳỷỹýỵ")
 
 
-def model_lines(side: dict) -> list[str]:
+def model_lines(side: dict) -> list[tuple[str, bool]]:
+    """(line, may mention owning or renting): only a landlord / flood-policy detail may."""
     lines = [side["summary"]] + [a["area"] for a in side["areas"]] + [d for a in side["areas"] for d in a["damage"]]
-    return lines + [c["detail"] for c in side["checklist"] if c["detail"]]
+    return [(line, False) for line in lines] + [(c["detail"], c["id"] in OWNERSHIP_OK_ITEMS)
+                                                for c in side["checklist"] if c["detail"]]
 
 
 def check(case: dict, out: dict) -> list[str]:
@@ -85,8 +87,8 @@ def check(case: dict, out: dict) -> list[str]:
     fails = []
     for side in sides:
         lang = side["lang"]
-        for line in model_lines(side):
-            if found := issues(line):
+        for line, ownership_ok in model_lines(side):
+            if found := issues(line, ownership_ok):
                 fails.append(f"{lang}: {found}: {line!r}")
         if not side["summary"] or not side["areas"]:
             fails.append(f"{lang}: empty summary or areas")
