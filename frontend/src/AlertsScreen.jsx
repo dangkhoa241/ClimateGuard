@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ALERT_LANGS, getZoneAlerts, subscribe } from './api.js'
+import { HazardIcon, hazardKind } from './icons.jsx'
 import LocationPicker from './LocationPicker.jsx'
 import ReadAloud from './ReadAloud.jsx'
 import ShareWhatsApp from './ShareWhatsApp.jsx'
@@ -34,9 +35,9 @@ function RecentAlerts({ zone, lang, t }) {
       {state.error && <p className="muted">{t.loadError}</p>}
       {!state.error && state.alerts.length === 0 && <p className="muted">{t.noAlerts}</p>}
       {state.alerts.map((a) => (
-        <article key={a.sent_at + a.hazard} className={`alert-card sev-${a.severity}`}>
+        <article key={a.sent_at + a.hazard} className={`alert-card sev-${a.severity} hz-${hazardKind(a.hazard)}`}>
           <div className="alert-meta">
-            <strong>{t.severity[a.severity] || a.severity}</strong>
+            <span className="alert-kind"><HazardIcon hazard={a.hazard} t={t} /><strong>{t.severity[a.severity] || a.severity}</strong></span>
             <time dateTime={a.sent_at}>
               {new Date(a.sent_at).toLocaleString(lang, { weekday: 'short', hour: 'numeric', minute: '2-digit' })}
             </time>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { getDemo, runDemoReplay } from './api.js'
+import { HazardIcon, hazardKind } from './icons.jsx'
 import ReadAloud from './ReadAloud.jsx'
 import { fill } from './RecoveryReport.jsx'
 import { reveal } from './reveal.js'
@@ -33,8 +34,10 @@ function ReplayResult({ r, lang, t, headingRef }) {
           : fill(t.demoCost, { calls: d.model_calls, cost: money(d.cost_usd) })}
       </p>
       {r.alerts.map((a) => (
-        <div key={a.hazard} className={`alert-card sev-${a.severity}`}>
-          <div className="alert-meta"><strong>{t.severity[a.severity] || a.severity}</strong></div>
+        <div key={a.hazard} className={`alert-card sev-${a.severity} hz-${hazardKind(a.hazard)}`}>
+          <div className="alert-meta">
+            <span className="alert-kind"><HazardIcon hazard={a.hazard} t={t} /><strong>{t.severity[a.severity] || a.severity}</strong></span>
+          </div>
           <p lang={a.lang} dir={a.lang === 'en' ? 'ltr' : undefined}>{a.text}</p>
           {a.automatic && <p className="muted small">{t.demoAutoAlert}</p>}
           {a.lang !== lang && <p className="muted small">{t.demoEnglishShown}</p>}
@@ -101,7 +104,7 @@ export default function DemoScreen({ lang, t, go }) {
       <section className="demo-section">
         <h2>{t.demoReplayTitle}</h2>
         <p className="small">{t.demoReplayIntro}</p>
-        <div className="actions">
+        <div className="demo-replays">
           {(info?.events?.map((e) => e.event) || EVENTS).map((e) => (
             <button key={e} className="mid demo-replay" onClick={() => replay(e)} disabled={!!running}>
               {t.demoEvents[e]}
@@ -113,6 +116,7 @@ export default function DemoScreen({ lang, t, go }) {
         {result && <ReplayResult r={result} lang={lang} t={t} headingRef={resultRef} />}
       </section>
 
+      <div className="demo-pair">
       <section className="demo-section">
         <h2>{t.demoRecoveryTitle}</h2>
         <p className="small">{t.demoRecoveryIntro}</p>
@@ -127,6 +131,7 @@ export default function DemoScreen({ lang, t, go }) {
           <button className="secondary" onClick={() => go('supervisor')}>{t.demoSupervisorButton}</button>
         </div>
       </section>
+      </div>
 
       <HowItWorks t={t} lang={lang} cost={info?.cost} onHistory={() => go('history')} />
     </>

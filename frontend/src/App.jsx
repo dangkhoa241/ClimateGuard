@@ -3,6 +3,7 @@ import { LANGS, STRINGS } from './i18n.js'
 import AlertsScreen from './AlertsScreen.jsx'
 import AskScreen from './AskScreen.jsx'
 import DemoScreen from './DemoScreen.jsx'
+import { FEATURE_ICONS, Globe, Logo } from './icons.jsx'
 import HistoryScreen from './HistoryScreen.jsx'
 import RecoveryScreen from './RecoveryScreen.jsx'
 import SupervisorScreen from './SupervisorScreen.jsx'
@@ -13,6 +14,11 @@ const STOCKTON = { zone: 'CAZ159', name: 'Central San Joaquin County Including S
   state: 'CA', tz: 'America/Los_Angeles', demo: true, monitored: true, calosha_applies: true }
 
 const ZONE_RE = /^[A-Z]{2}Z\d{3}$/
+const WIDE = new Set(['home', 'demo', 'history']) // the rest are forms and reports: reading width
+const FEATURES = [ // screen, description key
+  ['alerts', 'cardAlerts'], ['ask', 'cardAsk'], ['recovery', 'cardRecovery'], ['supervisor', 'cardSupervisor'],
+  ['history', 'cardHistory'],
+]
 
 function readStorage(key) {
   try {
@@ -49,20 +55,16 @@ function initialZone() {
   }
 }
 
+// One compact control: a native select, so keyboard, screen readers and phone pickers all work.
 function LanguagePicker({ lang, setLang, label }) {
   return (
-    <div className="lang-picker" role="group" aria-label={label}>
-      {LANGS.map((l) => (
-        <button
-          key={l.code}
-          className={l.code === lang ? 'active' : ''}
-          aria-pressed={l.code === lang}
-          onClick={() => setLang(l.code)}
-        >
-          {l.label}
-        </button>
-      ))}
-    </div>
+    <label className="lang-select">
+      <Globe />
+      <span className="sr-only">{label}</span>
+      <select value={lang} onChange={(e) => setLang(e.target.value)}>
+        {LANGS.map((l) => <option key={l.code} value={l.code} lang={l.code}>{l.label}</option>)}
+      </select>
+    </label>
   )
 }
 
@@ -105,25 +107,37 @@ export default function App() {
   }
 
   return (
-    <main className="app">
-      <LanguagePicker lang={lang} setLang={setLang} label={t.language} />
+    <main className={WIDE.has(screen) ? 'app wide' : 'app'}>
+      <header className="topbar">
+        {screen !== 'home' && <span className="brand"><Logo size={28} />ClimateGuard</span>}
+        <LanguagePicker lang={lang} setLang={setLang} label={t.language} />
+      </header>
       {meta.auto && <p className="muted small">{t.autoUiNote}</p>}
       {screen === 'home' ? (
         <>
-          <h1>ClimateGuard</h1>
-          <p className="tagline">{t.tagline}</p>
-          <section className="demo-entry">
-            <p>{t.demoAbout1}</p>
-            <p>{t.demoAbout2}</p>
-            <p>{t.demoAbout3}</p>
-            <button className="big demo-try" onClick={startDemo}>▶ {t.demoTry}</button>
+          <section className="hero">
+            <div className="hero-text">
+              <h1 className="hero-title"><Logo size={48} />ClimateGuard</h1>
+              <p className="tagline">{t.tagline}</p>
+              <p>{t.demoAbout1}</p>
+              <p>{t.demoAbout2}</p>
+              <p>{t.demoAbout3}</p>
+            </div>
+            <div className="hero-cta">
+              <button className="big demo-try" onClick={startDemo}><span aria-hidden="true">▶</span> {t.demoTry}</button>
+            </div>
           </section>
-          <nav className="actions">
-            <button className="big" onClick={() => setScreen('alerts')}>{t.alerts}</button>
-            <button className="big" onClick={() => setScreen('ask')}>{t.ask}</button>
-            <button className="big" onClick={() => setScreen('recovery')}>{t.recovery}</button>
-            <button className="secondary" onClick={() => setScreen('supervisor')}>{t.supervisor}</button>
-            <button className="secondary" onClick={() => setScreen('history')}>{t.history}</button>
+          <nav className="feature-grid" aria-label={t.featuresLabel}>
+            {FEATURES.map(([key, desc]) => {
+              const Icon = FEATURE_ICONS[key]
+              return (
+                <button key={key} className="feature-card" onClick={() => setScreen(key)}>
+                  <span className="feature-icon"><Icon /></span>
+                  <span className="feature-title">{t[key]}</span>
+                  <span className="feature-desc">{t[desc]}</span>
+                </button>
+              )
+            })}
           </nav>
         </>
       ) : (
