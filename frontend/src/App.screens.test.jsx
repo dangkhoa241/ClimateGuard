@@ -42,7 +42,25 @@ const mount = async (url = '/') => {
   window.history.replaceState(null, '', url)
   await act(async () => root.render(<App />))
 }
-const click = async (el) => act(async () => el.dispatchEvent(new MouseEvent('click', { bubbles: true })))
+// history.back() / forward() fire popstate a moment later: wait for it
+const settle = () => act(async () => { await new Promise((r) => setTimeout(r, 15)) })
+const click = async (el) => {
+  const before = window.location.href
+  const isBack = el.classList.contains('back') // the in-app Back button uses history.back(), which is async
+  await act(async () => el.dispatchEvent(new MouseEvent('click', { bubbles: true })))
+  if (isBack) for (let i = 0; i < 100 && window.location.href === before; i++) await settle()
+  await settle()
+}
+const heading = () => container.querySelector('h1').textContent
+// Poll until the page shows `title` (history changes finish a moment later, longer on a busy machine)
+const waitForHeading = async (title) => {
+  for (let i = 0; i < 100 && heading() !== title; i++) await settle()
+}
+const remount = async (url) => { // what F5 does: a fresh page at the same URL (storage survives, state does not)
+  act(() => root.unmount())
+  root = createRoot(container)
+  await mount(url)
+}
 const button = (text) => [...container.querySelectorAll('button')].find((b) => b.textContent.includes(text))
 const t = STRINGS.en
 
@@ -99,5 +117,93 @@ describe('error boundary', () => {
     expect(container.querySelector('a').getAttribute('href')).toBe('/?demo=1')
     expect(spy.mock.calls.some((c) => String(c[0]).includes('ClimateGuard crashed'))).toBe(true)
     spy.mockRestore()
+  })
+})
+
+describe('the URL follows the screen (refresh, Back and Forward)', () => {
+  const SCREENS = [['ask', t.ask], ['alerts', t.alerts], ['recovery', t.recovery], ['supervisor', t.supervisor],
+    ['history', t.history], ['demo', t.demoTitle]]
+
+  it.each(SCREENS)('loading #/%s opens that screen', async (name, title) => {
+    await mount(`/#/${name}`)
+    expect(heading()).toBe(title)
+  })
+
+  it('opening a screen puts only its name in the URL', async () => {
+    await mount()
+    await click(button(t.ask))
+    expect(window.location.hash).toBe('#/ask')
+    expect(window.location.search).toBe('')
+  })
+
+  it.each(['#/nope', '#/constructor', '#/__proto__', '#/ask/extra', '#', ''])('unknown hash %j opens home', async (hash) => {
+    await mount(`/${hash}`)
+    expect(heading()).toBe('ClimateGuard')
+  })
+
+  it('F5 on a screen stays on it', async () => {
+    await mount()
+    await click(button(t.supervisor))
+    await remount(window.location.href)
+    expect(heading()).toBe(t.supervisor)
+  })
+
+  it('browser Back and Forward move between screens, and the in-app Back button does too', async () => {
+    await mount()
+    await click(button(t.ask))
+    await click(button(t.back)) // in-app Back: one step back in the browser history
+    await waitForHeading('ClimateGuard')
+    expect(heading()).toBe('ClimateGuard')
+    await click(button(t.history))
+    expect(heading()).toBe(t.history)
+    window.history.back() // the browser's Back button
+    await waitForHeading('ClimateGuard')
+    expect(heading()).toBe('ClimateGuard')
+    window.history.forward()
+    await waitForHeading(t.history)
+    expect(heading()).toBe(t.history)
+  })
+
+  it('a screen opened directly (refresh, shared link) goes home with the in-app Back button', async () => {
+    await mount('/#/history')
+    await click(button(t.back))
+    await waitForHeading('ClimateGuard')
+    expect(heading()).toBe('ClimateGuard')
+  })
+
+  it('demo mode survives a refresh, on the demo page and on a screen opened from it', async () => {
+    await mount('/?demo=1')
+    expect(heading()).toBe(t.demoTitle)
+    await click(button(t.demoAskButton))
+    expect(heading()).toBe(t.ask)
+    expect(window.location.search).toBe('?demo=1')
+    await remount(window.location.href)
+    expect(heading()).toBe(t.ask)
+    expect(container.textContent).toContain(t.demoSampleArea) // still the sample-area demo
+    await click(button(t.back))
+    await waitForHeading(t.demoTitle)
+    expect(heading()).toBe(t.demoTitle)
+    await click(button(t.demoExit))
+    expect(heading()).toBe('ClimateGuard')
+    expect(window.location.search).toBe('')
+  })
+
+  it('the language survives a refresh', async () => {
+    await mount('/#/ask')
+    const select = container.querySelector('.lang-select select')
+    await act(async () => {
+      select.value = 'vi'
+      select.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    expect(heading()).toBe(STRINGS.vi.ask)
+    await remount(window.location.href)
+    expect(heading()).toBe(STRINGS.vi.ask)
+    expect(document.documentElement.lang).toBe('vi')
+  })
+
+  it('the recovery screen restarts at its first step on refresh instead of crashing', async () => {
+    await mount('/#/recovery')
+    expect(button(t.recCheck).disabled).toBe(true) // no photos yet
+    expect(container.querySelector('.rec-disasters')).toBeTruthy() // the disaster picker, step one
   })
 })

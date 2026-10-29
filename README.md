@@ -154,7 +154,7 @@ The same diagram is in [docs/architecture.mmd](docs/architecture.mmd). It is not
   - **Recovery: 6 of 6 trick cases passed** (injected instructions, cost and medicine bait, a renter question), $0.046 for all six.
   - **Back-translation: 54 of 62 Spanish and Vietnamese alerts kept the English meaning.** The 8 flagged: 4 are Vietnamese "chỉ" ("only") wording, 3 are small real changes (a dropped "immediately", "above" became "at", "stay off roads" softened to "limit going out"), and 1 is an end-time wording difference. They are flagged for a human, not scored.
   - Earlier development runs and the bugs they found are in [docs/TECHNICAL.md](docs/TECHNICAL.md).
-- **Tests.** 515 backend tests and 32 frontend tests (including one that opens every main screen in a browser-like page and fails on any thrown error), all offline.
+- **Tests.** 515 backend tests and 51 frontend tests (including ones that open every main screen in a browser-like page and fail on any thrown error, and ones for refresh and the Back button), all offline.
 - **Cost logging.** Every model call goes through one wrapper that requires a token limit, caches repeats for an hour, and logs tokens and cost. The usage log drives the **$5/day budget**: over it, the alert agent runs only for areas with an active NWS Warning, and Ask, recovery and demo replays degrade to fixed or saved answers.
 - **Measured cost** (Oct 2026): about **$0.013 per alert** (4 to 6 model calls); about **$0.003 per Ask answer** ($0.02 to $0.03 when it searches the web for shelters); about **$0.004 per pre-shift talk**; about **$0.0002 per voice question**; about **$0.01 per recovery report with 1 photo and $0.07 with 6**. Total model spend so far, from our usage logs (development, evals and the live site, including the final eval): about **$2.12 of the $150 Meta credit and $2.33 of the $100 Baseten credit**, about $4.45 together. AWS is $0 on the Free plan. The demo's "How it works" strip shows the live total.
 - **AWS.** One SAM template in **us-east-2**: Lambda, DynamoDB, EventBridge Scheduler, SNS, S3, API Gateway, SSM. It stays inside the AWS Free plan, so AWS costs about $0. `deploy.ps1` checks permissions and free-tier capacity before every deploy.
@@ -187,7 +187,7 @@ python -m venv .venv
 
 cd ../frontend
 npm install
-npm test                                   # 32 tests
+npm test                                   # 51 tests
 npm run dev                                # set VITE_API_URL in frontend/.env.local
 ```
 

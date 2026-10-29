@@ -44,6 +44,20 @@ function initialLang() {
   return [fromUrl, readStorage('lang')].find((v) => v && allowed.includes(v)) || 'en'
 }
 
+// The current screen lives in the URL hash (#/ask, #/demo...) so refresh and the browser's Back and Forward
+// buttons work. Only the screen name and the demo flag go in the URL, never a ZIP code, question or photo.
+function screenFromUrl() {
+  const { hash, search } = window.location
+  if (hash && hash !== '#') {
+    const name = hash.startsWith('#/') ? hash.slice(2) : ''
+    return Object.hasOwn(SCREENS, name) ? name : 'home' // unknown hash (or none): home
+  }
+  const q = new URLSearchParams(search) // links without a hash: ?demo=1, and alert emails with ?zone=
+  return q.get('demo') === '1' ? 'demo' : q.has('zone') ? 'alerts' : 'home'
+}
+
+const demoInUrl = () => new URLSearchParams(window.location.search).get('demo') === '1'
+
 function initialZone() {
   const fromUrl = (new URLSearchParams(window.location.search).get('zone') || '').toUpperCase()
   if (ZONE_RE.test(fromUrl)) return { zone: fromUrl, name: fromUrl }
@@ -71,12 +85,9 @@ function LanguagePicker({ lang, setLang, label }) {
 export default function App() {
   const [lang, setLang] = useState(initialLang)
   const [zone, setZone] = useState(initialZone)
-  const [demo, setDemo] = useState(() => new URLSearchParams(window.location.search).get('demo') === '1')
+  const [demo, setDemo] = useState(demoInUrl)
   const [demoZone, setDemoZone] = useState(STOCKTON)
-  const [screen, setScreen] = useState(() => {
-    const q = new URLSearchParams(window.location.search)
-    return q.get('demo') === '1' ? 'demo' : q.has('zone') ? 'alerts' : 'home'
-  })
+  const [screen, setScreen] = useState(screenFromUrl)
   const area = demo ? demoZone : zone
   const setArea = demo ? setDemoZone : setZone
   const t = STRINGS[lang]
@@ -93,17 +104,40 @@ export default function App() {
     window.scrollTo(0, 0)
   }, [screen])
 
-  function startDemo() {
-    setDemo(true)
-    setScreen('demo')
+  // Browser Back/Forward (and a hand-edited hash): follow the URL.
+  useEffect(() => {
+    const sync = () => {
+      setScreen(screenFromUrl())
+      setDemo(demoInUrl())
+    }
+    window.addEventListener('popstate', sync)
+    window.addEventListener('hashchange', sync)
+    return () => {
+      window.removeEventListener('popstate', sync)
+      window.removeEventListener('hashchange', sync)
+    }
+  }, [])
+
+  // Every in-app move adds a history entry; demo mode is kept in the URL (?demo=1) so a refresh stays in it.
+  function go(next, demoOn = demo) {
+    const url = new URL(window.location.href)
+    if (demoOn) url.searchParams.set('demo', '1')
+    else url.searchParams.delete('demo')
+    url.hash = next === 'home' ? '/' : `/${next}`
+    if (url.href !== window.location.href) window.history.pushState({ cg: true }, '', url) // cg: we pushed it
+    setDemo(demoOn)
+    setScreen(next)
   }
 
-  function leaveDemo() {
-    setDemo(false)
-    setScreen('home')
-    const url = new URL(window.location.href)
-    url.searchParams.delete('demo')
-    window.history.replaceState(null, '', url)
+  const startDemo = () => go('demo', true)
+  const leaveDemo = () => go('home', false)
+
+  // The in-app Back button: one step back in the browser's history when this page pushed the entry; if the
+  // page was opened straight on a screen (refresh, shared link), go to its parent instead.
+  function goBack() {
+    if (window.history.state?.cg) window.history.back()
+    else if (demo && screen !== 'demo') go('demo')
+    else go('home', false)
   }
 
   return (
@@ -131,7 +165,7 @@ export default function App() {
             {FEATURES.map(([key, desc]) => {
               const Icon = FEATURE_ICONS[key]
               return (
-                <button key={key} className="feature-card" onClick={() => setScreen(key)}>
+                <button key={key} className="feature-card" onClick={() => go(key)}>
                   <span className="feature-icon"><Icon /></span>
                   <span className="feature-title">{t[key]}</span>
                   <span className="feature-desc">{t[desc]}</span>
@@ -142,13 +176,13 @@ export default function App() {
         </>
       ) : (
         <>
-          <button className="back" onClick={() => setScreen(demo && screen !== 'demo' ? 'demo' : 'home')}>
+          <button className="back" onClick={goBack}>
             {meta.rtl ? '→' : '←'} {t.back}
           </button>
           {demo && screen === 'demo' && <button className="back demo-exit" onClick={leaveDemo}>{t.demoExit}</button>}
           <h1>{t[SCREENS[screen]]}</h1>
           {demo && ['ask', 'supervisor'].includes(screen) && <p className="notice demo-note small">{t.demoSampleArea}</p>}
-          {screen === 'demo' && <DemoScreen lang={lang} t={t} go={setScreen} />}
+          {screen === 'demo' && <DemoScreen lang={lang} t={t} go={(next) => go(next)} />}
           {screen === 'ask' && <AskScreen lang={lang} t={t} zone={area} setZone={setArea} demo={demo} />}
           {screen === 'alerts' && <AlertsScreen lang={lang} t={t} zone={zone} setZone={setZone} />}
           {screen === 'supervisor' && <SupervisorScreen lang={lang} t={t} zone={area} setZone={setArea} />}
