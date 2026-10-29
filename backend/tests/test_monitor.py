@@ -155,6 +155,8 @@ def test_agent_sends_and_logs_decision(monkeypatch):
 
 
 def test_agent_skip_when_model_declines(monkeypatch):
+    # skipping is allowed here because the heat warning was already alerted (otherwise it is sent back)
+    alerts_store.record_sent("CAZ159", "heat", "extreme", GOOD, "earlier")
     monkeypatch.setattr(monitor, "chat", FakeModel([{"content": "SKIPPED: already alerted."}]))
     d = monitor.run_monitor("CAZ159", scenarios.build("heatwave", "CAZ159"))
     assert d["action"] == "skipped" and d["reason"] == "already alerted."
@@ -227,3 +229,84 @@ def test_run_deadline_stops_a_slow_agent_and_logs_an_error(monkeypatch):
     monkeypatch.setattr(monitor, "chat", lambda *a, **k: pytest.fail("no model call after the deadline"))
     d = monitor.run_monitor("CAZ159", scenarios.build("heatwave", "CAZ159"))
     assert d["action"] == "error" and "time limit" in d["reason"] and d["model_calls"] == 0
+
+
+# --- an active official Warning may not be skipped (eval case hard_warning_vs_mild_data) ---
+
+def _warning_snapshot(ends_in=30, peak=82, event="Extreme Heat Warning", severity="Severe"):
+    """An official warning whose own text says 110, over data that only shows `peak` (82F by default)."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    tz = ZoneInfo("America/Los_Angeles")
+    parts = {"hours": scenarios.hours(tz, scenarios.heat_curve(peak), lambda h: 40),
+             "aqi": scenarios.aqi(tz, 40, [40, 40]),
+             "alerts": [scenarios.nws_alert(tz, event, severity, ends_in, f"{event} in effect",
+                                            "Dangerously hot conditions with temperatures up to 110 expected.",
+                                            "Stay cool.")]}
+    return scenarios.assemble("CAZ159", parts, "conflict")
+
+
+NO_NUMBERS = {"en": "An official Extreme Heat Warning is in effect. Drink water often and rest in the shade.",
+              "es": "Hay un Aviso oficial de calor extremo. Tome agua seguido y descanse en la sombra.",
+              "vi": "Có Cảnh báo nắng nóng gay gắt chính thức. Hãy uống nước thường xuyên và nghỉ trong bóng râm."}
+
+
+def test_agent_that_skips_an_active_warning_is_sent_back_and_alerts(monkeypatch):
+    fake = FakeModel([
+        {"content": "SKIPPED: the data shows only 82F, milder than the warning text."},
+        {"tool_calls": [_tool_call(1, "send_alert", _alert(severity="high", messages_by_language=NO_NUMBERS))]},
+        {"content": "SENT: official Extreme Heat Warning, numbers left out because the data disagrees."},
+    ])
+    monkeypatch.setattr(monitor, "chat", fake)
+    d = monitor.run_monitor("CAZ159", _warning_snapshot())
+    assert d["action"] == "sent" and d["model_calls"] == 3
+    nudge = fake.seen[1][-1]
+    assert nudge["role"] == "user" and "Extreme Heat Warning" in nudge["content"] and "leave numbers out" in nudge["content"]
+    assert alerts_store.recent_sent("CAZ159")[0]["messages"]["en"] == NO_NUMBERS["en"]
+
+
+def test_agent_is_sent_back_at_most_twice(monkeypatch):
+    fake = FakeModel([{"content": "SKIPPED: milder data."}] * 3)
+    monkeypatch.setattr(monitor, "chat", fake)
+    d = monitor.run_monitor("CAZ159", _warning_snapshot())
+    assert d["action"] == "skipped" and d["model_calls"] == 1 + monitor.MAX_WARNING_NUDGES
+
+
+def test_temperatures_are_left_out_when_the_data_disagrees_with_the_warning():
+    run = monitor.Run(zone="CAZ159", snapshot=_warning_snapshot())
+    for lang, text in (("en", "Extreme Heat Warning. Temperatures up to 110°F today."),
+                       ("es", "Aviso de calor extremo. Hasta 110 grados hoy."),
+                       ("vi", "Cảnh báo nắng nóng. Nhiệt độ lên tới 110 độ hôm nay.")):
+        r = monitor.tool_send_alert(run, _alert(messages_by_language=dict(NO_NUMBERS, **{lang: text})))
+        assert r["sent"] is False and "leave temperatures out" in r["rejected"], lang
+    assert monitor.tool_send_alert(run, _alert(messages_by_language=NO_NUMBERS))["sent"] is True
+
+
+def test_temperatures_are_fine_when_the_data_shows_the_heat():
+    run = monitor.Run(zone="CAZ159", snapshot=_warning_snapshot(peak=108))
+    msgs = dict(NO_NUMBERS, en="Extreme Heat Warning. Temperatures up to 108°F today. Drink water often.")
+    assert monitor.tool_send_alert(run, _alert(messages_by_language=msgs))["sent"] is True
+
+
+def test_what_counts_as_an_unalerted_warning():
+    def missing(snap, **kw):
+        return [a["event"] for a in monitor.unalerted_warnings(monitor.Run(zone="CAZ159", snapshot=snap, **kw))]
+
+    assert missing(_warning_snapshot()) == ["Extreme Heat Warning"]
+    assert missing(_warning_snapshot(event="Flood Warning")) == ["Flood Warning"]
+    assert missing(_warning_snapshot(event="Heat Advisory", severity="Minor")) == []  # only Warnings are required
+    assert missing(_warning_snapshot(ends_in=-3)) == []  # expired, still in the feed
+    assert missing(_warning_snapshot(ends_in=2)) == []  # ends within 3 h and the data no longer shows heat
+    assert missing(_warning_snapshot(ends_in=2, peak=104)) == ["Extreme Heat Warning"]  # heat is coming back
+    run = monitor.Run(zone="CAZ159", snapshot=_warning_snapshot())
+    run.sent.append({"hazard": "heat", "severity": "moderate", "messages": NO_NUMBERS})
+    assert monitor.unalerted_warnings(run) == []  # this run already alerted it
+    alerts_store.record_sent("CAZ159", "heat", "high", NO_NUMBERS, "earlier")
+    assert missing(_warning_snapshot()) == []  # already alerted in the last 24 h at its severity (dedup)
+    assert missing(_warning_snapshot(severity="Extreme")) == ["Extreme Heat Warning"]  # worse than what was sent
+
+
+def test_short_fuse_warnings_never_become_required(monkeypatch):
+    monkeypatch.setattr(monitor, "chat", lambda *a, **k: pytest.fail("a lone Tornado Warning must not run the agent"))
+    d = monitor.run_monitor("MNZ060", scenarios.build("tornado_warning", "MNZ060"))
+    assert d["action"] == "skipped" and d["model_calls"] == 0

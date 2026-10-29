@@ -66,10 +66,14 @@ How to work:
    - high chance of heavy rain with flood risk.
    Do not alert for normal conditions. Do not repeat an alert already sent for the same hazard unless the
    risk got worse (higher severity) or there is important new information.
+   An active NWS WARNING (not the short-fuse types named below) is ALWAYS alerted: never skip it because our
+   data looks milder than the warning. The only exceptions are the two rules in this step (already alerted,
+   or about to end with the hazard gone). If the data disagrees with the warning, leave temperatures and other
+   numbers out of your message and use the warning's own wording for what is happening and what to do.
    Check each alert's end time ("ends_in_hours") against the forecast. If a warning ends within about 2-3
    hours and the forecast for the rest of today and tomorrow no longer shows that hazard (for heat: no hour
-   near 95F and heat index below 100F), do NOT alert: the danger is over. Severity must match what the data
-   shows, not only the warning's name. Never write "dangerous now" unless current values support it.
+   near 95F and heat index below 100F), do NOT alert: the danger is over. For watches and advisories, severity
+   must match what the data shows, not only the alert's name. Never write numbers that the data does not support.
    ClimateGuard does NOT send Tornado, Flash Flood, Severe Thunderstorm or Extreme Wind WARNINGS (they need
    minutes of lead time); never claim to cover them.
 3. Before writing, call search_safety_guidance to ground the protective actions in official guidance.
@@ -285,6 +289,60 @@ def _ending_without_hazard(run: Run, hazard: str) -> str | None:
             f"({data}): the danger is over, so do not send this alert")
 
 
+MAX_WARNING_NUDGES = 2
+WARNING_SEVERITY = {"Extreme": "extreme", "Severe": "high"}  # NWS severity -> ours; anything else is "moderate"
+DEGREES = re.compile(r"\d\s*°|\d+\s*(degrees|grados|độ)\b", re.IGNORECASE)
+
+
+def active_warnings(run: Run) -> list[dict]:
+    """Active official NWS Warnings for this zone. The short-fuse ones (tornado, flash flood, severe
+    thunderstorm, extreme wind) never reach the snapshot, so they are not here."""
+    return [a for a in run.snapshot.get("alerts", []) if (a.get("event") or "").endswith("Warning")
+            and a.get("hazard") in HAZARDS and (run.hours_left(a) is None or run.hours_left(a) > 0)]
+
+
+def unalerted_warnings(run: Run) -> list[dict]:
+    """Active Warnings the agent has not alerted and may not skip. A Warning does NOT need an alert when:
+    this run already sent one for its hazard; the same hazard was alerted in the last 24 h at its severity
+    or higher (dedup); the daily cap blocks it; or it ends within hours and the hazard is gone."""
+    recent = alerts_store.recent_sent(run.key, hours=24)
+    top_today = max((SEVERITIES.get(r["severity"], 0) for r in recent), default=0)
+    missing = []
+    for a in active_warnings(run):
+        hazard = a["hazard"]
+        need = SEVERITIES[WARNING_SEVERITY.get(a.get("severity"), "moderate")]
+        if (any(x["hazard"] == hazard for x in run.sent) or _ending_without_hazard(run, hazard)
+                or any(r["hazard"] == hazard and SEVERITIES.get(r["severity"], 0) >= need for r in recent)
+                or (len(recent) >= MAX_ALERTS_PER_DAY and need <= top_today)):
+            continue
+        missing.append(a)
+    return missing
+
+
+def warning_nudge(warnings: list[dict]) -> str:
+    lines = "; ".join(f"{a['event']} ({a.get('headline') or 'no headline'}), hazard \"{a['hazard']}\"" for a in warnings)
+    return ("You skipped an active official NWS warning: " + lines + ". ClimateGuard must always alert for an "
+            "active official warning, so call send_alert for it now. You may adjust the wording, but use the "
+            "warning's own wording for what is happening and what to do. If the numbers in our data disagree with "
+            "the warning (for example a temperature), leave numbers out of the message instead of repeating "
+            "either one. All the usual message rules still apply.")
+
+
+def _numbers_vs_warning(run: Run, hazard: str, msgs: dict) -> str | None:
+    """An active heat Warning while our data shows no heat: the message must not quote temperatures, from
+    either source (found by the eval case hard_warning_vs_mild_data)."""
+    s = run.snapshot["summary"]
+    if hazard != "heat" or any(a["hazard"] == "heat" for a in active_warnings(run)) is False:
+        return None
+    if (s.get("hours_ge_95f") or 0) > 0 or (s.get("max_heat_index_f") or 0) >= 100:
+        return None
+    if any(DEGREES.search(m) for m in msgs.values()):
+        return ("the official heat warning is active but our data does not show that heat "
+                f"(max {s.get('max_temp_f')}°F): leave temperatures out of every language and use the warning's "
+                "own wording for what is happening and what to do")
+    return None
+
+
 WATCH_WORDS = {"en": re.compile(r"\bwatch(es)?\b", re.IGNORECASE), "es": re.compile(r"\bvigilancia", re.IGNORECASE),
                "vi": re.compile(r"Cảnh giác")}  # capitalized: the product name, not "hãy cảnh giác"
 FEELS_LIKE = re.compile(r"heat index|feels like|sensaci[oó]n t[eé]rmica|[ií]ndice de calor|se sienten? como|"
@@ -367,6 +425,8 @@ def validate_alert(run: Run, args: dict) -> str | None:
         return wording
     if ending := _ending_without_hazard(run, hazard):
         return ending
+    if conflict := _numbers_vs_warning(run, hazard, msgs):
+        return conflict
     recent = alerts_store.recent_sent(run.key, hours=24)
     if len(recent) >= MAX_ALERTS_PER_DAY:
         # An alert more severe than everything sent in the last 24h always goes through.
@@ -489,7 +549,7 @@ def run_monitor(zone: str, snapshot: dict | None = None, *, force: bool = False,
                                      f"Data was refreshed and these risk signals were detected: "
                                      f"{'; '.join(signals) or 'none (forced run)'}. Review and decide.")},
     ]
-    final_text, calls, timed_out = "", 0, False
+    final_text, calls, timed_out, nudges = "", 0, False, 0
     started = time.monotonic()
     try:
         for _ in range(MAX_STEPS):
@@ -504,6 +564,11 @@ def run_monitor(zone: str, snapshot: dict | None = None, *, force: bool = False,
             message = res.raw["choices"][0]["message"]
             tool_calls = message.get("tool_calls") or []
             if not tool_calls:
+                missing = unalerted_warnings(run) if nudges < MAX_WARNING_NUDGES else []
+                if missing:  # an active official Warning may not be skipped: send the agent back to it
+                    nudges += 1
+                    messages += [_assistant_history_message(message), {"role": "user", "content": warning_nudge(missing)}]
+                    continue
                 final_text = res.text
                 break
             messages.append(_assistant_history_message(message))
