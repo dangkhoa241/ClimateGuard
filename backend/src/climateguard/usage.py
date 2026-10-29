@@ -62,6 +62,29 @@ def _read_all():
                 yield json.loads(line)
 
 
+def records_for_days(days: list[str]):
+    """Usage records for the given UTC days ("YYYY-MM-DD"): one small query per day, never a scan."""
+    if config.STORAGE == "dynamodb":
+        from boto3.dynamodb.conditions import Key
+
+        table = _table()
+        for day in days:
+            kwargs = {}
+            while True:
+                page = table.query(KeyConditionExpression=Key("day").eq(day),
+                                   ProjectionExpression="cost_usd, purpose", **kwargs)
+                for item in page["Items"]:
+                    yield {k: float(v) if isinstance(v, Decimal) else v for k, v in item.items()}
+                if "LastEvaluatedKey" not in page:
+                    break
+                kwargs["ExclusiveStartKey"] = page["LastEvaluatedKey"]
+        return
+    wanted = set(days)
+    for r in _read_all():
+        if datetime.fromtimestamp(r["ts"], timezone.utc).strftime("%Y-%m-%d") in wanted:
+            yield r
+
+
 def log_call(provider: str, model: str, prompt_tokens: int, completion_tokens: int,
              cached_tokens: int = 0, purpose: str = "", cache_hit: bool = False) -> dict:
     record = {

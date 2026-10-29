@@ -43,10 +43,12 @@
 ## Remaining order (deadline Wed Nov 4, 6 PM PT; submit by noon)
 1. **Phase 5 recovery: done and deployed.** Cost per report: about **$0.01 for 1 photo, about $0.07 for 6** (one Muse Spark vision call about $0.01 + SAM $0.0025 per damage type per photo, at most 3 per photo + report about $0.007). Rate limit 6 reports per IP per hour; over the $5/day budget it returns "very busy".
    - Code map: `recovery.py` (job flow), `recovery_data.py` (fixed lists, 7 languages), `recovery_checklist.py`, `recovery_report.py`, `recovery_guard.py`, `sam.py` + `sam_mask.py` (one_bit decoder ported from meta-sam-parser, `LICENSE-SAM`), `photos.py`, `recovery_store.py`, `handlers/recovery.py`; frontend `RecoveryScreen.jsx`, `RecoveryReport.jsx` (screen + print), `photoPrep.js`, `reveal.js`, `reportDate.js`.
-   - Know: SAM masks cover their box, not the photo; use noun concepts, not adjectives. Masks under 1.5% of the photo (debris, furniture) or 0.3% (other labels) are dropped. Print uses a table `<thead>` for the disclaimer (checked in Chrome, still to check on iPhone Safari).
+   - Know: SAM masks cover their box, not the photo; use noun concepts, not adjectives. Masks under 1.5% of the photo (debris, furniture) or 0.3% (other labels) are dropped. Print uses a table `<thead>` for the disclaimer (checked in Chrome and on iPhone Safari).
    - Review text for Spanish and Vietnamese: `docs/recovery-text-es-vi.md`. zh/tl/ko/ar recovery screen text shows in English until `translate_ui.py` is rerun.
-2. **Phase 6, polish:** demo mode with replay banners (the replays exist in the backend; the Recovery button is already live), then **README with an architecture diagram**.
-3. **Final eval ("final polish"):** `run_eval.py --fresh`, the back-translation check, `translate_ui.py` for the new keys, the recovery eval.
+2. **Phase 6, polish:**
+   - **Demo mode: built (Oct 28), needs a backend deploy** (`deploy.ps1`; new routes `GET /demo`, `POST /demo/replay`, and the Ask Lambda now reads the Baseten key and writes `DEMO-*` decisions). Until then the live site shows the demo page, but replay buttons fail and the cost line is hidden. See README "Demo mode". Spanish and Vietnamese demo text (`demo*` keys in `strings.js`) still needs human review.
+   - Next: **README with an architecture diagram**.
+3. **Final eval ("final polish"):** `run_eval.py --fresh`, the back-translation check, the recovery eval, and the **zh/tl/ko/ar screen text: rerun `translate_ui.py`** (recovery and demo keys show in English until then).
 4. **Demo video:**
    - **Open:** the true Stockton story.
    - **Maria:** labeled as an example person, in the real 2022 heat wave and the 2023 Planada flood.
@@ -58,7 +60,7 @@
 ## Still to do outside code
 - Set the AWS $1 budget alert.
 - Find a Spanish speaker to review the Spanish alerts, screen text and the recovery text (`docs/recovery-text-es-vi.md`).
-- Check the recovery PDF header on iPhone Safari (disclaimer on every page) and the Vietnamese wording on a phone.
+- Check the Vietnamese wording on a phone. (iPhone Safari PDF header confirmed Oct 28: the repeating disclaimer shows on pages 1 to 5; page 6 has the plain "Not an official damage estimate" line.)
 
 ## First prompt for the next session
 ```

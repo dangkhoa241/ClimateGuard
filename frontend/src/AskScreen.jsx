@@ -125,7 +125,7 @@ function Answer({ result, lang, t, tz, zoneId }) {
   )
 }
 
-export default function AskScreen({ lang, t, zone, setZone }) {
+export default function AskScreen({ lang, t, zone, setZone, demo }) {
   const [question, setQuestion] = useState('')
   const [status, setStatus] = useState('idle') // idle | asking | done | error
   const [result, setResult] = useState(null)
@@ -163,6 +163,14 @@ export default function AskScreen({ lang, t, zone, setZone }) {
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
           />
+          {demo && (
+            <div className="demo-samples">
+              <span className="muted small">{t.demoTryOne}</span>
+              {Object.entries(t.demoAskSamples).map(([k, q]) => (
+                <button key={k} type="button" className="chip" onClick={() => { setQuestion(q); setFromVoice(false) }}>{q}</button>
+              ))}
+            </div>
+          )}
           <VoiceInput lang={lang} t={t} disabled={status === 'asking'}
             onText={(text) => { setQuestion(text.slice(0, MAX_CHARS)); setFromVoice(true) }} />
           {fromVoice && question && <p className="muted small">{t.voiceCheck}</p>}

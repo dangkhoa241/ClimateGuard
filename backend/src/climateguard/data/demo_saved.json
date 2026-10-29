@@ -1,0 +1,65 @@
+{
+ "flood_2023": {
+  "ran_at": "2026-10-28T04:32:02+00:00",
+  "action": "sent",
+  "reason": "Sent flood alert for Bear Creek with extended river flooding through Wednesday. Active Flood Warning forecasts river rising above flood stage just after midnight tonight (to 24.1 ft) with current flooding and canal overflow near Planada Elementary noted in advisories, confirming severe ongoing/imminent flood impact requiring immediate action.",
+  "model_calls": 4,
+  "cost_usd": 0.013777,
+  "sent": [
+   {
+    "hazard": "flood",
+    "severity": "high",
+    "messages": {
+     "en": "Flood Warning in effect until 9:30 AM Wednesday. Bear Creek above Mckee Road will rise above flood stage just after midnight tonight and remain high through Tuesday. The canal near Planada elementary school is overflowing. Never walk or drive through floodwater. Move to higher ground now and follow evacuation orders.",
+     "es": "Aviso de inundación vigente hasta las 9:30 de la mañana del miércoles. Bear Creek por encima de Mckee Road superará el nivel de inundación justo después de la medianoche de hoy y se mantendrá alto durante el martes. El canal cerca de la escuela primaria de Planada se está desbordando. Nunca camine ni maneje por agua de inundación. Vaya a un lugar alto ahora y siga las órdenes de evacuación.",
+     "vi": "Cảnh báo lũ lụt có hiệu lực đến 9 giờ 30 sáng thứ Tư. Nước sông Bear Creek đoạn qua Mckee Road dự kiến dâng vượt mức báo động lũ ngay sau nửa đêm nay và duy trì ở mức cao trong ngày thứ Ba. Kênh gần trường tiểu học Planada đang tràn bờ. Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập. Nếu bạn ở vùng trũng thấp, hãy di chuyển lên chỗ cao ngay và làm theo lệnh sơ tán."
+    }
+   }
+  ]
+ },
+ "heat_2022": {
+  "ran_at": "2026-10-28T04:30:51+00:00",
+  "action": "sent",
+  "reason": "Excessive Heat Warning active until Friday 8 PM with 11 hours at or above 95°F and max 114°F/heat index 115°F today, and separate Very Unhealthy ozone AQI forecast of 208 today; sent heat alert (extreme) and ozone air-quality alert (extreme) with appropriate protective actions.",
+  "model_calls": 6,
+  "cost_usd": 0.018178,
+  "sent": [
+   {
+    "hazard": "heat",
+    "severity": "extreme",
+    "messages": {
+     "en": "Excessive Heat Warning in effect until 8 PM Friday. Today (Tuesday), from 11 AM to 9 PM, temperatures up to 114°F. Stay in air conditioning, drink water often, and rest in shade. If you can, work outdoors only in early morning or evening.",
+     "es": "Aviso de calor excesivo vigente hasta las 8 PM del viernes. Hoy (martes), de 11 AM a 9 PM, temperaturas de hasta 114°F (46°C). Permanezca en un lugar con aire acondicionado, tome agua con frecuencia y descanse a la sombra. Si puede, trabaje al aire libre solo temprano en la mañana o al anochecer.",
+     "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 8 giờ tối thứ Sáu. Hôm nay (thứ Ba), từ 11 giờ sáng đến 9 giờ tối, nhiệt độ có thể lên tới 114°F (46°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm. Nếu có thể, hãy chỉ làm việc ngoài trời vào sáng sớm hoặc chiều tối."
+    }
+   },
+   {
+    "hazard": "smoke",
+    "severity": "extreme",
+    "messages": {
+     "en": "Today (Tuesday), ozone is very unhealthy for everyone with AQI up to 208. Limit time outdoors and avoid heavy work. If you can, stay indoors and keep windows closed.",
+     "es": "Hoy (martes), la calidad del aire es muy perjudicial para todos por el ozono con un índice de hasta 208. Limite el tiempo al aire libre y evite el trabajo pesado. Si puede, permanezca en interiores con las ventanas cerradas.",
+     "vi": "Hôm nay (thứ Ba), khí ôzôn tăng cao khiến không khí rất có hại cho sức khỏe (chỉ số AQI lên tới 208). Hãy hạn chế ra ngoài và tránh vận động mạnh. Nếu có thể, hãy ở trong nhà và đóng kín cửa sổ."
+    }
+   }
+  ]
+ },
+ "smoke_2020": {
+  "ran_at": "2026-10-28T04:33:21+00:00",
+  "action": "sent",
+  "reason": "AQI is currently 183 Unhealthy and forecast to 206 Very Unhealthy (PM2.5 wildfire smoke) for Sept 12-13, exceeding the 151 threshold for smoke alerts, with no duplicate alert in last 48h; extreme severity warranted due to Very Unhealthy level requiring protective actions.",
+  "model_calls": 4,
+  "cost_usd": 0.014621,
+  "sent": [
+   {
+    "hazard": "smoke",
+    "severity": "extreme",
+    "messages": {
+     "en": "Air quality is very unhealthy today (Saturday) and tomorrow (Sunday) due to wildfire smoke, AQI up to 206. Stay indoors and keep windows closed. Avoid working or exercising outdoors. If you must go outside, wear a well-fitted N95 mask.",
+     "es": "La calidad del aire es muy poco saludable hoy (sábado) y mañana (domingo) por el humo de incendios forestales, con un índice AQI de hasta 206. Permanezca dentro de casa y mantenga las ventanas cerradas. Evite trabajar o hacer ejercicio al aire libre. Si debe salir, use una mascarilla N95 bien ajustada.",
+     "vi": "Hôm nay (thứ Bảy) và ngày mai (Chủ Nhật), khói cháy rừng khiến chất lượng không khí rất có hại cho sức khỏe (chỉ số AQI lên tới 206). Hãy ở trong nhà và đóng kín cửa sổ. Tránh làm việc hoặc vận động ngoài trời. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít."
+    }
+   }
+  ]
+ }
+}

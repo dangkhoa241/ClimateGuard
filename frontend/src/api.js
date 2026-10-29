@@ -132,3 +132,25 @@ export const sendRecoveryAnswers = (job, answers) =>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ answers }),
   })
+
+// Demo mode: the replay buttons, the live site's real AI cost so far, and whether today's budget is spent.
+export const getDemo = () => request('/demo')
+
+// A real past event through the live alert agent (never emailed). The server waits up to 23 s, then answers
+// with an earlier saved run, so this always gets a result unless the network fails.
+export async function runDemoReplay({ event, lang }) {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 29000)
+  try {
+    return await request('/demo/replay', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event, lang }),
+      signal: ctrl.signal,
+    })
+  } catch (err) {
+    throw ctrl.signal.aborted ? new ApiError('timeout', 0) : err
+  } finally {
+    clearTimeout(timer)
+  }
+}

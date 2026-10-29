@@ -1,5 +1,6 @@
 """Lambda (HTTP API): POST /ask {question, lang, zone} -> an answer in the person's language,
-and POST /transcribe?lang= (a spoken question as WAV) -> its text.
+POST /transcribe?lang= (a spoken question as WAV) -> its text, POST /pretalk (supervisor view),
+and POST /demo/replay {event, lang} (demo mode: a real past event through the monitoring agent).
 
 Its own function (not api.py) because it calls a model: longer timeout, model-key access.
 Per-IP rate limits; the daily model budget is checked in ask.answer().
@@ -7,7 +8,7 @@ Per-IP rate limits; the daily model budget is checked in ask.answer().
 import base64
 import logging
 
-from .. import ask, budget, llm, pretalk, ratelimit, transcribe
+from .. import ask, budget, demo, llm, pretalk, ratelimit, transcribe
 from ..languages import LANGS
 from ..subscriptions import SignupError
 from .api import ZONE_RE, _json_body, _resp, _source_ip
@@ -15,6 +16,7 @@ from .api import ZONE_RE, _json_body, _resp, _source_ip
 log = logging.getLogger()
 ASK_PER_IP_PER_HOUR = 20
 PRETALK_PER_IP_PER_HOUR = 10
+DEMO_REPLAYS_PER_IP_PER_HOUR = 15  # a fresh run is about $0.015; repeats within an hour are cached
 TRANSCRIBE_PER_IP_PER_HOUR = 30  # at most 60 s each: under $0.10/hour per IP
 # 60 s of 16 kHz mono 16-bit audio is ~1.9 MB, ~2.6 MB as base64 (HTTP API payloads go up to 10 MB)
 MAX_AUDIO_BODY_CHARS = 2_700_000
@@ -97,7 +99,31 @@ def post_pretalk(event) -> dict:
     return _resp(200, result)
 
 
+def post_demo_replay(event) -> dict:
+    """Demo mode: replay a real event through the live agent (never emailed). Over the rate limit or the
+    daily budget, the person still gets an answer: the earlier saved run, labeled with why."""
+    try:
+        body = _json_body(event)
+    except SignupError as e:
+        return _resp(e.status, {"error": e.code})
+    name, lang = str(body.get("event") or ""), str(body.get("lang") or "")
+    if name not in demo.DEMO_MOMENTS:
+        return _resp(400, {"error": "unknown_event"})
+    if lang not in LANGS:
+        return _resp(400, {"error": "invalid_lang"})
+    if not ratelimit.hit("demo-ip", _source_ip(event), DEMO_REPLAYS_PER_IP_PER_HOUR, 3600):
+        return _resp(200, demo.saved_result(name, lang, "rate_limited"))
+    if budget.over_budget():
+        return _resp(200, demo.saved_result(name, lang, "budget"))
+    result = demo.run(name, lang)
+    log.info("demo replay event=%s lang=%s source=%s why=%s cost=%s", name, lang, result["source"],
+             result["why"], result["decision"]["cost_usd"])
+    return _resp(200, result)
+
+
 def handler(event, context):
+    if event.get("routeKey") == "POST /demo/replay":
+        return post_demo_replay(event)
     if event.get("routeKey") == "POST /ask":
         return post_ask(event)
     if event.get("routeKey") == "POST /transcribe":

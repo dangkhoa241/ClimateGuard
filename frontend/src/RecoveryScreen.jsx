@@ -14,6 +14,39 @@ const MAX_PHOTOS = 6
 const POLL_MS = 2000
 const GIVE_UP_MS = 180000
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+// Demo mode: public-domain photos (US government works, via Wikimedia Commons) so nobody needs their own.
+// The fire photo is cropped to leave out a bystander. Files in frontend/public/samples/.
+const SAMPLES = [
+  { id: 'storm', disaster: 'storm', credit: 'Greg Henshall / FEMA, Greensburg, Kansas, 2007',
+    source: 'https://commons.wikimedia.org/wiki/File:FEMA_-_30163_-_Tornado_damaged_home_in_Kansas.jpg' },
+  { id: 'flood', disaster: 'flood', credit: 'U.S. Fish and Wildlife Service',
+    source: 'https://commons.wikimedia.org/wiki/File:Flooded_house_interior.jpg' },
+  { id: 'fire', disaster: 'wildfire', credit: 'Susie Shapira / FEMA, Pauma, California, 2007',
+    source: 'https://commons.wikimedia.org/wiki/File:FEMA_-_33504_-_debris_from_a_burned_home_in_California.jpg' },
+  { id: 'earthquake', disaster: 'earthquake', credit: 'J.K. Nakata / U.S. Geological Survey, Watsonville, California, 1989',
+    source: 'https://commons.wikimedia.org/wiki/File:089srUSGSoffFoundation.jpg' },
+]
+
+function SamplePhotos({ t, onPick, disabled }) {
+  return (
+    <section className="rec-samples">
+      <h2 className="rec-h2">{t.demoSamplesTitle}</h2>
+      <ul>
+        {SAMPLES.map((s) => (
+          <li key={s.id}>
+            <button type="button" onClick={() => onPick(s)} disabled={disabled}>
+              <img src={`/samples/${s.id}.jpg`} alt="" loading="lazy" />
+              <span>{t.recDisasters[s.disaster]}</span>
+            </button>
+            <a className="muted small" href={s.source} target="_blank" rel="noreferrer" lang="en" dir="ltr">
+              {fill(t.demoSampleCredit, { credit: s.credit })}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
 
 function DisasterPicker({ t, value, onChange, disabled }) {
   return (
@@ -61,7 +94,7 @@ function Questions({ t, questions, answers, setAnswer, headingRef }) {
   )
 }
 
-export default function RecoveryScreen({ lang, t, zone }) {
+export default function RecoveryScreen({ lang, t, zone, demo }) {
   const place = zone?.place || null // "Stockton, CA" when the person picked an area elsewhere in the app
   const [disaster, setDisaster] = useState('auto')
   const [photos, setPhotos] = useState([]) // {url, blob}
@@ -104,6 +137,21 @@ export default function RecoveryScreen({ lang, t, zone }) {
       }
     }
     setPhotos((p) => [...p, ...added])
+  }
+
+  // Demo: a sample is added like a photo the person picked (same canvas step), and sets the disaster
+  // when it's the first photo; mixed samples go back to "let the agent decide".
+  async function addSample(sample) {
+    setError(null)
+    try {
+      const res = await fetch(`/samples/${sample.id}.jpg`)
+      if (!res.ok) throw new Error('photo_unreadable')
+      const file = new File([await res.blob()], `${sample.id}.jpg`, { type: 'image/jpeg' })
+      await addFiles([file])
+      setDisaster((d) => (photos.length === 0 ? sample.disaster : d === sample.disaster ? d : 'auto'))
+    } catch {
+      setError('photo_unreadable')
+    }
   }
 
   function removePhoto(i) {
@@ -197,6 +245,7 @@ export default function RecoveryScreen({ lang, t, zone }) {
       {(phase === 'pick' || phase === 'working') && (
         <>
           <DisasterPicker t={t} value={disaster} onChange={setDisaster} disabled={phase === 'working'} />
+          {demo && phase === 'pick' && photos.length < MAX_PHOTOS && <SamplePhotos t={t} onPick={addSample} />}
           <h2 className="rec-h2">{t.recPhotosLabel}</h2>
           {photos.length > 0 && (
             <ul className="rec-thumbs">

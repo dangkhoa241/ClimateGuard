@@ -22,6 +22,8 @@ ROUTES = [  # (method, regex, routeKey)
     ("GET", r"^/zones/(?P<zone>[A-Za-z]{2}[Zz]\d{3})/alerts$", "GET /zones/{zone}/alerts"),
     ("POST", r"^/subscribe$", "POST /subscribe"),
     ("GET", r"^/decisions$", "GET /decisions"),
+    ("GET", r"^/demo$", "GET /demo"),
+    ("POST", r"^/demo/replay$", "POST /demo/replay"),  # Ask Lambda in AWS
     ("POST", r"^/ask$", "POST /ask"),  # its own Lambda in AWS (handlers/ask.py)
     ("POST", r"^/transcribe$", "POST /transcribe"),  # same Lambda as /ask
     ("POST", r"^/pretalk$", "POST /pretalk"),  # same Lambda as /ask
@@ -61,7 +63,7 @@ class Handler(BaseHTTPRequestHandler):
                          "body": (base64.b64encode(raw).decode() if binary else raw.decode("utf-8")) if raw else None,
                          "isBase64Encoded": binary,
                          "requestContext": {"http": {"sourceIp": self.client_address[0]}}}
-                fn = (ask.handler if route in ("POST /ask", "POST /transcribe", "POST /pretalk")
+                fn = (ask.handler if route in ("POST /ask", "POST /transcribe", "POST /pretalk", "POST /demo/replay")
                       else recovery.handler if "/recovery" in route else handler)
                 r = fn(event, None)
                 return self._send(r["statusCode"], r["headers"], r["body"])

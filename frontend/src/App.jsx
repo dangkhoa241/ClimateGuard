@@ -2,11 +2,15 @@ import { useEffect, useState } from 'react'
 import { LANGS, STRINGS } from './i18n.js'
 import AlertsScreen from './AlertsScreen.jsx'
 import AskScreen from './AskScreen.jsx'
+import DemoScreen from './DemoScreen.jsx'
 import HistoryScreen from './HistoryScreen.jsx'
 import RecoveryScreen from './RecoveryScreen.jsx'
 import SupervisorScreen from './SupervisorScreen.jsx'
 
-const SCREENS = { alerts: 'alerts', ask: 'ask', recovery: 'recovery', supervisor: 'supervisor', history: 'history' } // screen -> title key
+const SCREENS = { alerts: 'alerts', ask: 'ask', recovery: 'recovery', supervisor: 'supervisor', history: 'history', demo: 'demoTitle' } // screen -> title key
+// Demo mode's sample area (a demo zone: always monitored). Kept apart from the person's own saved area.
+const STOCKTON = { zone: 'CAZ159', name: 'Central San Joaquin County Including Stockton Metro', place: 'Stockton, CA',
+  state: 'CA', tz: 'America/Los_Angeles', demo: true, monitored: true, calosha_applies: true }
 
 const ZONE_RE = /^[A-Z]{2}Z\d{3}$/
 
@@ -65,9 +69,14 @@ function LanguagePicker({ lang, setLang, label }) {
 export default function App() {
   const [lang, setLang] = useState(initialLang)
   const [zone, setZone] = useState(initialZone)
-  const [screen, setScreen] = useState(() =>
-    new URLSearchParams(window.location.search).has('zone') ? 'alerts' : 'home',
-  )
+  const [demo, setDemo] = useState(() => new URLSearchParams(window.location.search).get('demo') === '1')
+  const [demoZone, setDemoZone] = useState(STOCKTON)
+  const [screen, setScreen] = useState(() => {
+    const q = new URLSearchParams(window.location.search)
+    return q.get('demo') === '1' ? 'demo' : q.has('zone') ? 'alerts' : 'home'
+  })
+  const area = demo ? demoZone : zone
+  const setArea = demo ? setDemoZone : setZone
   const t = STRINGS[lang]
   const meta = LANGS.find((l) => l.code === lang) || {}
 
@@ -77,6 +86,20 @@ export default function App() {
     save('lang', lang)
   }, [lang, meta.rtl])
   useEffect(() => save('zone', zone ? JSON.stringify(zone) : null), [zone])
+  useEffect(() => window.scrollTo(0, 0), [screen])
+
+  function startDemo() {
+    setDemo(true)
+    setScreen('demo')
+  }
+
+  function leaveDemo() {
+    setDemo(false)
+    setScreen('home')
+    const url = new URL(window.location.href)
+    url.searchParams.delete('demo')
+    window.history.replaceState(null, '', url)
+  }
 
   return (
     <main className="app">
@@ -86,6 +109,12 @@ export default function App() {
         <>
           <h1>ClimateGuard</h1>
           <p className="tagline">{t.tagline}</p>
+          <section className="demo-entry">
+            <p>{t.demoAbout1}</p>
+            <p>{t.demoAbout2}</p>
+            <p>{t.demoAbout3}</p>
+            <button className="big demo-try" onClick={startDemo}>▶ {t.demoTry}</button>
+          </section>
           <nav className="actions">
             <button className="big" onClick={() => setScreen('alerts')}>{t.alerts}</button>
             <button className="big" onClick={() => setScreen('ask')}>{t.ask}</button>
@@ -96,13 +125,18 @@ export default function App() {
         </>
       ) : (
         <>
-          <button className="back" onClick={() => setScreen('home')}>{meta.rtl ? '→' : '←'} {t.back}</button>
+          <button className="back" onClick={() => setScreen(demo && screen !== 'demo' ? 'demo' : 'home')}>
+            {meta.rtl ? '→' : '←'} {t.back}
+          </button>
+          {demo && screen === 'demo' && <button className="back demo-exit" onClick={leaveDemo}>{t.demoExit}</button>}
           <h1>{t[SCREENS[screen]]}</h1>
-          {screen === 'ask' && <AskScreen lang={lang} t={t} zone={zone} setZone={setZone} />}
+          {demo && ['ask', 'supervisor'].includes(screen) && <p className="notice demo-note small">{t.demoSampleArea}</p>}
+          {screen === 'demo' && <DemoScreen lang={lang} t={t} go={setScreen} />}
+          {screen === 'ask' && <AskScreen lang={lang} t={t} zone={area} setZone={setArea} demo={demo} />}
           {screen === 'alerts' && <AlertsScreen lang={lang} t={t} zone={zone} setZone={setZone} />}
-          {screen === 'supervisor' && <SupervisorScreen lang={lang} t={t} zone={zone} setZone={setZone} />}
-          {screen === 'recovery' && <RecoveryScreen lang={lang} t={t} zone={zone} />}
-          {screen === 'history' && <HistoryScreen lang={lang} t={t} zone={zone} />}
+          {screen === 'supervisor' && <SupervisorScreen lang={lang} t={t} zone={area} setZone={setArea} />}
+          {screen === 'recovery' && <RecoveryScreen lang={lang} t={t} zone={area} demo={demo} />}
+          {screen === 'history' && <HistoryScreen lang={lang} t={t} zone={demo ? null : zone} />}
         </>
       )}
     </main>

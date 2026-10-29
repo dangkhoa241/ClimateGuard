@@ -44,6 +44,7 @@ backend/src/           Lambda code (packaged by `sam build`)
     languages.py, translate.py   alert languages; automatic translation of the English alert
     scenarios.py       synthetic heatwave / smoke / flood / calm / tornado_warning / winter_storm
     replays.py         real past events (data/replays/*.json) as snapshots, labeled REPLAY
+    demo.py            demo mode: replay buttons, saved fallback runs (data/demo_saved.json), cost so far
     stats.py           daily counters for the public decision history
     subscriptions.py   sign-up by zone + language via SNS (double opt-in), abuse limits, confirmed counts
     notify.py          alert delivery: one SNS publish per zone + language topic
@@ -51,7 +52,7 @@ backend/src/           Lambda code (packaged by `sam build`)
     ssm.py             read API keys from SSM Parameter Store (Lambda)
     llm.py, cache.py, usage.py   model calls, response cache, usage and cost log
 backend/scripts/       smoke tests, collect_local.py, run_monitor.py, local_api.py, spend.py, compare_effort.py,
-                       build_replays.py, replay.py, run_eval.py + eval_cases.py
+                       build_replays.py, replay.py, save_demo_replays.py, run_eval.py + eval_cases.py
 backend/eval/results/  evaluation reports (.md + .json)
 backend/tests/         offline tests (pytest)
 frontend/              React + Vite, mobile-first, deployed on Vercel (root directory `frontend`, env `VITE_API_URL`)
@@ -289,6 +290,24 @@ python scripts/replay.py                       # list events and moments
 python scripts/replay.py flood_2023            # run every moment through the live agent
 python scripts/build_replays.py                # rebuild from the archives (about 45 s)
 ```
+
+## Demo mode
+
+"Try the demo" on the home screen (or `?demo=1`) shows every feature in about a minute: no sign-up, no email, no photos of your own.
+
+- **Replay alerts:** one button per real event (2022 heat wave, record-day morning; 2023 Planada flood, night of the flood warnings; 2020 smoke peak). `POST /demo/replay {event, lang}` runs the **real monitoring agent** on that moment and shows the alert in the chosen language, labeled "REPLAY of a real event", with the agent's decision, reason and cost.
+  - Each run gets its own `DEMO-<event>-<id>` log, so earlier demo runs never make the agent skip a duplicate. Nothing is emailed and nothing enters the live history. Repeats within an hour reuse cached model answers ($0, and the page says so). zh/tl/ko/ar alerts are translated automatically and labeled.
+  - **Fallback:** over the $5/day budget, over the rate limit (15 per IP per hour), or when the agent takes more than 23 s or fails, the page shows an **earlier real run** of the same moment with its date and the reason, never an error. These saved runs (`data/demo_saved.json`) come from the local replay/eval logs: `python scripts/save_demo_replays.py`.
+- **Recovery with sample photos:** tap a sample photo (it goes through the same canvas step as your own photos), then the normal flow: outlines, questions, report, checklist, PDF. Same rate limit and budget guard as real reports. Sample photos (public domain, US government works, via Wikimedia Commons; credited in the app):
+
+  | Photo | Credit | Source |
+  |---|---|---|
+  | Storm | Greg Henshall / FEMA, Greensburg, Kansas, 2007 | [FEMA 30163](https://commons.wikimedia.org/wiki/File:FEMA_-_30163_-_Tornado_damaged_home_in_Kansas.jpg) |
+  | Flood | U.S. Fish and Wildlife Service | [Flooded house interior](https://commons.wikimedia.org/wiki/File:Flooded_house_interior.jpg) |
+  | Fire | Susie Shapira / FEMA, Pauma, California, 2007 (cropped to leave out a bystander) | [FEMA 33504](https://commons.wikimedia.org/wiki/File:FEMA_-_33504_-_debris_from_a_burned_home_in_California.jpg) |
+  | Earthquake | J.K. Nakata / USGS, Watsonville, California, 1989 | [089srUSGSoffFoundation](https://commons.wikimedia.org/wiki/File:089srUSGSoffFoundation.jpg) |
+- **Ask and Supervisor view** use Stockton (`CAZ159`) as the sample area, kept apart from the person's own saved area. Ask offers three sample questions.
+- **How it works** strip with the history page link and the live site's real AI cost since launch (`GET /demo`, summed from the usage log one day at a time, cached 15 minutes).
 
 ## Evaluation
 

@@ -5,13 +5,14 @@ GET  /zones/{zone}                       -> latest snapshot (summary + alerts + 
 GET  /zones/{zone}/alerts                -> alerts ClimateGuard sent to this zone in the last 48 h
 POST /subscribe                          -> {email, lang, zip | lat+lon} sign-up (SNS double opt-in)
 GET  /decisions?zone=&days=7&limit=50    -> the live agent's real decisions + daily counters (public)
+GET  /demo                               -> demo mode: replay buttons, real model cost so far, budget state
 """
 import base64
 import json
 import logging
 import re
 
-from .. import alerts_store, hazards, ratelimit, stats, zones
+from .. import alerts_store, budget, demo, hazards, ratelimit, stats, zones
 from ..geo import GeoError
 from ..languages import LANGS
 from ..store import get_store
@@ -131,10 +132,23 @@ def get_decisions(event) -> dict:
                        "decisions": rows[:limit]}, cache_s=60)
 
 
+def get_demo() -> dict:
+    """Demo mode's setup: the replay buttons, the deployed app's real model cost, and whether today's
+    budget is spent (then replays show earlier saved runs). Reads the usage log, so cached."""
+    try:
+        cost, spent = demo.cost_so_far(), budget.over_budget()
+    except Exception as e:  # usage log unreadable: the demo still works, without the cost line
+        log.warning("demo cost unavailable: %s", e)
+        cost, spent = None, False
+    return _resp(200, {"events": demo.catalog(), "cost": cost, "over_budget": spent}, cache_s=300)
+
+
 def handler(event, context):
     route = event.get("routeKey", "")
     if route == "GET /decisions":
         return get_decisions(event)
+    if route == "GET /demo":
+        return get_demo()
     zone = ((event.get("pathParameters") or {}).get("zone") or "").upper()
     if route == "GET /locate":
         return get_locate(event)

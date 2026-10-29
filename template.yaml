@@ -237,6 +237,7 @@ Resources:
         - DynamoDBReadPolicy: { TableName: !Ref AlertsTable }
         - DynamoDBCrudPolicy: { TableName: !Ref RateLimitTable }
         - DynamoDBCrudPolicy: { TableName: !Ref ZonesTable }  # /locate registers new zones
+        - DynamoDBReadPolicy: { TableName: !Ref UsageTable }  # GET /demo: real model cost so far + budget state
         - Statement:
             - Effect: Allow
               Action: [sns:CreateTopic, sns:Subscribe, sns:TagResource]
@@ -266,12 +267,16 @@ Resources:
         Decisions:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /decisions }
+        Demo:  # demo mode: replay buttons, cost so far
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /demo }
 
   AskFunction:
     Type: AWS::Serverless::Function
     Properties:
       Handler: climateguard.handlers.ask.handler
-      # one model call with a 20 s deadline (ask.py), inside API Gateway's 30 s limit
+      # one model call with a 20 s deadline (ask.py), inside API Gateway's 30 s limit; a demo replay
+      # waits at most 23 s for the agent, then shows the saved run (demo.py)
       Timeout: 28
       MemorySize: 512  # the OpenAI SDK import is slow at 256 MB
       LoggingConfig: { LogGroup: !Ref ApiLogGroup }
@@ -279,17 +284,19 @@ Resources:
         Variables:
           MODEL_API_KEY_PARAM: /climateguard/meta-model-api-key
           AIRNOW_API_KEY_PARAM: /climateguard/airnow-api-key  # on-demand snapshots for unmonitored zones
+          BASETEN_API_KEY_PARAM: /climateguard/baseten-api-key  # POST /demo/replay runs the monitoring agent
           USE_CONTRIBUTOR: "false"
           DAILY_MODEL_BUDGET_USD: "5"
       Policies:
         - DynamoDBReadPolicy: { TableName: !Ref SnapshotsTable }
-        - DynamoDBReadPolicy: { TableName: !Ref AlertsTable }
+        - DynamoDBCrudPolicy: { TableName: !Ref AlertsTable }  # demo replays log to DEMO-* keys (never live ones)
         - DynamoDBReadPolicy: { TableName: !Ref ZonesTable }
         - DynamoDBCrudPolicy: { TableName: !Ref RateLimitTable }
         - DynamoDBCrudPolicy: { TableName: !Ref UsageTable }   # cost log + daily budget
         - DynamoDBCrudPolicy: { TableName: !Ref CacheTable }
         - SSMParameterReadPolicy: { ParameterName: climateguard/meta-model-api-key }
         - SSMParameterReadPolicy: { ParameterName: climateguard/airnow-api-key }
+        - SSMParameterReadPolicy: { ParameterName: climateguard/baseten-api-key }
       Events:
         Ask:
           Type: HttpApi
@@ -300,6 +307,9 @@ Resources:
         PreTalk:  # supervisor view: today's crew checklist + AI pre-shift talk
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /pretalk }
+        DemoReplay:  # demo mode: a real past event through the monitoring agent (never emailed)
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /demo/replay }
 
   # Recovery agent: routes + its own async worker (POST .../analyze re-invokes this function with
   # InvocationType=Event). Fixed name so the role can invoke itself without a circular reference.
