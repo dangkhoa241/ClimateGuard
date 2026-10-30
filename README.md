@@ -166,7 +166,7 @@ The same diagram is in [docs/architecture.mmd](docs/architecture.mmd). It is not
 
 - **Not for minutes-long warnings.** See above. Alerts are email only (no SMS), so they depend on someone checking email. The first confirmation email comes from AWS, in English.
 - **Spanish has no human reviewer yet,** and Vietnamese was reviewed for style, not every sentence. The newest Spanish and Vietnamese text (recovery, demo) was drafted with AI and is waiting for review (`docs/recovery-text-es-vi.md`).
-- **Chinese, Tagalog, Korean and Arabic are machine-translated,** screens and alerts, and labeled as such. The text was checked in code (same keys, same placeholders, 911/211/N95 unchanged) but no native speaker has read it.
+- **Chinese, Tagalog, Korean and Arabic are machine-translated and not yet reviewed by a native speaker.** The app shows this note near the language selector. The text was checked in code (same keys, same placeholders, 911/211/N95 unchanged), but no native speaker has read it.
 - **The agent is not deterministic.** The same data can give a different judgment on another run. In development, a few hard cases flipped between runs. The back-translation check is a flag for review, not proof of meaning, and was itself wrong on 5 of 13 flags in one run.
 - **Replays use observed weather,** because archived NWS forecasts do not exist. The agent sees "perfect forecasts" in a replay.
 - **Recovery is approximate.** The AI can misread a photo. SAM outlines cover a box, not exact pixels, and small items are dropped. It is one home, up to 6 photos, no video. It is not an estimate and not an inspection.

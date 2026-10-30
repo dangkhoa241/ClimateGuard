@@ -227,6 +227,18 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
     expect(container.querySelector('.demo-note a').getAttribute('href')).toBe('#/how-it-works')
   })
 
+  it('the How it works title and step names render in all seven languages', async () => {
+    for (const code of ['en', 'es', 'vi', 'zh', 'tl', 'ko', 'ar']) {
+      localStorage.setItem('lang', code)
+      await remount('/#/how-it-works')
+      expect(heading()).toBe(STRINGS[code].howWorksTitle)
+      expect(container.querySelectorAll('.how-steps > li')).toHaveLength(8)
+      if (['zh', 'tl', 'ko', 'ar'].includes(code)) {
+        expect(container.textContent).toContain(STRINGS[code].autoUiNote)
+      }
+    }
+  })
+
   it('the recovery screen restarts at its first step on refresh instead of crashing', async () => {
     await mount('/#/recovery')
     expect(button(t.recCheck).disabled).toBe(true) // no photos yet
