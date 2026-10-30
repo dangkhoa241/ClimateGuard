@@ -200,11 +200,11 @@ export default function App() {
           {demo && (
             <aside className="notice demo-note small">
               <p>{t.demoSampleArea}</p>
-              <a href="#/how-it-works">{t.howWorksTitle}</a>
+              {screen !== 'how-it-works' && <a href="#/how-it-works">{t.howWorksTitle}</a>}
             </aside>
           )}
           {screen === 'demo' && <DemoScreen lang={lang} t={t} go={(next) => go(next)} />}
-          {screen === 'how-it-works' && <HowItWorksScreen lang={lang} t={t} />}
+          {screen === 'how-it-works' && <HowItWorksScreen lang={lang} t={t} demo={demo} />}
           {screen === 'ask' && <AskScreen lang={lang} t={t} zone={area} setZone={setArea} demo={demo} />}
           {screen === 'alerts' && <AlertsScreen lang={lang} t={t} zone={zone} setZone={setZone} />}
           {screen === 'supervisor' && <SupervisorScreen lang={lang} t={t} zone={area} setZone={setArea} />}
@@ -213,7 +213,7 @@ export default function App() {
         </>
       )}
       <footer className="app-footer">
-        <a href="#/how-it-works">{t.howWorksTitle}</a>
+        {screen !== 'how-it-works' && <a href="#/how-it-works">{t.howWorksTitle}</a>}
       </footer>
     </main>
   )

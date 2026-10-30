@@ -98,6 +98,23 @@ def saved_result(event: str, lang: str, why: str) -> dict:
     return _result(event, lang, saved()[event], source="saved", why=why, translate=False)
 
 
+def sample_decision() -> dict:
+    """A saved, no-model decision example for the demo's How it works page."""
+    result = saved_result("flood_2023", "en", "demo_sample")
+    return {
+        "event": result["event"],
+        "place": result["place"],
+        "ts": result["ran_at"],
+        "action": result["decision"]["action"],
+        "reason": result["decision"]["reason"],
+        "model_calls": result["decision"]["model_calls"],
+        "cost_usd": result["decision"]["cost_usd"],
+        "alerts": [{"hazard": alert["hazard"], "severity": alert["severity"],
+                    "messages": alert["translations"]}
+                   for alert in result["alerts"]],
+    }
+
+
 def _live(event: str, lang: str) -> dict:
     snap = replays.snapshot_for(event, DEMO_MOMENTS[event])
     decision = run_monitor(snap["zone"], snap, namespace=f"DEMO-{event}-{uuid.uuid4().hex[:8]}")

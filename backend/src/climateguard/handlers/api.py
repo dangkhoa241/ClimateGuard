@@ -140,7 +140,8 @@ def get_demo() -> dict:
     except Exception as e:  # usage log unreadable: the demo still works, without the cost line
         log.warning("demo cost unavailable: %s", e)
         cost, spent = None, False
-    return _resp(200, {"events": demo.catalog(), "cost": cost, "over_budget": spent}, cache_s=300)
+    return _resp(200, {"events": demo.catalog(), "cost": cost, "over_budget": spent,
+                       "sample_decision": demo.sample_decision()}, cache_s=300)
 
 
 def handler(event, context):

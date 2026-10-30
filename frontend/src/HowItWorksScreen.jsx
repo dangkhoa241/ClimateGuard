@@ -1,4 +1,4 @@
-import { getDecisions } from './api.js'
+import { getDecisions, getDemo } from './api.js'
 import { useEffect, useState } from 'react'
 
 const MODELS = [
@@ -16,20 +16,25 @@ function when(ts, lang) {
   return new Date(ts).toLocaleString(lang, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
-export default function HowItWorksScreen({ lang, t }) {
+export default function HowItWorksScreen({ lang, t, demo = false }) {
   const [attempt, setAttempt] = useState(0)
   const [state, setState] = useState({ loading: true })
 
   useEffect(() => {
     let cancelled = false
     setState({ loading: true })
-    getDecisions({ days: 7 })
-      .then((data) => !cancelled && setState({ loading: false, data }))
+    const request = demo ? getDemo() : getDecisions({ days: 7 })
+    request
+      .then((data) => {
+        if (demo && !data.sample_decision) throw new Error('demo_sample_missing')
+        if (!cancelled) setState({ loading: false, data })
+      })
       .catch(() => !cancelled && setState({ loading: false, error: true }))
     return () => { cancelled = true }
-  }, [attempt])
+  }, [attempt, demo])
 
-  const sent = state.data?.decisions?.filter((decision) => decision.action === 'sent').slice(0, 3) || []
+  const sent = !demo ? state.data?.decisions?.filter((decision) => decision.action === 'sent').slice(0, 3) || [] : []
+  const sample = demo ? state.data?.sample_decision : null
 
   return (
     <div className="how-page">
@@ -50,7 +55,24 @@ export default function HowItWorksScreen({ lang, t }) {
             <button type="button" className="secondary" onClick={() => setAttempt((n) => n + 1)}>{t.retry}</button>
           </div>
         )}
-        {state.data && sent.length === 0 && <p className="muted">{t.howNoAlerts}</p>}
+        {demo && sample && (
+          <article className="decision decision-sent">
+            <p className="muted small">{t.howDemoSample}</p>
+            <div className="alert-meta">
+              <strong>{sample.place || sample.event}</strong>
+              <time dateTime={sample.ts}>{when(sample.ts, lang)}</time>
+            </div>
+            <p><strong>{sample.action === 'sent' ? t.decisionSent : t.decisionSkipped}</strong>
+              {' · '}{sample.alerts?.map((alert) => t.hazardNames[alert.hazard] || alert.hazard).join(', ')}</p>
+            <p lang="en" dir="ltr">{sample.reason}</p>
+            {sample.alerts?.map((alert) => (
+              <p className="small" key={alert.hazard}>{alert.messages?.[lang] || alert.messages?.en}</p>
+            ))}
+            <p className="muted small">{t.decisionSteps.replace('{n}', sample.model_calls)
+              .replace('{cost}', Number(sample.cost_usd).toFixed(4))}</p>
+          </article>
+        )}
+        {!demo && state.data && sent.length === 0 && <p className="muted">{t.howNoAlerts}</p>}
         {sent.map((decision) => (
           <article className="decision decision-sent" key={`${decision.ts}-${decision.zone}`}>
             <div className="alert-meta">

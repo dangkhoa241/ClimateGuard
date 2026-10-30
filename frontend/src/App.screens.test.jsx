@@ -227,11 +227,42 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
     expect(container.querySelector('.demo-note a').getAttribute('href')).toBe('#/how-it-works')
   })
 
+  it('hides the How it works self-links there and shows a saved demo decision', async () => {
+    const response = (body) => ({ ok: true, status: 200, json: () => Promise.resolve(body) })
+    globalThis.fetch = vi.fn().mockResolvedValue(response({
+      events: [],
+      sample_decision: {
+        event: 'flood_2023', place: 'Planada', ts: '2023-01-09T20:00:00Z',
+        action: 'sent', reason: 'Flood Warning active', model_calls: 2, cost_usd: 0.0123,
+        alerts: [{ hazard: 'flood', messages: { en: 'Move to higher ground now.' } }],
+      },
+    }))
+    await mount('/?demo=1#/how-it-works')
+    expect(container.querySelector('.demo-note')).not.toBeNull()
+    expect(container.querySelector('.demo-note a')).toBeNull()
+    expect(container.querySelector('.app-footer a')).toBeNull()
+    expect(container.textContent).toContain(STRINGS.en.howDemoSample)
+    expect(container.textContent).toContain('Flood Warning active')
+    expect(container.textContent).toContain('Move to higher ground now.')
+    expect(globalThis.fetch.mock.calls.some(([url]) => String(url).endsWith('/demo'))).toBe(true)
+    expect(globalThis.fetch.mock.calls.some(([url]) => String(url).includes('/decisions?'))).toBe(false)
+  })
+
+  it('shows a retryable message if the demo decision sample is unavailable', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true, status: 200, json: () => Promise.resolve({ events: [] }),
+    })
+    await mount('/?demo=1#/how-it-works')
+    expect(container.querySelector('[role="alert"]').textContent).toContain(STRINGS.en.howLoadError)
+    expect(button(STRINGS.en.retry)).not.toBeUndefined()
+  })
+
   it('the How it works title and step names render in all seven languages', async () => {
     for (const code of ['en', 'es', 'vi', 'zh', 'tl', 'ko', 'ar']) {
       localStorage.setItem('lang', code)
       await remount('/#/how-it-works')
       expect(heading()).toBe(STRINGS[code].howWorksTitle)
+      expect(STRINGS[code].howDemoSample).toBeTruthy()
       expect(container.querySelectorAll('.how-steps > li')).toHaveLength(8)
       if (['zh', 'tl', 'ko', 'ar'].includes(code)) {
         expect(container.textContent).toContain(STRINGS[code].autoUiNote)

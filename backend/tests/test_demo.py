@@ -167,6 +167,11 @@ def test_get_demo_has_events_cost_by_feature_and_budget_state(monkeypatch):
     r = api.handler({"routeKey": "GET /demo"}, None)
     body = json.loads(r["body"])
     assert r["statusCode"] == 200 and len(body["events"]) == 3 and body["over_budget"] is False
+    sample = body["sample_decision"]
+    assert sample["event"] == "flood_2023" and sample["action"] == "sent"
+    assert sample["reason"] == demo.saved()["flood_2023"]["reason"]
+    assert sample["alerts"][0]["messages"]["en"] == demo.saved()["flood_2023"]["sent"][0]["messages"]["en"]
+    assert sample["cost_usd"] == round(demo.saved()["flood_2023"]["cost_usd"], 4)
     assert body["cost"]["since"] == "2026-10-27" and body["cost"]["total_usd"] == 0.02
     assert body["cost"]["by_feature"] == {"alerts": 0.011, "ask": 0.002, "supervisor": 0.001,
                                           "recovery": 0.009, "other": 0.0}

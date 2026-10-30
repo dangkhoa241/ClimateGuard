@@ -12,6 +12,7 @@
     "撰写报告"
   ],
   "howWhyTitle": "为什么发送了这条提醒？",
+  "howDemoSample": "演示回放中的示例",
   "howNoAlerts": "过去 7 天没有发送提醒。",
   "howLoadError": "无法加载最近的提醒决定。请检查网络后重试。",
   "retry": "重试",
@@ -292,6 +293,7 @@
     "Pagsulat ng ulat"
   ],
   "howWhyTitle": "Bakit ipinadala ang alertong ito?",
+  "howDemoSample": "Halimbawa mula sa demo replay",
   "howNoAlerts": "Walang alertong naipadala sa nakalipas na 7 araw.",
   "howLoadError": "Hindi ma-load ang mga kamakailang desisyon sa alerto. Suriin ang koneksyon at subukan muli.",
   "retry": "Subukan muli",
@@ -572,6 +574,7 @@
     "보고서 작성"
   ],
   "howWhyTitle": "이 알림은 왜 발송되었나요?",
+  "howDemoSample": "데모 재생의 예시",
   "howNoAlerts": "지난 7일 동안 발송된 알림이 없습니다.",
   "howLoadError": "최근 알림 결정을 불러오지 못했습니다. 연결을 확인하고 다시 시도하세요.",
   "retry": "다시 시도",
@@ -852,6 +855,7 @@
     "كتابة التقرير"
   ],
   "howWhyTitle": "لماذا أُرسل هذا التنبيه؟",
+  "howDemoSample": "عينة من إعادة العرض التوضيحي",
   "howNoAlerts": "لم تُرسل تنبيهات خلال الأيام السبعة الماضية.",
   "howLoadError": "تعذّر تحميل قرارات التنبيه الأخيرة. تحقق من اتصالك وحاول مرة أخرى.",
   "retry": "حاول مرة أخرى",
