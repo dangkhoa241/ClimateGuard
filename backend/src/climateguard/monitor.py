@@ -70,6 +70,11 @@ How to work:
    data looks milder than the warning. The only exceptions are the two rules in this step (already alerted,
    or about to end with the hazard gone). If the data disagrees with the warning, leave temperatures and other
    numbers out of your message and use the warning's own wording for what is happening and what to do.
+   An active NWS Dense Fog Advisory is also sufficient evidence to alert: do not skip it because the hourly
+   forecast says sunny or does not mention fog/visibility. Use the advisory's official visibility wording,
+   explain in plain words how to drive safely (slow down, low beams, extra distance), and allow extra time for
+   early-morning travel. Do not invent a visibility measurement absent from the advisory. Never include medical
+   advice. Only skip an expired/canceled advisory or a duplicate blocked by the alert rules.
    Check each alert's end time ("ends_in_hours") against the forecast. If a warning ends within about 2-3
    hours and the forecast for the rest of today and tomorrow no longer shows that hazard (for heat: no hour
    near 95F and heat index below 100F), do NOT alert: the danger is over. For watches and advisories, severity

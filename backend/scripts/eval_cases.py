@@ -163,6 +163,20 @@ CASES = [
                                                                      "Visibility one quarter mile or less in fog.",
                                                                      "Slow down and use low beams.")]}, "fog"),
                 {"send": True, "hazards": {"fog"}})]},
+    {"id": "edge_dense_fog_coastal", "kind": "edge",
+     "desc": "Coastal Dense Fog Advisory with low visibility and early-morning travel",
+     "steps": [(edge("FLZ173", lambda tz: {"hours": sc.hours(tz, lambda h: 68, lambda h: 95,
+                                                              short_at=lambda h: "Patchy fog near the coast"),
+                                            "aqi": sc.aqi(tz, 32, [35, 38]),
+                                            "alerts": [sc.nws_alert(tz, "Dense Fog Advisory", "Minor", 5,
+                                                                    f"Dense Fog Advisory until {_in(tz, 5)}",
+                                                                    "Patchy dense fog near the coast will reduce "
+                                                                    "visibility to one half mile or less through "
+                                                                    "mid morning.",
+                                                                    "If traveling early, slow down and use low "
+                                                                    "beam headlights.", "NWS Miami FL")]},
+                              "coastal-fog"),
+               {"send": True, "hazards": {"fog"}})]},
     {"id": "edge_winter_storm_mn", "kind": "edge", "desc": "Winter Storm Warning, Minneapolis (Central time)",
      "steps": [(lambda: sc.build("winter_storm"), {"send": True, "hazards": {"winter"}})]},
     # ---------------- hard / ambiguous (written after the rules, NOT to match them) ----------------
