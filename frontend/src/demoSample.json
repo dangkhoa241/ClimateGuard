@@ -1,0 +1,25 @@
+{
+  "event": "flood_2023",
+  "place": "Planada, CA",
+  "ts": "2026-10-28T04:32:02+00:00",
+  "action": "sent",
+  "reason": "Sent flood alert for Bear Creek with extended river flooding through Wednesday. Active Flood Warning forecasts river rising above flood stage just after midnight tonight (to 24.1 ft) with current flooding and canal overflow near Planada Elementary noted in advisories, confirming severe ongoing/imminent flood impact requiring immediate action.",
+  "model_calls": 4,
+  "cost_usd": 0.013777,
+  "safety_checks_passed": true,
+  "alerts": [
+    {
+      "hazard": "flood",
+      "severity": "high",
+      "messages": {
+        "en": "Flood Warning in effect until 9:30 AM Wednesday. Bear Creek above Mckee Road will rise above flood stage just after midnight tonight and remain high through Tuesday. The canal near Planada elementary school is overflowing. Never walk or drive through floodwater. Move to higher ground now and follow evacuation orders.",
+        "es": "Aviso de inundación vigente hasta las 9:30 de la mañana del miércoles. Bear Creek por encima de Mckee Road superará el nivel de inundación justo después de la medianoche de hoy y se mantendrá alto durante el martes. El canal cerca de la escuela primaria de Planada se está desbordando. Nunca camine ni maneje por agua de inundación. Vaya a un lugar alto ahora y siga las órdenes de evacuación.",
+        "vi": "Cảnh báo lũ lụt có hiệu lực đến 9 giờ 30 sáng thứ Tư. Nước sông Bear Creek đoạn qua Mckee Road dự kiến dâng vượt mức báo động lũ ngay sau nửa đêm nay và duy trì ở mức cao trong ngày thứ Ba. Kênh gần trường tiểu học Planada đang tràn bờ. Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập. Nếu bạn ở vùng trũng thấp, hãy di chuyển lên chỗ cao ngay và làm theo lệnh sơ tán.",
+        "zh": "洪水警告有效至周三上午9:30。今晚午夜过后，Mckee Road上游的Bear Creek将涨到洪水水位以上，并持续到周二保持高水位。Planada小学附近的运河正在溢出。切勿步行或驾车穿过洪水。立即转移到高处并遵守疏散命令。",
+        "tl": "Babala sa Baha na may bisa hanggang 9:30 AM Miyerkules. Ang Bear Creek sa itaas ng Mckee Road ay tataas nang lagpas sa flood stage pagkaraan lang ng hatinggabi ngayong gabi at mananatiling mataas hanggang Martes. Ang kanal malapit sa Planada elementary school ay umaapaw. Huwag kailanman maglakad o magmaneho sa tubig-baha. Lumipat sa mas mataas na lugar ngayon at sundin ang mga utos sa paglikas.",
+        "ko": "수요일 오전 9시 30분까지 홍수 경보 발효 중. Bear Creek above Mckee Road는 오늘 밤 자정 직후 홍수 수위를 넘어 화요일까지 높게 유지됩니다. Planada elementary school 근처 운하가 범람하고 있습니다. 침수된 물을 걷거나 운전해서 지나가지 마세요. 지금 높은 곳으로 이동하고 대피 명령을 따르세요.",
+        "ar": "تحذير من الفيضان سارٍ حتى الساعة 9:30 صباحًا يوم الأربعاء. سيرتفع منسوب بير كريك فوق طريق مكّي فوق مستوى الفيضان بعد منتصف الليل مباشرة الليلة وسيبقى مرتفعًا حتى يوم الثلاثاء. القناة بالقرب من مدرسة بلانادا الابتدائية تفيض. لا تمشِ أو تقُد أبدًا في مياه الفيضان. انتقل إلى أرض مرتفعة الآن واتبع أوامر الإخلاء."
+      }
+    }
+  ]
+}

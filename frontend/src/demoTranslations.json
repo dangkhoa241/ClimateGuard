@@ -1,0 +1,44 @@
+{
+  "heat_2022": {
+    "heat": {
+      "en": "Excessive Heat Warning in effect until 8 PM Friday. Today (Tuesday), from 11 AM to 9 PM, temperatures up to 114°F. Stay in air conditioning, drink water often, and rest in shade. If you can, work outdoors only in early morning or evening.",
+      "es": "Aviso de calor excesivo vigente hasta las 8 PM del viernes. Hoy (martes), de 11 AM a 9 PM, temperaturas de hasta 114°F (46°C). Permanezca en un lugar con aire acondicionado, tome agua con frecuencia y descanse a la sombra. Si puede, trabaje al aire libre solo temprano en la mañana o al anochecer.",
+      "vi": "Cảnh báo nắng nóng gay gắt có hiệu lực đến 8 giờ tối thứ Sáu. Hôm nay (thứ Ba), từ 11 giờ sáng đến 9 giờ tối, nhiệt độ có thể lên tới 114°F (46°C). Hãy ở nơi có máy lạnh, uống nước thường xuyên và nghỉ ngơi trong bóng râm. Nếu có thể, hãy chỉ làm việc ngoài trời vào sáng sớm hoặc chiều tối.",
+      "zh": "极端高温警告有效至周五晚上8点。今天（周二）上午11点至晚上9点，气温高达114°F。请待在有空调的地方，经常喝水，在阴凉处休息。如有可能，仅在清晨或傍晚进行户外工作。",
+      "tl": "Babala sa Matinding Init na may bisa hanggang 8 PM Biyernes. Ngayon (Martes), mula 11 AM hanggang 9 PM, temperatura hanggang 114°F. Manatili sa air conditioning, uminom ng tubig nang madalas, at magpahinga sa lilim. Kung maaari, magtrabaho sa labas lamang sa maagang umaga o gabi.",
+      "ko": "금요일 오후 8시까지 과도한 더위 경보 발효 중. 오늘(화요일) 오전 11시부터 오후 9시까지 기온 최고 114°F. 에어컨이 있는 곳에 머무르고, 물을 자주 마시고, 그늘에서 쉬세요. 가능하면 이른 아침이나 저녁에만 야외에서 일하세요.",
+      "ar": "تحذير من الحر الشديد سارٍ حتى الساعة 8 مساءً يوم الجمعة. اليوم (الثلاثاء)، من الساعة 11 صباحًا حتى 9 مساءً، درجات حرارة تصل إلى 114°ف. ابقَ في مكان مكيّف، واشرب الماء كثيرًا، واسترح في الظل. إن أمكن، اعمل في الخارج فقط في الصباح الباكر أو المساء."
+    },
+    "smoke": {
+      "en": "Today (Tuesday), ozone is very unhealthy for everyone with AQI up to 208. Limit time outdoors and avoid heavy work. If you can, stay indoors and keep windows closed.",
+      "es": "Hoy (martes), la calidad del aire es muy perjudicial para todos por el ozono con un índice de hasta 208. Limite el tiempo al aire libre y evite el trabajo pesado. Si puede, permanezca en interiores con las ventanas cerradas.",
+      "vi": "Hôm nay (thứ Ba), khí ôzôn tăng cao khiến không khí rất có hại cho sức khỏe (chỉ số AQI lên tới 208). Hãy hạn chế ra ngoài và tránh vận động mạnh. Nếu có thể, hãy ở trong nhà và đóng kín cửa sổ.",
+      "zh": "今天（周二）臭氧对所有人非常不健康，AQI高达208。减少户外时间，避免重体力劳动。如有可能，请待在室内并关闭窗户。",
+      "tl": "Ngayon (Martes), ang ozone ay lubhang hindi malusog para sa lahat na may AQI hanggang 208. Limitahan ang oras sa labas at iwasan ang mabibigat na gawain. Kung maaari, manatili sa loob at panatilihing nakasara ang mga bintana.",
+      "ko": "오늘(화요일) 오존이 모두에게 매우 해로우며 AQI 최대 208. 야외 시간을 줄이고 무거운 작업을 피하세요. 가능하면 실내에 머무르고 창문을 닫아 두세요.",
+      "ar": "اليوم (الثلاثاء)، الأوزون غير صحي جدًا للجميع مع مؤشر جودة الهواء حتى 208. قلل الوقت في الخارج وتجنب العمل الشاق. إن أمكن، ابقَ في الداخل وأبقِ النوافذ مغلقة."
+    }
+  },
+  "flood_2023": {
+    "flood": {
+      "en": "Flood Warning in effect until 9:30 AM Wednesday. Bear Creek above Mckee Road will rise above flood stage just after midnight tonight and remain high through Tuesday. The canal near Planada elementary school is overflowing. Never walk or drive through floodwater. Move to higher ground now and follow evacuation orders.",
+      "es": "Aviso de inundación vigente hasta las 9:30 de la mañana del miércoles. Bear Creek por encima de Mckee Road superará el nivel de inundación justo después de la medianoche de hoy y se mantendrá alto durante el martes. El canal cerca de la escuela primaria de Planada se está desbordando. Nunca camine ni maneje por agua de inundación. Vaya a un lugar alto ahora y siga las órdenes de evacuación.",
+      "vi": "Cảnh báo lũ lụt có hiệu lực đến 9 giờ 30 sáng thứ Tư. Nước sông Bear Creek đoạn qua Mckee Road dự kiến dâng vượt mức báo động lũ ngay sau nửa đêm nay và duy trì ở mức cao trong ngày thứ Ba. Kênh gần trường tiểu học Planada đang tràn bờ. Tuyệt đối không đi bộ hoặc lái xe qua vùng nước ngập. Nếu bạn ở vùng trũng thấp, hãy di chuyển lên chỗ cao ngay và làm theo lệnh sơ tán.",
+      "zh": "洪水警告有效至周三上午9:30。今晚午夜过后，Mckee Road上游的Bear Creek将涨到洪水水位以上，并持续到周二保持高水位。Planada小学附近的运河正在溢出。切勿步行或驾车穿过洪水。立即转移到高处并遵守疏散命令。",
+      "tl": "Babala sa Baha na may bisa hanggang 9:30 AM Miyerkules. Ang Bear Creek sa itaas ng Mckee Road ay tataas nang lagpas sa flood stage pagkaraan lang ng hatinggabi ngayong gabi at mananatiling mataas hanggang Martes. Ang kanal malapit sa Planada elementary school ay umaapaw. Huwag kailanman maglakad o magmaneho sa tubig-baha. Lumipat sa mas mataas na lugar ngayon at sundin ang mga utos sa paglikas.",
+      "ko": "수요일 오전 9시 30분까지 홍수 경보 발효 중. Bear Creek above Mckee Road는 오늘 밤 자정 직후 홍수 수위를 넘어 화요일까지 높게 유지됩니다. Planada elementary school 근처 운하가 범람하고 있습니다. 침수된 물을 걷거나 운전해서 지나가지 마세요. 지금 높은 곳으로 이동하고 대피 명령을 따르세요.",
+      "ar": "تحذير من الفيضان سارٍ حتى الساعة 9:30 صباحًا يوم الأربعاء. سيرتفع منسوب بير كريك فوق طريق مكّي فوق مستوى الفيضان بعد منتصف الليل مباشرة الليلة وسيبقى مرتفعًا حتى يوم الثلاثاء. القناة بالقرب من مدرسة بلانادا الابتدائية تفيض. لا تمشِ أو تقُد أبدًا في مياه الفيضان. انتقل إلى أرض مرتفعة الآن واتبع أوامر الإخلاء."
+    }
+  },
+  "smoke_2020": {
+    "smoke": {
+      "en": "Air quality is very unhealthy today (Saturday) and tomorrow (Sunday) due to wildfire smoke, AQI up to 206. Stay indoors and keep windows closed. Avoid working or exercising outdoors. If you must go outside, wear a well-fitted N95 mask.",
+      "es": "La calidad del aire es muy poco saludable hoy (sábado) y mañana (domingo) por el humo de incendios forestales, con un índice AQI de hasta 206. Permanezca dentro de casa y mantenga las ventanas cerradas. Evite trabajar o hacer ejercicio al aire libre. Si debe salir, use una mascarilla N95 bien ajustada.",
+      "vi": "Hôm nay (thứ Bảy) và ngày mai (Chủ Nhật), khói cháy rừng khiến chất lượng không khí rất có hại cho sức khỏe (chỉ số AQI lên tới 206). Hãy ở trong nhà và đóng kín cửa sổ. Tránh làm việc hoặc vận động ngoài trời. Nếu phải ra ngoài, hãy đeo khẩu trang N95 vừa khít.",
+      "zh": "由于野火烟雾，今天（周六）和明天（周日）空气质量非常不健康，AQI高达206。请待在室内并关闭窗户。避免在户外工作或锻炼。如必须外出，请佩戴贴合良好的N95口罩。",
+      "tl": "Ang kalidad ng hangin ay lubhang hindi malusog ngayon (Sabado) at bukas (Linggo) dahil sa usok ng wildfire, AQI hanggang 206. Manatili sa loob at panatilihing nakasara ang mga bintana. Iwasan ang pagtatrabaho o pag-eehersisyo sa labas. Kung kailangan lumabas, magsuot ng maayos na N95 mask.",
+      "ko": "산불 연기로 인해 오늘(토요일)과 내일(일요일) 대기 질이 매우 해로우며 AQI 최대 206. 실내에 머무르고 창문을 닫아 두세요. 야외에서 일하거나 운동하지 마세요. 외출해야 한다면 잘 맞는 N95 마스크를 착용하세요.",
+      "ar": "جودة الهواء غير صحية جدًا اليوم (السبت) وغدًا (الأحد) بسبب دخان حرائق الغابات، ومؤشر جودة الهواء حتى 206. ابقَ في الداخل وأبقِ النوافذ مغلقة. تجنب العمل أو ممارسة الرياضة في الخارج. إذا كان يجب عليك الخروج، ارتدِ كمامة N95 محكمة الملاءمة."
+    }
+  }
+}

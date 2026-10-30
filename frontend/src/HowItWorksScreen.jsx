@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { getDecisions, getDemo } from './api.js'
+import { getDecisions } from './api.js'
 import { HOW_LANES, HOW_NODES } from './howItWorksData.js'
+import DEMO_SAMPLE from './demoSample.json'
 
 function when(ts, lang) {
   return new Date(ts).toLocaleString(lang, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
@@ -70,6 +71,10 @@ function DecisionPanel({ decision, lang, t }) {
       <dl className="how-decision-fields">
         <div><dt>{t.howDecisionHazard}</dt><dd>{hazards.length ? hazards.join(', ') : t.howNoHazard}</dd></div>
         <div><dt>{t.howDecisionAction}</dt><dd>{action}</dd></div>
+        {decision.safety_checks_passed != null && (
+          <div><dt>{t.howDecisionSafety}</dt><dd>{decision.safety_checks_passed ? t.howSafetyPassed : t.howSafetyNotPassed}</dd></div>
+        )}
+        {decision.model_calls != null && <div><dt>{t.howDecisionCalls}</dt><dd>{decision.model_calls}</dd></div>}
         <div><dt>{t.howDecisionCost}</dt><dd>${Number(decision.cost_usd || 0).toFixed(4)}</dd></div>
       </dl>
       <p lang="en" dir="ltr">{decision.reason}</p>
@@ -88,14 +93,11 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
   const closeButtonRef = useRef(null)
 
   useEffect(() => {
+    if (demo) return undefined // demo mode shows the bundled sample: no API call, so nothing to fail
     let cancelled = false
     setState({ loading: true })
-    const request = demo ? getDemo() : getDecisions({ days: 7 })
-    request
-      .then((data) => {
-        if (demo && !data.sample_decision) throw new Error('demo_sample_missing')
-        if (!cancelled) setState({ loading: false, data })
-      })
+    getDecisions({ days: 7 })
+      .then((data) => !cancelled && setState({ loading: false, data }))
       .catch(() => !cancelled && setState({ loading: false, error: true }))
     return () => { cancelled = true }
   }, [attempt, demo])
@@ -120,7 +122,7 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
   }, [openNodeId])
 
   const activeNode = HOW_NODES.find((node) => node.id === openNodeId)
-  const decision = demo ? state.data?.sample_decision : state.data?.decisions?.[0]
+  const decision = demo ? DEMO_SAMPLE : state.data?.decisions?.[0]
   const visibleLanes = HOW_LANES.map((lane) => ({
     ...lane,
     flows: lane.flows.filter((flow) => view === 'all' || flow.id === view),
@@ -203,14 +205,14 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
           <section className="how-decisions" aria-labelledby="how-decisions-title">
             <p className="how-card-kicker">{demo ? t.howDemoSample : t.howLatestDecision}</p>
             <h2 id="how-decisions-title">{demo ? t.howWhyTitle : t.howLatestDecision}</h2>
-            {state.loading && <p className="muted" role="status">{t.loading}</p>}
-            {state.error && (
+            {!demo && state.loading && <p className="muted" role="status">{t.loading}</p>}
+            {!demo && state.error && (
               <div className="notice error" role="alert">
                 <p>{t.howLoadError}</p>
                 <button type="button" className="secondary" onClick={() => setAttempt((n) => n + 1)}>{t.retry}</button>
               </div>
             )}
-            {state.data && <DecisionPanel decision={decision} lang={lang} t={t} />}
+            {(demo || state.data) && <DecisionPanel decision={decision} lang={lang} t={t} />}
           </section>
         </div>
       </div>

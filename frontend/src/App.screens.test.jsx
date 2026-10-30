@@ -296,32 +296,26 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
     expect(container.querySelector('.demo-note a').getAttribute('href')).toBe('#/how-it-works')
   })
 
-  it('hides the How it works self-links there and shows a saved demo decision', async () => {
-    const response = (body) => ({ ok: true, status: 200, json: () => Promise.resolve(body) })
-    globalThis.fetch = vi.fn().mockResolvedValue(response({
-      events: [],
-      sample_decision: {
-        event: 'flood_2023', place: 'Planada', ts: '2023-01-09T20:00:00Z',
-        action: 'sent', reason: 'Flood Warning active', model_calls: 2, cost_usd: 0.0123,
-        alerts: [{ hazard: 'flood', messages: { en: 'Move to higher ground now.' } }],
-      },
-    }))
+  it('hides the How it works self-links there and shows the bundled demo sample without any API call', async () => {
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('offline'))
     await mount('/?demo=1#/how-it-works')
     expect(container.querySelector('.demo-note')).toBeNull()
     expect(container.querySelector('.app-footer a')).toBeNull()
-    expect(container.textContent).toContain(STRINGS.en.howDemoSample)
-    expect(container.textContent).toContain('Flood Warning active')
-    expect(container.textContent).toContain('Move to higher ground now.')
-    expect(container.textContent).toContain('$0.0123')
-    expect(globalThis.fetch.mock.calls.some(([url]) => String(url).endsWith('/demo'))).toBe(true)
-    expect(globalThis.fetch.mock.calls.some(([url]) => String(url).includes('/decisions?'))).toBe(false)
+    const panel = container.querySelector('.how-decisions')
+    expect(panel.textContent).toContain(STRINGS.en.howDemoSample)
+    expect(panel.textContent).toContain(STRINGS.en.hazardNames.flood)
+    expect(panel.textContent).toContain(STRINGS.en.decisionSent)
+    expect(panel.textContent).toContain(STRINGS.en.howSafetyPassed)
+    expect(panel.textContent).toContain('Sent flood alert for Bear Creek')
+    expect(panel.textContent).toContain('$0.0138')
+    expect(panel.textContent).toContain(STRINGS.en.howDecisionCalls)
+    expect(container.querySelector('[role="alert"]')).toBeNull()
+    expect(globalThis.fetch).not.toHaveBeenCalled()
   })
 
-  it('shows a retryable message if the demo decision sample is unavailable', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true, status: 200, json: () => Promise.resolve({ events: [] }),
-    })
-    await mount('/?demo=1#/how-it-works')
+  it('outside demo mode, shows a retryable error when the decisions call fails', async () => {
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('offline'))
+    await mount('/#/how-it-works')
     expect(container.querySelector('[role="alert"]').textContent).toContain(STRINGS.en.howLoadError)
     expect(button(STRINGS.en.retry)).not.toBeUndefined()
   })
