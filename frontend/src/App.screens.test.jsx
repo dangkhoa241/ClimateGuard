@@ -189,10 +189,11 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
     expect(window.location.search).toBe('?demo=1')
     await remount(window.location.href)
     expect(heading()).toBe(t.ask)
-    expect(container.textContent).toContain(t.demoSampleArea) // still the sample-area demo
+    expect(container.querySelector('.demo-note')).toBeNull()
     await click(button(t.back))
     await waitForHeading(t.demoTitle)
     expect(heading()).toBe(t.demoTitle)
+    expect(container.querySelector('.demo-note').textContent).toContain(t.demoSampleArea)
     await click(button(t.demoExit))
     expect(heading()).toBe('ClimateGuard')
     expect(window.location.search).toBe('')
@@ -224,14 +225,52 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
     expect(globalThis.fetch.mock.calls.some(([url]) => String(url).includes('/decisions?'))).toBe(true)
   })
 
-  it('shows a selected node description and cost on keyboard focus', async () => {
+  it('shows step details beside the workflow and closes them by clicking again, the close button, or Escape', async () => {
     await mount('/#/how-it-works')
     const node = container.querySelector('[data-node-id="sam"]')
     await act(async () => node.focus())
-    const details = container.querySelector('#how-node-details')
-    expect(node.getAttribute('aria-pressed')).toBe('true')
+    expect(container.querySelector('[role="dialog"]')).toBeNull()
+    expect(node.hasAttribute('aria-controls')).toBe(false)
+    await click(node)
+    let details = container.querySelector('#how-node-details')
+    expect(node.getAttribute('aria-expanded')).toBe('true')
+    expect(node.getAttribute('aria-controls')).toBe('how-node-details')
+    expect(details.getAttribute('aria-modal')).toBe('false')
+    expect(container.querySelector('.how-dialog-backdrop')).toBeNull()
+    expect(details.parentElement.classList.contains('how-support-grid')).toBe(true)
     expect(details.textContent).toContain(STRINGS.en.howNodeDescriptions[8])
     expect(details.textContent).toContain('$0.0025')
+    expect(document.activeElement).toBe(container.querySelector('.how-dialog-close'))
+
+    await click(node)
+    expect(container.querySelector('[role="dialog"]')).toBeNull()
+    expect(node.getAttribute('aria-expanded')).toBe('false')
+
+    await click(node)
+    const otherNode = container.querySelector('[data-node-id="decision"]')
+    await click(otherNode)
+    expect(container.querySelector('[role="dialog"] h2').textContent).toBe(STRINGS.en.howSteps[1])
+
+    await click(node)
+    await click(container.querySelector('.how-dialog-close'))
+    expect(container.querySelector('[role="dialog"]')).toBeNull()
+
+    await click(node)
+    await act(async () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
+    expect(container.querySelector('[role="dialog"]')).toBeNull()
+  })
+
+  it('filters the workflow with the segmented view controls', async () => {
+    await mount('/#/how-it-works')
+    expect(container.querySelectorAll('.how-node')).toHaveLength(11)
+    await click(container.querySelector('[data-node-id="sam"]'))
+    expect(container.querySelector('[role="dialog"]')).not.toBeNull()
+    await click(button(STRINGS.en.howLaneRecovery))
+    expect(container.querySelectorAll('.how-node')).toHaveLength(4)
+    expect(container.querySelector('.how-node-count').textContent).toBe(`4 ${STRINGS.en.howStepsLabel}`)
+    expect(container.querySelector('[role="dialog"]')).toBeNull()
+    await click(button(STRINGS.en.howViewAll))
+    expect(container.querySelectorAll('.how-node')).toHaveLength(11)
   })
 
   it('shows the latest live decision hazard, action and cost', async () => {
@@ -268,8 +307,7 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
       },
     }))
     await mount('/?demo=1#/how-it-works')
-    expect(container.querySelector('.demo-note')).not.toBeNull()
-    expect(container.querySelector('.demo-note a')).toBeNull()
+    expect(container.querySelector('.demo-note')).toBeNull()
     expect(container.querySelector('.app-footer a')).toBeNull()
     expect(container.textContent).toContain(STRINGS.en.howDemoSample)
     expect(container.textContent).toContain('Flood Warning active')
@@ -297,6 +335,10 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
       expect(STRINGS[code].howSteps).toHaveLength(HOW_NODES.length)
       expect(STRINGS[code].howNodeDescriptions).toHaveLength(HOW_NODES.length)
       expect(STRINGS[code].howNodeCosts).toHaveLength(HOW_NODES.length)
+      expect(STRINGS[code].howIntroTitle).toBeTruthy()
+      expect(STRINGS[code].howViewAll).toBeTruthy()
+      expect(STRINGS[code].howStepsLabel).toBeTruthy()
+      expect(STRINGS[code].howCloseDetails).toBeTruthy()
       expect(container.querySelectorAll('.how-fallback li')).toHaveLength(11)
       if (['zh', 'tl', 'ko', 'ar'].includes(code)) {
         expect(container.textContent).toContain(STRINGS[code].autoUiNote)

@@ -197,10 +197,10 @@ export default function App() {
           </button>
           {demo && screen === 'demo' && <button className="back demo-exit" onClick={leaveDemo}>{t.demoExit}</button>}
           <h1>{t[SCREENS[screen]]}</h1>
-          {demo && (
+          {demo && screen === 'demo' && (
             <aside className="notice demo-note small">
               <p>{t.demoSampleArea}</p>
-              {screen !== 'how-it-works' && <a href="#/how-it-works">{t.howWorksTitle}</a>}
+              <a href="#/how-it-works">{t.howWorksTitle}</a>
             </aside>
           )}
           {screen === 'demo' && <DemoScreen lang={lang} t={t} go={(next) => go(next)} />}

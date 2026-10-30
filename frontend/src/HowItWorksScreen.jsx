@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { getDecisions, getDemo } from './api.js'
 import { HOW_LANES, HOW_NODES } from './howItWorksData.js'
 
@@ -27,7 +27,7 @@ function Flow({ flow, lang, t, activeId, onSelect }) {
 
   return (
     <div className={`how-flow-wrap how-flow-wrap-${flow.id}`}>
-      {flow.titleKey && <h3 className="how-flow-title">{t[flow.titleKey]}</h3>}
+      {flow.titleKey && <h4 className="how-flow-title">{t[flow.titleKey]}</h4>}
       <ol className={`how-flow how-flow-${flow.id}`} style={{ gridTemplateColumns: columns.join(' ') }}>
         {nodes.map((node, index) => (
           <Fragment key={node.id}>
@@ -36,10 +36,9 @@ function Flow({ flow, lang, t, activeId, onSelect }) {
                 type="button"
                 className={`how-node ${node.meta ? 'how-node-meta' : 'how-node-code'}${activeId === node.id ? ' active' : ''}`}
                 data-node-id={node.id}
-                aria-pressed={activeId === node.id}
-                aria-controls="how-node-details"
+                aria-expanded={activeId === node.id}
+                aria-controls={activeId === node.id ? 'how-node-details' : undefined}
                 aria-label={`${t.howSteps[node.stepIndex]}. ${node.modelLabel}`}
-                onFocus={() => onSelect(node.id)}
                 onClick={() => onSelect(node.id)}
               >
                 <span className={`how-node-badge ${node.meta ? 'meta' : ''}`}>
@@ -57,7 +56,7 @@ function Flow({ flow, lang, t, activeId, onSelect }) {
   )
 }
 
-function DecisionPanel({ decision, demo, lang, t }) {
+function DecisionPanel({ decision, lang, t }) {
   if (!decision) return <p className="muted">{t.howNoAlerts}</p>
   const action = decision.action === 'sent' ? t.decisionSent
     : decision.action === 'error' ? t.decisionError : t.decisionSkipped
@@ -65,7 +64,6 @@ function DecisionPanel({ decision, demo, lang, t }) {
 
   return (
     <article className={`decision decision-${decision.action || 'skipped'}`}>
-      {demo && <p className="muted small">{t.howDemoSample}</p>}
       <div className="alert-meta">
         <strong>{decision.place || decision.event || decision.zone}</strong>
         {decision.ts && <time dateTime={decision.ts}>{when(decision.ts, lang)}</time>}
@@ -85,8 +83,10 @@ function DecisionPanel({ decision, demo, lang, t }) {
 
 export default function HowItWorksScreen({ lang, t, demo = false }) {
   const [attempt, setAttempt] = useState(0)
-  const [activeId, setActiveId] = useState(HOW_NODES[0].id)
+  const [openNodeId, setOpenNodeId] = useState(null)
+  const [view, setView] = useState('all')
   const [state, setState] = useState({ loading: true })
+  const closeButtonRef = useRef(null)
 
   useEffect(() => {
     let cancelled = false
@@ -101,31 +101,82 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
     return () => { cancelled = true }
   }, [attempt, demo])
 
-  const activeNode = HOW_NODES.find((node) => node.id === activeId) || HOW_NODES[0]
+  useEffect(() => {
+    if (!openNodeId) return undefined
+
+    closeButtonRef.current?.focus()
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setOpenNodeId(null)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.querySelector(`[data-node-id="${openNodeId}"]`)?.focus()
+    }
+  }, [openNodeId])
+
+  const activeNode = HOW_NODES.find((node) => node.id === openNodeId)
   const decision = demo ? state.data?.sample_decision : state.data?.decisions?.[0]
+  const visibleLanes = HOW_LANES.map((lane) => ({
+    ...lane,
+    flows: lane.flows.filter((flow) => view === 'all' || flow.id === view),
+  })).filter((lane) => lane.flows.length > 0)
+  const visibleNodeCount = visibleLanes.reduce((count, lane) =>
+    count + lane.flows.reduce((flowCount, flow) => flowCount + flow.nodeIds.length, 0), 0)
+  const chooseView = (nextView) => {
+    setView(nextView)
+    setOpenNodeId(null)
+  }
+  const selectNode = (nodeId) => setOpenNodeId((current) => current === nodeId ? null : nodeId)
 
   return (
     <div className="how-page">
-      <p className="how-interaction-hint">{t.howInteractionHint}</p>
+      <section className="how-intro" aria-labelledby="how-intro-title">
+        <p className="how-intro-kicker">{t.howWorksTitle}</p>
+        <h2 id="how-intro-title">{t.howIntroTitle}</h2>
+        <p>{t.howIntroBody}</p>
+      </section>
       <div className="how-layout">
         <section className="how-diagram" aria-label={t.howDiagramTitle}>
-          <div className="how-legend" aria-label={t.howLegend}>
-            <span><i className="how-legend-swatch meta" aria-hidden="true" />{t.howMetaBadge}</span>
-            <span><i className="how-legend-swatch code" aria-hidden="true" />{t.howNoMetaBadge}</span>
-          </div>
-          {HOW_LANES.map((lane) => (
-            <section className={`how-lane how-lane-${lane.id}`} key={lane.id} aria-labelledby={`how-lane-${lane.id}`}>
-              <h2 id={`how-lane-${lane.id}`} className="how-lane-title">{t[lane.titleKey]}</h2>
-              {lane.flows.map((flow) => (
-                <Flow key={flow.id} flow={flow} lang={lang} t={t} activeId={activeId} onSelect={setActiveId} />
+          <div className="how-diagram-header">
+            <div>
+              <h2>{t.howDiagramTitle}</h2>
+              <p>{t.howInteractionHint}</p>
+            </div>
+            <div className="how-view-switch" role="group" aria-label={t.howViewLabel}>
+              {[
+                ['all', t.howViewAll],
+                ['alerts', t.howLaneAlerts],
+                ['ask', t.howAskLabel],
+                ['recovery', t.howLaneRecovery],
+              ].map(([id, label]) => (
+                <button key={id} type="button" aria-pressed={view === id}
+                  onClick={() => chooseView(id)}>{label}</button>
               ))}
-            </section>
-          ))}
-          <section id="how-node-details" className="how-node-details" aria-live="polite" aria-atomic="true">
-            <h2>{t.howSelectedStep}: {t.howSteps[activeNode.stepIndex]}</h2>
-            <p>{t.howNodeDescriptions[activeNode.infoIndex]}</p>
-            <p><strong>{t.howCallCost}:</strong> {t.howNodeCosts[activeNode.infoIndex]}</p>
-          </section>
+            </div>
+          </div>
+          <div className="how-diagram-meta">
+            <div className="how-legend" aria-label={t.howLegend}>
+              <span><i className="how-legend-swatch meta" aria-hidden="true" />{t.howMetaBadge}</span>
+              <span><i className="how-legend-swatch code" aria-hidden="true" />{t.howNoMetaBadge}</span>
+            </div>
+            <span className="how-node-count">{visibleNodeCount} {t.howStepsLabel}</span>
+          </div>
+          <div className="how-lanes">
+            {visibleLanes.map((lane) => (
+              <section className={`how-lane how-lane-${lane.id}`} key={lane.id} aria-labelledby={`how-lane-${lane.id}`}>
+                <h3 id={`how-lane-${lane.id}`} className="how-lane-title">{t[lane.titleKey]}</h3>
+                {lane.flows.map((flow) => (
+                  <Flow key={flow.id} flow={flow} lang={lang} t={t} activeId={openNodeId} onSelect={selectNode} />
+                ))}
+              </section>
+            ))}
+          </div>
           <section className="sr-only how-fallback" aria-labelledby="how-fallback-title">
             <h2 id="how-fallback-title">{t.howFallbackTitle}</h2>
             <ol>
@@ -137,17 +188,32 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
             </ol>
           </section>
         </section>
-        <section className="how-decisions" aria-labelledby="how-decisions-title">
-          <h2 id="how-decisions-title">{demo ? t.howWhyTitle : t.howLatestDecision}</h2>
-          {state.loading && <p className="muted" role="status">{t.loading}</p>}
-          {state.error && (
-            <div className="notice error" role="alert">
-              <p>{t.howLoadError}</p>
-              <button type="button" className="secondary" onClick={() => setAttempt((n) => n + 1)}>{t.retry}</button>
-            </div>
+        <div className="how-support-grid">
+          {activeNode && (
+            <section id="how-node-details" className="how-node-dialog" role="dialog" aria-modal="false"
+              aria-labelledby="how-node-dialog-title" aria-describedby="how-node-dialog-description">
+              <button ref={closeButtonRef} type="button" className="how-dialog-close"
+                aria-label={t.howCloseDetails} onClick={() => setOpenNodeId(null)}>×</button>
+              <p className="how-card-kicker">{t.howSelectedStep}</p>
+              <h2 id="how-node-dialog-title">{t.howSteps[activeNode.stepIndex]}</h2>
+              <p className="how-dialog-model" lang="en" dir="ltr">{activeNode.modelLabel}</p>
+              <p id="how-node-dialog-description">{t.howNodeDescriptions[activeNode.infoIndex]}</p>
+              <p><strong>{t.howCallCost}:</strong> {t.howNodeCosts[activeNode.infoIndex]}</p>
+            </section>
           )}
-          {state.data && <DecisionPanel decision={decision} demo={demo} lang={lang} t={t} />}
-        </section>
+          <section className="how-decisions" aria-labelledby="how-decisions-title">
+            <p className="how-card-kicker">{demo ? t.howDemoSample : t.howLatestDecision}</p>
+            <h2 id="how-decisions-title">{demo ? t.howWhyTitle : t.howLatestDecision}</h2>
+            {state.loading && <p className="muted" role="status">{t.loading}</p>}
+            {state.error && (
+              <div className="notice error" role="alert">
+                <p>{t.howLoadError}</p>
+                <button type="button" className="secondary" onClick={() => setAttempt((n) => n + 1)}>{t.retry}</button>
+              </div>
+            )}
+            {state.data && <DecisionPanel decision={decision} lang={lang} t={t} />}
+          </section>
+        </div>
       </div>
     </div>
   )
