@@ -23,6 +23,12 @@ TRANSLATE_PER_IP_PER_HOUR = 10
 # 60 s of 16 kHz mono 16-bit audio is ~1.9 MB, ~2.6 MB as base64 (HTTP API payloads go up to 10 MB)
 MAX_AUDIO_BODY_CHARS = 2_700_000
 
+
+def _busy_response() -> dict:
+    return _resp(429, {"error": "demo_busy", "message": budget.BUSY_MESSAGE},
+                 headers={"Retry-After": "3600"})
+
+
 # Cold start: create the model client (OpenAI SDK import + API key from SSM) during Lambda init,
 # which runs once per instance with a full CPU, instead of inside the first person's request.
 try:
@@ -47,7 +53,12 @@ def post_ask(event) -> dict:
         return _resp(400, {"error": "unknown_zone"})
     if not ratelimit.hit("ask-ip", _source_ip(event), ASK_PER_IP_PER_HOUR, 3600):
         return _resp(429, {"error": "rate_limited"}, headers={"Retry-After": "3600"})
-    result = ask.answer(question, lang, zone)
+    if not (ask.SYMPTOM_QUESTION.search(question) or ask.ANSWER_MEDICAL.search(question)) and budget.over_budget():
+        return _busy_response()
+    try:
+        result = ask.answer(question, lang, zone)
+    except budget.SpendCapExceeded:
+        return _busy_response()
     log.info("ask zone=%s lang=%s kind=%s blocked=%s", zone, lang, result["kind"], result.get("blocked"))
     return _resp(200, result)
 
@@ -65,6 +76,8 @@ def post_transcribe(event) -> dict:
     try:
         data = base64.b64decode(raw) if event.get("isBase64Encoded") else raw.encode("latin-1")
         result = transcribe.transcribe(data, lang)
+    except budget.SpendCapExceeded:
+        return _busy_response()
     except transcribe.AudioError as e:
         return _resp(e.status, {"error": e.code})
     except Exception as e:  # API down or slow: the person can still type the question
@@ -94,7 +107,12 @@ def post_translate(event) -> dict:
                   if row.get("hazard") == hazard and row.get("ts") == sent_at), None)
     if alert is None:
         return _resp(404, {"error": "unknown_alert"})
-    text, translated = translate_alert(alert["messages"]["en"], lang)
+    if budget.over_budget():
+        return _busy_response()
+    try:
+        text, translated = translate_alert(alert["messages"]["en"], lang, raise_on_spend_cap=True)
+    except budget.SpendCapExceeded:
+        return _busy_response()
     if not translated:
         return _resp(502, {"error": "translation_unavailable"})
     return _resp(200, {"text": text, "lang": lang})
@@ -115,13 +133,12 @@ def post_pretalk(event) -> dict:
     snap = ask.zone_snapshot(zone)
     if snap is None:
         return _resp(404, {"error": "unknown_zone"})
-    if budget.over_budget():  # the checklist still works without the model
-        items = pretalk.render(pretalk.checklist(snap), lang)
-        return _resp(200, {"today": pretalk.today(snap), "checklist": items, "kind": "checklist_only",
-                           "talk": " ".join(i["text"] for i in items), "reason": "budget",
-                           "checklist_lang": lang if lang in pretalk.REVIEWED else "en",
-                           "automatic": lang not in pretalk.REVIEWED})
-    result = pretalk.build(snap, lang)
+    if budget.over_budget():
+        return _busy_response()
+    try:
+        result = pretalk.build(snap, lang)
+    except budget.SpendCapExceeded:
+        return _busy_response()
     log.info("pretalk zone=%s lang=%s kind=%s blocked=%s", zone, lang, result["kind"], result.get("blocked"))
     return _resp(200, result)
 

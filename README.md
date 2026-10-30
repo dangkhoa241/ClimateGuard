@@ -75,7 +75,7 @@ flowchart LR
     COL["Collector Lambda<br/>one snapshot per monitored zone"]
     PRE{"Pre-filter + change check<br/>any risk? did the data change?"}
     SKIP["Skip: no AI call, $0"]
-    BUD{"Under $5/day?"}
+    BUD{"Under $3/day?"}
     AGENT["Monitoring agent<br/>Muse Spark Open on Baseten<br/>tools: alerts, forecast, AQI, sent alerts, safety guidance"]
     GUARD["Guardrails in code (send_alert)<br/>no duplicates, daily cap, no medical advice,<br/>N95 only for smoke, NWS level names, accents"]
     TR["Muse Spark 1.3<br/>translates the checked English alert<br/>(zh, tl, ko, ar)"]
@@ -149,19 +149,26 @@ The same diagram is in [docs/architecture.mmd](docs/architecture.mmd). It is not
 - **Replays are always labeled.** "REPLAY of a real event, not live." Replays never send email and never appear in the live decision history.
 - **AI-written, check it.** Reports and talks say they were written by AI. Automatic translations say so. The agent's reasons are shown as written.
 - **Shelters: cited sources only.** A cooling-center or shelter answer is used only if it cites a web source, and always says to call 211 or the place first. Otherwise the person gets a fixed 211 sentence with tappable links.
-- **Abuse limits.** Per-IP and per-email limits, a sign-up cap, a honeypot field, and a hard $5/day model budget.
+- **Abuse protection.** See the limits below.
+
+## Abuse protection
+
+- **Sign-up:** hidden honeypot, SNS double opt-in, at most 5 attempts per IP per hour and 3 per email per day, plus at most 3 distinct area-and-language subscriptions per email in a year. A global subscriber ceiling also applies. Identifiers are hashed; rate counters and per-email subscription markers expire through DynamoDB TTL.
+- **Request volume:** API Gateway caps the default stage at 5 requests/second (burst 10), with stricter route limits for sign-up, Ask, translation, speech and recovery. Ask and recovery also have reserved concurrency of 2 each; this does not add a separate Lambda charge.
+- **Model spend:** each billable request reserves a conservative estimate in the existing DynamoDB rate-limit table before calling a model, then reconciles it with reported usage. The configurable hard cap defaults to **$3 per UTC day**. Model-backed endpoints return HTTP 429 with “The demo is busy, please try again later” when the remaining budget cannot cover a call. Saved demo replays and the static sample decision continue to work. At the hard cap, scheduled monitoring also stops making model calls, including for active warnings; keep Wireless Emergency Alerts enabled on your phone.
+- **No edge proxy or paid protection service is required.** Turnstile is not enabled. If added later, create a Cloudflare Turnstile site key for the frontend and a secret key for server-side verification; neither belongs in the repository.
 
 ## Engineering depth
 
 - **Evaluation.** The alert agent is tested on 35 cases (37 steps): 11 real archived moments, 9 hard judgment cases written without looking at the agent's rules, and 16 edge cases (including a prompt injection hidden in NWS text). Ask has its own check on real questions, recovery has 6 trick cases, and a **back-translation check** has a second model translate every Spanish and Vietnamese alert back to English to flag changes in meaning. **Oct 28 full eval (standard models, fresh samples):**
   - **Alert agent: 35 of 36 steps passed** (real 11/11, edge 16/16, hard 8/9), re-run after the active-warning rule below. No medical wording in 38/38 sent messages, Vietnamese written with accents 38/38, no mask advice without smoke 28/28, zero model calls on the 5 pre-filter cases. $0.0127 per alert, median 7.2 s per run. The first run of this eval failed `hard_warning_vs_mild_data` (the warning says 110°F, our data shows 82°F, the agent skipped the alert). That was a real bug and is fixed: the agent now sends it and leaves the numbers out. The Oct 28 run's one failure was `hard_neighbor_zone_alert`: a Flood Warning for Fresno County sits in a Stockton feed, and the new rule sends it.
-  - **Latest full alert-agent rerun (Oct 30, fresh model samples): 36 of 37 steps passed** (real 11/11, edge 17/17, hard 8/9). Both `edge_dense_fog` and `edge_dense_fog_coastal` sent a fog alert; the only failure was `hard_neighbor_zone_alert` (see Known limitations). Safety checks passed: no medical wording in 39/39 sent messages, Vietnamese accents in 39/39, and no mask advice without smoke in 29/29. The back-translation check matched 59/68 messages (review flags, not a pass/fail gate). The run used local storage and no AWS resources; monitoring model cost was $0.4994, plus $0.1699 for the back-translation checker. [Full report](backend/eval/results/20261030-1349.md).
+  - **Latest full alert-agent rerun (Oct 30, fresh model samples): 35 of 37 steps passed** (real 11/11, edge 17/17, hard 7/9). Both `edge_dense_fog` cases sent a fog alert. The failures were `hard_warning_plus_other_watch` (sent the heat alert but omitted the concurrent Fire Weather Watch) and `hard_neighbor_zone_alert` (see Known limitations). Safety checks passed: no medical wording in 39/39 sent messages, Vietnamese accents in 39/39, and no mask advice without smoke in 29/29. The back-translation check matched 55/66 messages (review flags, not a pass/fail gate). The run used local storage and no AWS resources; monitoring model cost was $0.299, plus $0.1112 for the back-translation checker ($0.4102 total). [Full report](backend/eval/results/20261030-1531.md).
   - **Ask: 8 of 8 passed**, median 2.4 s.
   - **Recovery: 6 of 6 trick cases passed** (injected instructions, cost and medicine bait, a renter question), $0.046 for all six.
   - **Back-translation: 54 of 62 Spanish and Vietnamese alerts kept the English meaning.** The 8 flagged: 4 are Vietnamese "chỉ" ("only") wording, 3 are small real changes (a dropped "immediately", "above" became "at", "stay off roads" softened to "limit going out"), and 1 is an end-time wording difference. They are flagged for a human, not scored.
   - Earlier development runs and the bugs they found are in [docs/TECHNICAL.md](docs/TECHNICAL.md).
-- **Tests.** 515 backend tests and 51 frontend tests (including ones that open every main screen in a browser-like page and fail on any thrown error, and ones for refresh and the Back button), all offline.
-- **Cost logging.** Every model call goes through one wrapper that requires a token limit, caches repeats for an hour, and logs tokens and cost. The usage log drives the **$5/day budget**: over it, the alert agent runs only for areas with an active NWS Warning, and Ask, recovery and demo replays degrade to fixed or saved answers.
+- **Tests.** 528 backend tests and 64 frontend tests (including ones that open every main screen in a browser-like page and fail on any thrown error, and ones for refresh and the Back button), all offline.
+- **Cost logging.** Every model call goes through one wrapper that requires a token limit, caches repeats for an hour, and logs tokens and cost. A separate atomic DynamoDB counter enforces the **$3/day hard cap** across chat, vision, image outlining, speech and web-search calls.
 - **Measured cost** (Oct 2026): about **$0.013 per alert** (4 to 6 model calls); about **$0.003 per Ask answer** ($0.02 to $0.03 when it searches the web for shelters); about **$0.004 per pre-shift talk**; about **$0.0002 per voice question**; about **$0.01 per recovery report with 1 photo and $0.07 with 6**. Total model spend so far, from our usage logs (development, evals and the live site, including the final eval): about **$2.12 of the $150 Meta credit and $2.33 of the $100 Baseten credit**, about $4.45 together. AWS is $0 on the Free plan. The demo's "How it works" strip shows the live total.
 - **AWS.** One SAM template in **us-east-2**: Lambda, DynamoDB, EventBridge Scheduler, SNS, S3, API Gateway, SSM. It stays inside the AWS Free plan, so AWS costs about $0. `deploy.ps1` checks permissions and free-tier capacity before every deploy.
 - **Bugs the tests found, now fixed:** missing accents in Spanish and Vietnamese, an ozone alert that told people to wear an N95, a model request that hung for 19 minutes (now a hard 60 s limit), and a collector permission that left the history counters at zero.
@@ -175,6 +182,7 @@ The same diagram is in [docs/architecture.mmd](docs/architecture.mmd). It is not
 - **Replays use observed weather,** because archived NWS forecasts do not exist. The agent sees "perfect forecasts" in a replay.
 - **Recovery is approximate.** The AI can misread a photo. SAM outlines cover a box, not exact pixels, and small items are dropped. It is one home, up to 6 photos, no video. It is not an estimate and not an inspection.
 - **Neighbor-zone warning text can still trigger an alert (known gap).** The latest alert-agent eval's `hard_neighbor_zone_alert` case fails: an active Flood Warning matched to Stockton's NWS zone names the Kings River near Piedra in Fresno County, while the local forecast is dry. NWS matches alerts to forecast zones using official UGC codes, and some products legitimately cover multiple areas. Suppressing a matched active Warning based only on its free-text place names could hide a real warning, so the code continues to send it; a person may receive an alert for a nearby place. A fix needs authoritative geographic overlap checks and tests that preserve valid multi-zone warnings.
+- **Concurrent hazards can be omitted.** `hard_warning_plus_other_watch` failed in the latest eval: with an Extreme Heat Warning and Fire Weather Watch active together, the model sent the heat alert but omitted the watch. The result can vary between model runs; multi-hazard decisions need continued evaluation.
 - **Cooling-center search** falls back to the 211 links in about 1 run in 8, when the model writes an uncited answer. That is the rule working, not a bug.
 - **US only,** by NWS forecast zone. In a large county, a county-wide alert reaches every zone in it.
 - **Read aloud depends on the phone.** If the phone has no voice for a language, the button is hidden. Desktop browsers often have no Vietnamese or Tagalog voice.
@@ -188,12 +196,12 @@ cp .env.example .env                       # BASETEN_API_KEY and MODEL_API_KEY
 cd backend
 python -m venv .venv
 .venv/Scripts/pip install -r requirements-dev.txt   # macOS/Linux: .venv/bin/pip
-.venv/Scripts/python -m pytest -q tests             # 515 offline tests
+.venv/Scripts/python -m pytest -q tests             # 528 offline tests
 .venv/Scripts/python scripts/local_api.py           # API on http://localhost:8787
 
 cd ../frontend
 npm install
-npm test                                   # 51 tests
+npm test                                   # 64 tests
 npm run dev                                # set VITE_API_URL in frontend/.env.local
 ```
 

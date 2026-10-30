@@ -9,7 +9,7 @@ checklist is shown in English and the talk is labeled automatic.
 """
 import logging
 
-from . import guardrails, units
+from . import budget, guardrails, units
 from .languages import LANGS
 from .llm import chat
 from .monitor import MEDICAL_TERMS
@@ -130,6 +130,8 @@ def build(snap: dict, lang: str) -> dict:
         res = chat("meta", MODEL, [{"role": "system", "content": TALK_PROMPT.format(language=LANGS[lang]["name"])},
                                    {"role": "user", "content": user}],
                    max_tokens=MAX_TOKENS, reasoning_effort="minimal", deadline_s=DEADLINE_S, purpose=f"pretalk:{lang}")
+    except budget.SpendCapExceeded:
+        raise
     except Exception as e:
         log.warning("pre-shift talk failed: %s", e)
         return {**result, "talk": fallback, "kind": "checklist_only", "reason": type(e).__name__}

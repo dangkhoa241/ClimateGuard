@@ -22,7 +22,7 @@ import secrets
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from . import llm, photos, recovery_checklist as checklist, recovery_report, recovery_store as store, sam
+from . import budget, llm, photos, recovery_checklist as checklist, recovery_report, recovery_store as store, sam
 from .languages import LANGS
 from .recovery_data import (CONCEPTS, CONCEPTS_BY_DISASTER, DANGERS, DISASTER_LABELS, DISASTERS,
                             MAX_CONCEPTS_PER_PHOTO, OPTIONS, QUESTIONS, QUESTIONS_BY_DISASTER, danger_lines,
@@ -169,6 +169,8 @@ def _segment_all(images: list[bytes], photos_out: list[dict]) -> tuple[list[dict
         i, slot, c = task
         try:
             return task, sam.segment(images[i], CONCEPTS[c]["sam"], purpose=f"recovery-sam:{c}"), True
+        except budget.SpendCapExceeded:
+            raise
         except Exception as e:  # the photo keeps its other outlines
             log.warning("SAM failed for photo %d %s: %s", i, c, e)
             return task, [], False
@@ -208,6 +210,8 @@ def analyze(job: str) -> dict:
         log.info("recovery analyze job=%s photos=%d disaster=%s dangers=%s sam_calls=%d cost=$%.4f ms=%s",
                  job[:6], len(images), result["disaster"], result["dangers"], round(sam_cost / sam.SAM_USD_PER_IMAGE),
                  rec["cost_usd"], rec["timings_ms"])
+    except budget.SpendCapExceeded:
+        rec.update(status="error", error="demo_busy", error_detail=None)
     except Exception as e:
         log.exception("recovery analyze failed")
         rec.update(status="error", error="analyze_failed", error_detail=type(e).__name__)
@@ -242,6 +246,8 @@ def report(job: str) -> dict:
         log.info("recovery report job=%s lang=%s attempts=%d removed=%s report_cost=$%.4f total_cost=$%.4f ms=%s",
                  job[:6], rec["lang"], out["attempts"], out["guard_removed"], out["cost_usd"], rec["cost_usd"],
                  rec["timings_ms"])
+    except budget.SpendCapExceeded:
+        rec.update(status="error", error="demo_busy", error_detail=None)
     except Exception as e:
         log.exception("recovery report failed")
         rec.update(status="error", error="report_failed", error_detail=type(e).__name__)

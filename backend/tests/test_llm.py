@@ -38,7 +38,7 @@ import os  # noqa: E402
 
 import pytest  # noqa: E402
 
-from climateguard import config, llm  # noqa: E402
+from climateguard import budget, config, llm, ratelimit  # noqa: E402
 
 
 class _FakeCompletions:
@@ -130,3 +130,13 @@ def test_model_errors_still_propagate(fake, monkeypatch):
     monkeypatch.setattr(fake, "create", boom)
     with pytest.raises(ValueError, match="bad request"):
         _ask(use_cache=False)
+
+
+def test_spend_cap_blocks_model_call_before_provider_request(fake, monkeypatch):
+    monkeypatch.setattr(config, "STORAGE", "local")
+    monkeypatch.setattr(config, "DAILY_MODEL_BUDGET_USD", 0.000001)
+    monkeypatch.setattr(ratelimit, "_local", {})
+    with pytest.raises(budget.SpendCapExceeded):
+        llm.chat("meta", "muse-spark-1.3", [{"role": "user", "content": "hi"}], max_tokens=50,
+                 use_cache=False)
+    assert fake.calls == []

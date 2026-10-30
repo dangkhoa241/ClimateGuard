@@ -7,7 +7,7 @@ the English message is sent instead, so an alert is never lost to a translation 
 """
 import logging
 
-from . import config, guardrails
+from . import budget, config, guardrails
 from .languages import LANGS
 from .llm import chat
 
@@ -19,8 +19,8 @@ PROMPT = ("Translate this public-safety weather alert from English into {languag
           "any advice, and do not add medical information. Output only the translation.")
 
 
-def translate_alert(text_en: str, lang: str) -> tuple[str, bool]:
-    """Returns (text, translated). translated=False means the English fallback was used."""
+def translate_alert(text_en: str, lang: str, *, raise_on_spend_cap: bool = False) -> tuple[str, bool]:
+    """Returns (text, translated); background delivery can fall back if the spend cap is reached."""
     try:
         res = chat("meta", config.CHAT_MODEL,
                    [{"role": "system", "content": PROMPT.format(language=LANGS[lang]["name"])},
@@ -34,6 +34,10 @@ def translate_alert(text_en: str, lang: str) -> tuple[str, bool]:
             return text, True
         else:
             log.warning("translation to %s rejected (empty or too long)", lang)
+    except budget.SpendCapExceeded:
+        if raise_on_spend_cap:
+            raise
+        log.warning("translation to %s skipped because the daily model-spend cap was reached", lang)
     except Exception as e:  # missing key, API down, ...: never block the alert
         log.warning("translation to %s failed: %s", lang, e)
     return text_en, False

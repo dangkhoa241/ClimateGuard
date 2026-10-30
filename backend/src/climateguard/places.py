@@ -20,7 +20,7 @@ import time
 from datetime import datetime
 from urllib.parse import urlparse
 
-from . import llm, usage
+from . import budget, llm, usage
 from .languages import LANGS
 
 log = logging.getLogger(__name__)
@@ -104,6 +104,8 @@ def _search_once(question: str, lang: str, snap: dict, attempt: dict, deadline_s
                                                   language=LANGS[lang]["name"], max_searches=attempt["searches"]),
               "input": question,
               "tools": [{"type": "web_search", "search_context_size": "low", "user_location": _location(snap)}]}
+    reservation = budget.reserve_call(MODEL, params, attempt["max_tokens"],
+                                      extra_usd=attempt["searches"] * SEARCH_USD)
     try:
         client = llm._client("meta")
         raw = llm._with_deadline(lambda: client.responses.create(**params).model_dump(), deadline_s)
@@ -118,6 +120,7 @@ def _search_once(question: str, lang: str, snap: dict, attempt: dict, deadline_s
                          (u.get("input_tokens_details") or {}).get("cached_tokens") or 0, purpose=f"places:{lang}")
     usage.log_extra("meta", MODEL, searches * SEARCH_USD, purpose=f"places-search:{lang}")
     cost = round(rec["cost_usd"] + searches * SEARCH_USD, 6)
+    budget.settle(reservation, cost)
     text, cites = _final_message(raw.get("output") or [])
     text = _MARKDOWN.sub("", text).strip()
     if raw.get("status") == "incomplete":  # ran out of tokens: the last message is a progress note

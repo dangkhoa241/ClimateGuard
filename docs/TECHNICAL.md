@@ -42,7 +42,7 @@ backend/src/           Lambda code (packaged by `sam build`)
     monitor.py         monitoring agent (Muse Spark Open on Baseten, tool calling)
     guidance.py        BM25 search over data/guidance.json (official safety guidance)
     alerts_store.py    sent alerts (for dedup) + agent decision log
-    budget.py          daily model budget ($5/day)
+    budget.py          daily model budget ($3/day hard cap)
     languages.py, translate.py   alert languages; automatic translation of the English alert
     scenarios.py       synthetic heatwave / smoke / flood / calm / tornado_warning / winter_storm
     replays.py         real past events (data/replays/*.json) as snapshots, labeled REPLAY
@@ -117,7 +117,7 @@ The agent runs only for zones whose fingerprint changed. When NWS re-issues the 
    - wind of 40 mph or more.
 
    With no signal, the run is logged as skipped and costs nothing.
-2. **Budget check.** Over the **$5/day** model budget, only zones with an active NWS *Warning* run the agent; the rest are logged as skipped for budget.
+2. **Budget check.** When the **$3/day** hard model-spend cap is reached, new monitoring model calls are skipped, including for active NWS Warnings. This keeps spend bounded; keep Wireless Emergency Alerts enabled on your phone.
 3. **Gather data.** The agent calls `get_nws_alerts`, `get_forecast` (in the zone's local time), `get_aqi` and `get_recent_alerts_sent`.
 4. **Ground the advice.** It calls `search_safety_guidance`, which searches 28 official excerpts from NWS, Ready.gov, CDC, EPA AirNow, FEMA, Cal/OSHA and OSHA. These cover protective actions only, with no symptom content.
 5. **Decide and send.** The agent decides on its own. To alert, it calls `send_alert(zone, hazard, severity, messages_by_language, reason)` with English, Spanish and Vietnamese messages.
@@ -176,7 +176,7 @@ python scripts/collect_local.py --monitor                   # real data for moni
   - The silent switch mutes speech, and websites can't detect it. So on iPhone/iPad, starting to read shows "Can't hear it? Turn off your phone's silent mode."
   - A one-line tip suggests downloading an "Enhanced" voice. It's hidden once one is in use.
 
-Every answer shows the place and time of the data it used, and its official sources. Limits: 20 questions per IP per hour; over the $5/day model budget, Ask returns the fallback message.
+Every answer shows the place and time of the data it used, and its official sources. Limits: 20 questions per IP per hour; at the $3/day hard model-spend cap, Ask returns HTTP 429 with a friendly busy message.
 
 **Times in the question are resolved in code** (`timeref.py`), against the zone's local time: "3 giờ chiều", "3 PM", "a las 3 de la tarde", "下午3点", "오후 3시", "alas-3 ng hapon", "الساعة 3 مساءً". If that time has already passed today, the answer is for the same time tomorrow and starts with a note written in code, for example "3 giờ chiều hôm nay đã qua, đây là dự báo cho 3 giờ chiều ngày mai (thứ Tư)." The model gets the target time and the forecast for that hour. "Tomorrow" in the question, or tomorrow's weekday, means tomorrow with no note. Another weekday or a date is left to the model.
 - **Ranges:** "từ 6 giờ sáng đến 2 giờ chiều" or "from 6 AM to 2 PM" get a summary computed in code: temperature at the start, the warmest and when, and at the end, plus sky, wind, rain and AQI. The model summarizes the range first, then gives 2–3 actions from the guidance.
@@ -272,7 +272,7 @@ The failures, fixed in the prompt: "66 degrees" instead of "66°F", and an unask
 6. **Danger first:** if the photos show danger, the first line of every screen and of the report is "Leave the area now and call 911 from a safe place."
 7. **Guardrails in code, in all 7 languages** (`recovery_guard.py`): no safe/unsafe verdicts about the building, no repair costs or prices, no medical or injury advice, and the home is always "your home" (never owned or rented). A line that breaks a rule is retried once, then dropped.
 8. **Print or save as PDF:** "Not an official damage estimate" on every page.
-9. **Limits and cost:** 6 reports per IP per hour; over the $5/day budget it answers "very busy". About $0.01 for 1 photo and about $0.07 for 6 (one vision call about $0.01, SAM $0.0025 per damage type per photo, report about $0.007).
+9. **Limits and cost:** 6 reports per IP per hour; at the $3/day hard model-spend cap it returns HTTP 429 with a friendly "very busy" message. About $0.01 for 1 photo and about $0.07 for 6 (one vision call about $0.01, SAM $0.0025 per damage type per photo, report about $0.007).
 10. **Checked with** `python scripts/run_recovery_eval.py` (6 trick cases, about $0.04). Spanish and Vietnamese screen text for review: `docs/recovery-text-es-vi.md`.
 
 ## Real-event replays
@@ -315,7 +315,7 @@ python scripts/build_replays.py                # rebuild from the archives (abou
 
 - **Replay alerts:** one button per real event (2022 heat wave, record-day morning; 2023 Planada flood, night of the flood warnings; 2020 smoke peak). `POST /demo/replay {event, lang}` runs the **real monitoring agent** on that moment and shows the alert in the chosen language, labeled "REPLAY of a real event", with the agent's decision, reason and cost.
   - Each run gets its own `DEMO-<event>-<id>` log, so earlier demo runs never make the agent skip a duplicate. Nothing is emailed and nothing enters the live history. Repeats within an hour reuse cached model answers ($0, and the page says so). zh/tl/ko/ar alerts are translated automatically and labeled.
-  - **Fallback:** over the $5/day budget, over the rate limit (15 per IP per hour), or when the agent takes more than 23 s or fails, the page shows an **earlier real run** of the same moment with its date and the reason, never an error. These saved runs (`data/demo_saved.json`) come from the local replay/eval logs: `python scripts/save_demo_replays.py`.
+  - **Fallback:** over the $3/day budget, over the rate limit (15 per IP per hour), or when the agent takes more than 23 s or fails, the page shows an **earlier real run** of the same moment with its date and the reason, never an error. These saved runs (`data/demo_saved.json`) come from the local replay/eval logs: `python scripts/save_demo_replays.py`.
 - **Recovery with sample photos:** tap a sample photo (it goes through the same canvas step as your own photos), then the normal flow: outlines, questions, report, checklist, PDF. Same rate limit and budget guard as real reports. Sample photos (public domain, US government works, via Wikimedia Commons; credited in the app):
 
   | Photo | Credit | Source |
@@ -600,7 +600,7 @@ Assumptions: $0.010 per agent run (measured $0.0065–0.011); 0.2 runs per zone 
 | | 10 zones | 100 zones | 500 zones |
 |---|---|---|---|
 | Monitoring agent (Baseten), calm → active season | $0.60 – $4.50 | $6 – $45 | $30 – $225 |
-| Worst single day (major event, 60% of zones, 4 runs each) | $0.24 | $2.40 | $12 (the **$5/day budget** caps this) |
+| Worst single day (major event, 60% of zones, 4 runs each) | $0.24 | $2.40 | $12 (the **$3/day budget** caps new model calls) |
 | Translations for zh/tl/ko/ar | < $0.10 | < $1 | ≈ $3 |
 | AWS (Lambda, DynamoDB, SNS, Scheduler, SSM, Logs) | ≈ $0 | ≈ $0 | ≈ $0–2 |
 

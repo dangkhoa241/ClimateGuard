@@ -9,7 +9,8 @@ sys.path[:0] = [str(ROOT / "src"), str(ROOT / "scripts")]
 
 import pytest
 
-from climateguard import alerts_store, config, monitor, notify, replays, scenarios as sc, units, zones
+from climateguard import (alerts_store, budget, config, monitor, notify, replays, scenarios as sc, translate,
+                          units, zones)
 
 
 @pytest.fixture(autouse=True)
@@ -54,6 +55,16 @@ def test_translated_alerts_get_both_units(monkeypatch):
     notify.deliver(zone, "heat", "extreme", {"en": "Highs 108F.", "es": "x", "vi": "y"})
     outbox = (config.LOCAL_DIR / "outbox.jsonl").read_text(encoding="utf-8")
     assert "108°F (42°C)" in outbox
+
+
+def test_background_translation_falls_back_when_spend_cap_is_reached(monkeypatch):
+    def blocked(*args, **kwargs):
+        raise budget.SpendCapExceeded("cap reached")
+
+    monkeypatch.setattr(translate, "chat", blocked)
+    assert translate.translate_alert("Stay indoors.", "es") == ("Stay indoors.", False)
+    with pytest.raises(budget.SpendCapExceeded):
+        translate.translate_alert("Stay indoors.", "es", raise_on_spend_cap=True)
 
 
 # --- warning ending with no hazard left ---

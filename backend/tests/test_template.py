@@ -69,6 +69,12 @@ def test_collector_can_write_daily_counters(transformed):
     assert "RateLimitTable" in role and "dynamodb:UpdateItem" in role
 
 
+def test_api_can_claim_signup_counters_atomically(transformed):
+    import json
+    role = json.dumps(transformed["Resources"]["ApiFunctionRole"]["Properties"]["Policies"])
+    assert "RateLimitTable" in role and "dynamodb:TransactWriteItems" in role
+
+
 def test_recovery_photos_private_and_cleaned_up(transformed):
     import json
     bucket = transformed["Resources"]["RecoveryBucket"]["Properties"]

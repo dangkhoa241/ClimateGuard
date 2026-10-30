@@ -75,7 +75,7 @@ def test_transcribe_sends_language_bias_and_logs_cost(monkeypatch):
     assert seen[0]["url"].endswith("/asr/transcribe")
     assert req["model"] == "muse-voice-transcribe-1.0" and req["languageBias"] == ["Vietnamese", "English"]
     rec = json.loads(config.USAGE_LOG.read_text().splitlines()[-1])
-    assert rec["audio_seconds"] == 4 and rec["cost_usd"] == pytest.approx(4 * 0.18 / 3600)
+    assert rec["audio_seconds"] == 5 and rec["cost_usd"] == pytest.approx(5 * 0.18 / 3600)
     assert usage.totals()  # the audio record doesn't break the spend report
 
 

@@ -399,6 +399,8 @@ def answer(question: str, lang: str, zone_id: str) -> dict:
         res = chat("meta", ASK_MODEL, [{"role": "system", "content": system}, {"role": "user", "content": user}],
                    max_tokens=MAX_ANSWER_TOKENS[ASK_REASONING_EFFORT], reasoning_effort=ASK_REASONING_EFFORT,
                    deadline_s=CALL_DEADLINE_S, purpose=f"ask:{lang}")
+    except budget.SpendCapExceeded:
+        raise
     except Exception as e:
         lap("model")
         log.warning("ask failed for %s: %s", zone_id, e)

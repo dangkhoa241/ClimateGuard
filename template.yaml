@@ -21,6 +21,14 @@ Parameters:
   MaxSubscribers:
     Type: Number
     Default: 500
+  MaxSubscriptionsPerEmail:
+    Type: Number
+    Default: 3
+    Description: Maximum distinct zone and language subscriptions per email in one year.
+  DailyModelBudgetUsd:
+    Type: Number
+    Default: 3
+    Description: Maximum estimated model spend per UTC day.
   NwsUserAgent:
     Type: String
     Description: NWS asks for a User-Agent with contact info, e.g. "ClimateGuard/0.1 you@example.com"
@@ -47,6 +55,8 @@ Globals:
         NOTIFY_MODE: sns
         FRONTEND_URL: !Ref FrontendUrl
         MAX_SUBSCRIBERS: !Ref MaxSubscribers
+        MAX_SUBSCRIPTIONS_PER_EMAIL: !Ref MaxSubscriptionsPerEmail
+        DAILY_MODEL_BUDGET_USD: !Ref DailyModelBudgetUsd
         CG_LOCAL_DIR: /tmp/climateguard
         NWS_USER_AGENT: !Ref NwsUserAgent
 
@@ -119,13 +129,13 @@ Resources:
       KeySchema:
         - { AttributeName: zone, KeyType: HASH }
 
-  # Per-IP / per-email sign-up limits, "already subscribed" markers, subscriber counter
+  # Sign-up limits, subscription caps, and the UTC daily model-spend reservation counter
   RateLimitTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: climateguard-ratelimit
       BillingMode: PROVISIONED
-      ProvisionedThroughput: { ReadCapacityUnits: 2, WriteCapacityUnits: 2 }
+      ProvisionedThroughput: { ReadCapacityUnits: 2, WriteCapacityUnits: 5 }
       AttributeDefinitions:
         - { AttributeName: k, AttributeType: S }
       KeySchema:
@@ -183,7 +193,6 @@ Resources:
           # Muse Spark 1.3 translates alerts for zh/tl/ko/ar sign-ups; if missing: English with a note
           MODEL_API_KEY_PARAM: /climateguard/meta-model-api-key
           USE_CONTRIBUTOR: "false"
-          DAILY_MODEL_BUDGET_USD: "5"
       Policies:
         - DynamoDBCrudPolicy: { TableName: !Ref SnapshotsTable }
         - DynamoDBCrudPolicy: { TableName: !Ref UsageTable }
@@ -222,9 +231,40 @@ Resources:
         - AllowOrigins: [!Ref FrontendUrl, !Ref LocalDevOrigin, !Ref LocalDevOrigin2]
           AllowMethods: [GET, POST, DELETE, OPTIONS]
           AllowHeaders: [Content-Type]
-      DefaultRouteSettings:  # whole-API safety net; per-IP limits are enforced in code
-        ThrottlingBurstLimit: 20
-        ThrottlingRateLimit: 10
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 10
+        ThrottlingRateLimit: 5
+      RouteSettings:
+        "POST /subscribe":
+          ThrottlingBurstLimit: 1
+          ThrottlingRateLimit: 0.2
+        "POST /ask":
+          ThrottlingBurstLimit: 2
+          ThrottlingRateLimit: 0.5
+        "POST /transcribe":
+          ThrottlingBurstLimit: 2
+          ThrottlingRateLimit: 0.5
+        "POST /translate":
+          ThrottlingBurstLimit: 2
+          ThrottlingRateLimit: 0.5
+        "POST /pretalk":
+          ThrottlingBurstLimit: 2
+          ThrottlingRateLimit: 0.5
+        "POST /demo/replay":
+          ThrottlingBurstLimit: 2
+          ThrottlingRateLimit: 0.5
+        "POST /recovery":
+          ThrottlingBurstLimit: 1
+          ThrottlingRateLimit: 0.2
+        "POST /recovery/{job}/photos":
+          ThrottlingBurstLimit: 2
+          ThrottlingRateLimit: 1
+        "POST /recovery/{job}/analyze":
+          ThrottlingBurstLimit: 1
+          ThrottlingRateLimit: 0.1
+        "POST /recovery/{job}/answers":
+          ThrottlingBurstLimit: 1
+          ThrottlingRateLimit: 0.2
 
   ApiFunction:
     Type: AWS::Serverless::Function
@@ -236,6 +276,10 @@ Resources:
         - DynamoDBReadPolicy: { TableName: !Ref SnapshotsTable }
         - DynamoDBReadPolicy: { TableName: !Ref AlertsTable }
         - DynamoDBCrudPolicy: { TableName: !Ref RateLimitTable }
+        - Statement:
+            - Effect: Allow
+              Action: dynamodb:TransactWriteItems
+              Resource: !GetAtt RateLimitTable.Arn
         - DynamoDBCrudPolicy: { TableName: !Ref ZonesTable }  # /locate registers new zones
         - DynamoDBReadPolicy: { TableName: !Ref UsageTable }  # GET /demo: real model cost so far + budget state
         - Statement:
@@ -286,7 +330,7 @@ Resources:
           AIRNOW_API_KEY_PARAM: /climateguard/airnow-api-key  # on-demand snapshots for unmonitored zones
           BASETEN_API_KEY_PARAM: /climateguard/baseten-api-key  # POST /demo/replay runs the monitoring agent
           USE_CONTRIBUTOR: "false"
-          DAILY_MODEL_BUDGET_USD: "5"
+      ReservedConcurrentExecutions: 2
       Policies:
         - DynamoDBReadPolicy: { TableName: !Ref SnapshotsTable }
         - DynamoDBCrudPolicy: { TableName: !Ref AlertsTable }  # demo replays log to DEMO-* keys (never live ones)
@@ -328,7 +372,7 @@ Resources:
         Variables:
           MODEL_API_KEY_PARAM: /climateguard/meta-model-api-key
           USE_CONTRIBUTOR: "false"  # real photos: never contributor mode
-          DAILY_MODEL_BUDGET_USD: "5"
+      ReservedConcurrentExecutions: 2
       EventInvokeConfig:
         MaximumRetryAttempts: 0  # a failed analysis shows "try again" rather than running (and billing) twice
       Policies:

@@ -442,7 +442,7 @@ def test_rate_limit_and_budget(monkeypatch):
     monkeypatch.setattr(handler.budget, "over_budget", lambda: True)
     monkeypatch.setattr(handler.ratelimit, "hit", lambda *a: True)
     r = handler.handler(_event("POST /recovery", body={"lang": "en"}), None)
-    assert r["statusCode"] == 503 and json.loads(r["body"])["error"] == "over_budget"
+    assert r["statusCode"] == 429 and json.loads(r["body"])["error"] == "demo_busy"
 
 
 # --- checklist and report (model mocked) ------------------------------------------------------------

@@ -10,11 +10,12 @@ Endpoint (https://dev.meta.ai/docs/speech-to-text): POST /v1/asr/transcribe, mul
 import io
 import json
 import logging
+import math
 import wave
 
 import requests
 
-from . import config, llm, usage
+from . import budget, config, llm, usage
 
 log = logging.getLogger(__name__)
 
@@ -53,11 +54,14 @@ def check_wav(data: bytes) -> int:
 
 def transcribe(data: bytes, lang: str) -> dict:
     """{text, audio_ms}. Raises AudioError for bad audio; other failures are the caller's fallback."""
-    check_wav(data)
+    input_audio_ms = check_wav(data)
     bias = [BIAS[lang]] + (["English"] if lang != "en" else [])
     req = {"mode": "PUSH_TO_TALK", "model": config.TRANSCRIBE_MODEL, "audioEncoding": "WAV",
            "languageBias": bias, "keywords": KEYWORDS}
     key = llm._client("meta").api_key  # same key (env or SSM) as the chat calls
+    estimated_audio_s = math.ceil(input_audio_ms / 1000)
+    estimate = estimated_audio_s * usage.AUDIO_USD_PER_HOUR[config.TRANSCRIBE_MODEL] / 3600
+    reservation = budget.reserve(estimate)
     r = requests.post(f"{config.META_BASE_URL}/asr/transcribe", headers={"Authorization": f"Bearer {key}"},
                       files={"request": (None, json.dumps(req), "application/json"),
                              "audio": ("question.wav", data, "audio/wav")},
@@ -66,6 +70,7 @@ def transcribe(data: bytes, lang: str) -> dict:
         raise AudioError("invalid_audio")
     r.raise_for_status()
     body = r.json()
-    audio_ms = int(body.get("audioDurationMs") or 0)
-    usage.log_audio(config.TRANSCRIBE_MODEL, audio_ms, purpose=f"transcribe:{lang}")
+    audio_ms = int(body.get("audioDurationMs") or input_audio_ms)
+    record = usage.log_audio(config.TRANSCRIBE_MODEL, audio_ms, purpose=f"transcribe:{lang}")
+    budget.settle(reservation, record["cost_usd"])
     return {"text": (body.get("transcript") or "").strip(), "audio_ms": audio_ms}

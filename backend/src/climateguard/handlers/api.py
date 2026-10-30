@@ -85,7 +85,8 @@ def post_subscribe(event) -> dict:
                            zip_code=body.get("zip"), lat=body.get("lat"), lon=body.get("lon"))
         return _resp(202, {**result, "not_covered": hazards.EXCLUSION_NOTE})
     except SignupError as e:
-        headers = {"Retry-After": "3600"} if e.status == 429 else None
+        headers = ({"Retry-After": "86400" if e.code == "email_subscription_cap" else "3600"}
+                   if e.status == 429 else None)
         return _resp(e.status, {"error": e.code}, headers=headers)
 
 

@@ -152,7 +152,8 @@ def test_translate_retry_only_translates_a_recent_alert(monkeypatch):
     sent = {"ts": "2026-10-30T12:00:00+00:00", "hazard": "heat",
             "messages": {"en": "Heat alert."}}
     monkeypatch.setattr(ask_handler.alerts_store, "recent_sent", lambda zone, hours: [sent])
-    monkeypatch.setattr(ask_handler, "translate_alert", lambda text, lang: (f"{lang}: {text}", True))
+    monkeypatch.setattr(ask_handler, "translate_alert",
+                        lambda text, lang, **kwargs: (f"{lang}: {text}", True))
     body = {"zone": "CAZ159", "sent_at": sent["ts"], "hazard": "heat", "lang": "vi"}
     response = ask_handler.handler(_translate_event(body), None)
     assert response["statusCode"] == 200 and json.loads(response["body"]) == {
@@ -168,7 +169,7 @@ def test_translate_retry_reports_failure_and_is_rate_limited(monkeypatch):
     sent = {"ts": "2026-10-30T12:00:00+00:00", "hazard": "heat",
             "messages": {"en": "Heat alert."}}
     monkeypatch.setattr(ask_handler.alerts_store, "recent_sent", lambda zone, hours: [sent])
-    monkeypatch.setattr(ask_handler, "translate_alert", lambda text, lang: (text, False))
+    monkeypatch.setattr(ask_handler, "translate_alert", lambda text, lang, **kwargs: (text, False))
     body = {"zone": "CAZ159", "sent_at": sent["ts"], "hazard": "heat", "lang": "vi"}
     failed = ask_handler.handler(_translate_event(body), None)
     assert failed["statusCode"] == 502

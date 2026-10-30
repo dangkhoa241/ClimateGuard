@@ -69,10 +69,11 @@ RECOVERY_BUCKET = os.getenv("RECOVERY_BUCKET", "")  # recovery photos + job reco
 NOTIFY_MODE = os.getenv("NOTIFY_MODE", "dryrun")
 SNS_TOPIC_PREFIX = os.getenv("SNS_TOPIC_PREFIX", "climateguard")
 MAX_SUBSCRIBERS = int(os.getenv("MAX_SUBSCRIBERS", "500"))
+MAX_SUBSCRIPTIONS_PER_EMAIL = int(os.getenv("MAX_SUBSCRIPTIONS_PER_EMAIL", "3"))
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
 # --- Cost and scale controls ---
-DAILY_MODEL_BUDGET_USD = float(os.getenv("DAILY_MODEL_BUDGET_USD", "5"))
+DAILY_MODEL_BUDGET_USD = float(os.getenv("DAILY_MODEL_BUDGET_USD", "3"))
 COLLECT_WORKERS = int(os.getenv("COLLECT_WORKERS", "8"))   # zones collected in parallel (I/O bound)
 AGENT_WORKERS = int(os.getenv("AGENT_WORKERS", "4"))       # agent runs in parallel
 ACTIVE_REFRESH_MINUTES = int(os.getenv("ACTIVE_REFRESH_MINUTES", "60"))  # how often to recount confirmed subs

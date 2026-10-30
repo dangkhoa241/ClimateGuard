@@ -196,7 +196,7 @@ def test_handler_runs_agent_only_for_changed_zones(local, monkeypatch):
     assert calls == [] and r["decisions"] == {}  # nothing changed: no agent, no spend
 
 
-def test_over_budget_only_zones_with_a_warning_run_the_agent(local, monkeypatch):
+def test_daily_model_cap_skips_every_zone(local, monkeypatch):
     from climateguard import budget, monitor, subscriptions, zones
     seen = {}
     monkeypatch.setattr(monitor, "run_monitor", lambda slug, skip_reason=None: seen.update({slug: skip_reason}) or
@@ -204,9 +204,8 @@ def test_over_budget_only_zones_with_a_warning_run_the_agent(local, monkeypatch)
     monkeypatch.setattr(zones, "monitored", lambda: [ZONE_A, ZONE_B])
     monkeypatch.setattr(subscriptions, "refresh_confirmed", lambda: [])
     monkeypatch.setattr(budget, "over_budget", lambda: True)
-    monkeypatch.setattr(budget, "has_active_warning", lambda snap: snap.get("zone") == "MNZ060")
     collect_mod.handler({}, None)
-    assert seen["MNZ060"] is None and "budget" in seen["CAZ159"]
+    assert all("model-spend cap" in reason for reason in seen.values())
 
 
 def test_source_errors_never_contain_query_params(monkeypatch):

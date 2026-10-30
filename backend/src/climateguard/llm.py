@@ -10,7 +10,7 @@ import threading
 from dataclasses import dataclass
 
 
-from . import cache, config, ssm, usage
+from . import budget, cache, config, ssm, usage
 
 _THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
 
@@ -118,8 +118,10 @@ def chat(provider: str, model: str, messages: list[dict], *, max_tokens: int,
 
     raw = cache.get(key, ttl) if use_cache else None
     cache_hit = raw is not None
+    reservation = None
     if not cache_hit:
         client = _client(provider)
+        reservation = budget.reserve_call(model, messages, max_tokens)
         raw = _with_deadline(lambda: client.chat.completions.create(**params).model_dump(),
                              deadline_s or config.LLM_CALL_DEADLINE_S)
 
@@ -130,6 +132,9 @@ def chat(provider: str, model: str, messages: list[dict], *, max_tokens: int,
     reasoning_tokens = (u.get("completion_tokens_details") or {}).get("reasoning_tokens") or 0
     rec = usage.log_call(provider, model, prompt_tokens, completion_tokens, cached_tokens,
                          purpose=purpose, cache_hit=cache_hit)
+    if reservation:
+        actual = rec["cost_usd"] if prompt_tokens or completion_tokens else reservation.amount
+        budget.settle(reservation, actual)
 
     choice = raw["choices"][0]
     text = strip_reasoning(choice["message"])

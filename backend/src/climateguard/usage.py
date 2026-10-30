@@ -5,6 +5,7 @@ Storage follows config.STORAGE:
   dynamodb -> USAGE_TABLE (pk=day "YYYY-MM-DD", sk="<epoch>#<uuid>")
 """
 import json
+import math
 import time
 import uuid
 from collections import defaultdict
@@ -123,10 +124,11 @@ AUDIO_USD_PER_HOUR ={"muse-voice-transcribe-1.0": 0.18}  # billed on whole secon
 
 def log_audio(model: str, audio_ms: int, purpose: str = "") -> dict:
     """Speech-to-text is billed per second of audio, not per token."""
+    audio_seconds = math.ceil(audio_ms / 1000)
     record = {"ts": time.time(), "provider": "meta", "model": model, "purpose": purpose,
               "prompt_tokens": 0, "completion_tokens": 0, "cached_tokens": 0, "cache_hit": False,
-              "audio_seconds": audio_ms // 1000,
-              "cost_usd": (audio_ms // 1000) * AUDIO_USD_PER_HOUR.get(model, 0.0) / 3600}
+              "audio_seconds": audio_seconds,
+              "cost_usd": audio_seconds * AUDIO_USD_PER_HOUR.get(model, 0.0) / 3600}
     try:
         _write(record)
     except Exception as e:

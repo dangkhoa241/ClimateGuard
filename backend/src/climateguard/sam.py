@@ -15,7 +15,7 @@ import re
 import struct
 import zlib
 
-from . import config, llm, sam_mask, usage
+from . import budget, config, llm, sam_mask, usage
 
 log = logging.getLogger(__name__)
 
@@ -61,8 +61,10 @@ def segment(jpeg: bytes, concept: str, purpose: str = "recovery-sam") -> list[di
                                      {"type": "input_image", "image_url": url}]}],
               "metadata": {"mask_encoding": "one_bit", "include_confidence": "true"}}
     client = llm._client("meta")
+    reservation = budget.reserve(SAM_USD_PER_IMAGE)
     raw = llm._with_deadline(lambda: client.responses.create(**params).model_dump(), CALL_DEADLINE_S)
     usage.log_extra("meta", config.SAM_MODEL, SAM_USD_PER_IMAGE, purpose=purpose)
+    budget.settle(reservation, SAM_USD_PER_IMAGE)
     text = "".join(part.get("text") or "" for o in raw.get("output") or [] if o.get("type") == "message"
                    for part in o.get("content") or [])
     return [r for r in parse(text) if r["conf"] >= MIN_CONFIDENCE]

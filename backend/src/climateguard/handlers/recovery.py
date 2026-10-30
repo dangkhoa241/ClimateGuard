@@ -19,6 +19,12 @@ log = logging.getLogger()
 JOBS_PER_IP_PER_HOUR = 6
 MAX_PHOTO_BODY_CHARS = 2_100_000  # 1.5 MB JPEG as base64
 
+
+def _busy_response() -> dict:
+    return _resp(429, {"error": "demo_busy", "message": budget.BUSY_MESSAGE},
+                 headers={"Retry-After": "3600"})
+
+
 try:  # cold start: model client during init (see handlers/ask.py)
     llm._client("meta")
 except Exception as e:
@@ -51,7 +57,7 @@ def post_create(event) -> dict:
     if not ratelimit.hit("recovery-ip", _source_ip(event), JOBS_PER_IP_PER_HOUR, 3600):
         return _resp(429, {"error": "rate_limited"}, headers={"Retry-After": "3600"})
     if budget.over_budget():
-        return _resp(503, {"error": "over_budget"})
+        return _busy_response()
     rec = recovery.new_job(str(body.get("lang") or ""), str(body.get("disaster") or "auto"))
     log.info("recovery new job=%s lang=%s disaster=%s", rec["id"][:6], rec["lang"], rec["disaster_choice"])
     return _resp(201, recovery.view(rec))
@@ -71,7 +77,7 @@ def post_photo(event, job: str) -> dict:
 
 def post_analyze(job: str) -> dict:
     if budget.over_budget():
-        return _resp(503, {"error": "over_budget"})
+        return _busy_response()
     rec = recovery.start_analysis(job)
     _start_worker("analyze", job)
     return _resp(202, recovery.view(rec))
@@ -83,7 +89,7 @@ def post_answers(event, job: str) -> dict:
     except SignupError as e:
         return _resp(e.status, {"error": e.code})
     if budget.over_budget():
-        return _resp(503, {"error": "over_budget"})
+        return _busy_response()
     rec = recovery.submit_answers(job, body.get("answers") or {})
     _start_worker("report", job)
     return _resp(202, recovery.view(rec))

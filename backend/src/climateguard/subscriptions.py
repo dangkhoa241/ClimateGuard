@@ -10,6 +10,7 @@ NOTIFY_MODE=dryrun (local dev) records sign-ups to backend/.local/outbox.jsonl i
 and treats them as confirmed.
 """
 import json
+import logging
 import re
 import time
 from functools import lru_cache
@@ -24,6 +25,7 @@ EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[A-Za-z0-9.-]{1,255}\.[A-Za-z]{2,24}$")
 PER_IP_PER_HOUR = 5
 PER_EMAIL_PER_DAY = 3
 GLOBAL_PER_DAY = 300
+log = logging.getLogger(__name__)
 
 
 class SignupError(Exception):
@@ -82,22 +84,31 @@ def subscribe(email: str, lang: str, ip: str, zip_code: str | None = None, lat=N
 
     zone = _locate(zip_code, lat, lon)
 
-    # Repeat sign-ups (same email, zone and language) don't count toward the cap; SNS
-    # just re-sends the confirmation email if it's still pending.
     sub_id = f"{email}|{zone['zone']}|{lang}"
-    if not ratelimit.seen("subscription", sub_id):
-        if ratelimit.peek_counter("subscribers") >= config.MAX_SUBSCRIBERS:
-            raise SignupError("subscriber_cap", 503)
-        if ratelimit.mark_once("subscription", sub_id):
-            ratelimit.counter("subscribers")
+    claim = ratelimit.claim_subscription(email, sub_id, config.MAX_SUBSCRIPTIONS_PER_EMAIL,
+                                         config.MAX_SUBSCRIBERS)
+    if claim == "email_subscription_cap":
+        raise SignupError("email_subscription_cap", 429)
+    if claim == "subscriber_cap":
+        raise SignupError("subscriber_cap", 503)
 
-    if config.NOTIFY_MODE == "sns":
-        import boto3
+    try:
+        if config.NOTIFY_MODE == "sns":
+            import boto3
 
-        boto3.client("sns").subscribe(TopicArn=topic_arn(zone["zone"], lang), Protocol="email", Endpoint=email)
-    else:
-        outbox({"type": "subscribe", "zone": zone["zone"], "lang": lang, "email_hash": ratelimit.hashed(email)})
-    zones.add_language(zone["zone"], lang)
+            boto3.client("sns").subscribe(TopicArn=topic_arn(zone["zone"], lang), Protocol="email",
+                                         Endpoint=email)
+        else:
+            outbox({"type": "subscribe", "zone": zone["zone"], "lang": lang,
+                    "email_hash": ratelimit.hashed(email)})
+        zones.add_language(zone["zone"], lang)
+    except Exception:
+        if claim == "created":
+            try:
+                ratelimit.release_subscription(email, sub_id)
+            except Exception:
+                log.exception("failed to release subscription claim after setup failure")
+        raise
     return {"status": "pending_confirmation", "zone": zone["zone"], "zone_name": zone["name"],
             "place": zone.get("place"), "lang": lang}
 

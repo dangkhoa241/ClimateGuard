@@ -6,7 +6,7 @@ Cost and scale controls:
   - NWS alerts: one national request per run, matched to zones by UGC code
   - forecasts / AirNow: reused for 45 min (they update hourly)
   - zones collected in parallel (COLLECT_WORKERS), agent runs in parallel (AGENT_WORKERS)
-  - no model call when nothing changed; over the daily budget, only zones with a Warning
+  - no model call when nothing changed; the hard daily model-spend cap stops all new model calls
 """
 import logging
 from concurrent.futures import ThreadPoolExecutor
@@ -78,8 +78,8 @@ def monitor_changed(result: dict) -> dict:
     def one(slug):
         try:
             skip = None
-            if over and not budget.has_active_warning(store.get_latest(slug) or {}):
-                skip = f"daily model budget (${config.DAILY_MODEL_BUDGET_USD:.2f}) used up; only zones with an NWS Warning run"
+            if over:
+                skip = f"daily model-spend cap (${config.DAILY_MODEL_BUDGET_USD:.2f}) reached"
             d = run_monitor(slug, skip_reason=skip)
             return slug, {"action": d["action"], "reason": d["reason"], "cost_usd": d.get("cost_usd"),
                           "alerts_sent": len(d.get("sent") or [])}

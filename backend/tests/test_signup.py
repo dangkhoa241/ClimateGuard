@@ -114,6 +114,35 @@ def test_per_email_limit_across_ips():
     assert _post(SIGNUP, ip="10.0.0.99")[0] == 429
 
 
+def test_distinct_subscription_cap_per_email_and_duplicate_retry(monkeypatch):
+    email = "maria@example.com"
+    monkeypatch.setattr(config, "MAX_SUBSCRIPTIONS_PER_EMAIL", 2)
+    monkeypatch.setattr(subscriptions, "PER_EMAIL_PER_DAY", 10)
+    for lang in ("en", "es"):
+        assert _post({**SIGNUP, "email": email, "lang": lang})[0] == 202
+
+    blocked = api.handler({"routeKey": "POST /subscribe",
+                           "body": json.dumps({**SIGNUP, "email": email, "lang": "vi"}),
+                           "requestContext": {"http": {"sourceIp": "1.2.3.4"}}}, None)
+    assert blocked["statusCode"] == 429
+    assert json.loads(blocked["body"]) == {"error": "email_subscription_cap"}
+    assert blocked["headers"]["Retry-After"] == "86400"
+    assert _post({**SIGNUP, "email": email, "lang": "en"})[0] == 202
+    assert ratelimit.peek_counter("subscribers") == 2
+    assert ratelimit.peek_counter(f"email-subscriptions#{ratelimit.hashed(email)}") == 2
+
+
+def test_failed_signup_setup_releases_new_subscription_claim(monkeypatch):
+    def fail_outbox(record):
+        raise OSError("outbox unavailable")
+
+    monkeypatch.setattr(subscriptions, "outbox", fail_outbox)
+    with pytest.raises(OSError, match="outbox unavailable"):
+        subscriptions.subscribe("maria@example.com", "es", "1.2.3.4", zip_code="95202")
+    assert ratelimit.peek_counter("subscribers") == 0
+    assert ratelimit.peek_counter(f"email-subscriptions#{ratelimit.hashed('maria@example.com')}") == 0
+
+
 def test_subscriber_cap(monkeypatch):
     monkeypatch.setattr(config, "MAX_SUBSCRIBERS", 2)
     assert _post({**SIGNUP, "email": "a@example.com"}, ip="1.1.1.1")[0] == 202
