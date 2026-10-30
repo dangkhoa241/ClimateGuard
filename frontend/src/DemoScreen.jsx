@@ -38,10 +38,18 @@ function ReplayResult({ r, lang, t, headingRef }) {
           <div className="alert-meta">
             <span className="alert-kind"><HazardIcon hazard={a.hazard} t={t} /><strong>{t.severity[a.severity] || a.severity}</strong></span>
           </div>
-          <p lang={a.lang} dir={a.lang === 'en' ? 'ltr' : undefined}>{a.text}</p>
-          {a.automatic && <p className="muted small">{t.demoAutoAlert}</p>}
-          {a.lang !== lang && <p className="muted small">{t.demoEnglishShown}</p>}
-          <ReadAloud text={a.text} lang={a.lang} t={t} />
+          {(() => {
+            const text = a.translations?.[lang] || a.text
+            const shownLang = a.translations?.[lang] ? lang : a.lang
+            return (
+              <>
+                <p lang={shownLang} dir={shownLang === 'en' ? 'ltr' : undefined}>{text}</p>
+                {shownLang !== 'en' && !['es', 'vi'].includes(shownLang) && <p className="muted small">{t.demoAutoAlert}</p>}
+                {shownLang !== lang && <p className="muted small">{t.demoEnglishShown}</p>}
+                <ReadAloud text={text} lang={shownLang} t={t} />
+              </>
+            )
+          })()}
         </div>
       ))}
       <details className="sources">

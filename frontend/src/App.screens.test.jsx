@@ -239,6 +239,71 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
     }
   })
 
+  it('relocalizes live alert cards after a language switch and can retry a failed translation', async () => {
+    localStorage.setItem('zone', JSON.stringify({
+      zone: 'CAZ159', name: 'Stockton', location: { zip: '95202' },
+    }))
+    const response = (body) => ({ ok: true, status: 200, json: () => Promise.resolve(body) })
+    let translationAttempts = 0
+    globalThis.fetch = vi.fn((url) => {
+      if (String(url).includes('/zones/')) {
+        return Promise.resolve(response([{
+          sent_at: '2026-10-30T12:00:00+00:00', hazard: 'heat', severity: 'high',
+          messages: { en: 'Heat alert.' },
+        }]))
+      }
+      if (String(url).endsWith('/translate')) {
+        translationAttempts += 1
+        return translationAttempts === 1
+          ? Promise.reject(new Error('temporary model failure'))
+          : Promise.resolve(response({ text: 'Cảnh báo nắng nóng.', lang: 'vi' }))
+      }
+      return Promise.resolve(response({}))
+    })
+
+    await mount('/#/alerts')
+    expect(container.textContent).toContain('Heat alert.')
+
+    const language = container.querySelector('.lang-select select')
+    await act(async () => {
+      language.value = 'vi'
+      language.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    expect(container.textContent).toContain('Heat alert.')
+    expect(container.textContent).toContain(STRINGS.vi.translationUnavailable)
+    await click(button(STRINGS.vi.retry))
+    expect(translationAttempts).toBe(2)
+    expect(container.textContent).toContain('Cảnh báo nắng nóng.')
+    const translationRequest = globalThis.fetch.mock.calls.find(([url]) => String(url).endsWith('/translate'))
+    expect(translationRequest[1].body).toContain('"lang":"vi"')
+  })
+
+  it('switching language relocalizes a saved demo replay alert', async () => {
+    const response = (body) => ({ ok: true, status: 200, json: () => Promise.resolve(body) })
+    globalThis.fetch = vi.fn()
+      .mockResolvedValueOnce(response({ events: [{ event: 'heat_2022' }] }))
+      .mockResolvedValueOnce(response({
+        event: 'heat_2022', source: 'saved',
+        decision: { action: 'sent', reason: 'Heat warning.', model_calls: 1, cost_usd: 0.01 },
+        alerts: [{
+          hazard: 'heat', severity: 'extreme', text: 'Heat alert.', lang: 'en', automatic: false,
+          translations: { en: 'Heat alert.', vi: 'Cảnh báo nắng nóng.' },
+        }],
+      }))
+
+    await mount('/?demo=1')
+    await click(button(t.demoEvents.heat_2022))
+    expect(container.textContent).toContain('Heat alert.')
+
+    const language = container.querySelector('.lang-select select')
+    await act(async () => {
+      language.value = 'vi'
+      language.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    expect(container.textContent).toContain('Cảnh báo nắng nóng.')
+    expect(container.textContent).not.toContain(STRINGS.vi.demoEnglishShown)
+  })
+
   it('the text-size toggle is accessible and persists the selected size', async () => {
     await mount()
     const toggle = () => container.querySelector('.text-size-toggle')

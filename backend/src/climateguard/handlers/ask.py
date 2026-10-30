@@ -8,8 +8,9 @@ Per-IP rate limits; the daily model budget is checked in ask.answer().
 import base64
 import logging
 
-from .. import ask, budget, demo, llm, pretalk, ratelimit, transcribe
+from .. import alerts_store, ask, budget, demo, llm, pretalk, ratelimit, transcribe
 from ..languages import LANGS
+from ..translate import translate_alert
 from ..subscriptions import SignupError
 from .api import ZONE_RE, _json_body, _resp, _source_ip
 
@@ -18,6 +19,7 @@ ASK_PER_IP_PER_HOUR = 20
 PRETALK_PER_IP_PER_HOUR = 10
 DEMO_REPLAYS_PER_IP_PER_HOUR = 15  # a fresh run is about $0.015; repeats within an hour are cached
 TRANSCRIBE_PER_IP_PER_HOUR = 30  # at most 60 s each: under $0.10/hour per IP
+TRANSLATE_PER_IP_PER_HOUR = 10
 # 60 s of 16 kHz mono 16-bit audio is ~1.9 MB, ~2.6 MB as base64 (HTTP API payloads go up to 10 MB)
 MAX_AUDIO_BODY_CHARS = 2_700_000
 
@@ -71,6 +73,31 @@ def post_transcribe(event) -> dict:
     log.info("transcribe lang=%s audio_ms=%s chars=%s", lang, result["audio_ms"], len(result["text"]))
     return _resp(200, result)
 
+
+def post_translate(event) -> dict:
+    """Translate a known English alert for an existing alert card, on an explicit retry."""
+    try:
+        body = _json_body(event)
+    except SignupError as e:
+        return _resp(e.status, {"error": e.code})
+    lang = str(body.get("lang") or "")
+    zone = str(body.get("zone") or "").upper()
+    hazard = str(body.get("hazard") or "")
+    sent_at = str(body.get("sent_at") or "")
+    if lang not in LANGS or lang == "en":
+        return _resp(400, {"error": "invalid_lang"})
+    if not ZONE_RE.match(zone) or not hazard or not sent_at:
+        return _resp(400, {"error": "invalid_alert"})
+    if not ratelimit.hit("translate-ip", _source_ip(event), TRANSLATE_PER_IP_PER_HOUR, 3600):
+        return _resp(429, {"error": "rate_limited"}, headers={"Retry-After": "3600"})
+    alert = next((row for row in alerts_store.recent_sent(zone, hours=48)
+                  if row.get("hazard") == hazard and row.get("ts") == sent_at), None)
+    if alert is None:
+        return _resp(404, {"error": "unknown_alert"})
+    text, translated = translate_alert(alert["messages"]["en"], lang)
+    if not translated:
+        return _resp(502, {"error": "translation_unavailable"})
+    return _resp(200, {"text": text, "lang": lang})
 
 def post_pretalk(event) -> dict:
     """POST /pretalk {zone, lang}: today's crew checklist + an AI pre-shift talk (supervisor view)."""
@@ -128,6 +155,8 @@ def handler(event, context):
         return post_ask(event)
     if event.get("routeKey") == "POST /transcribe":
         return post_transcribe(event)
+    if event.get("routeKey") == "POST /translate":
+        return post_translate(event)
     if event.get("routeKey") == "POST /pretalk":
         return post_pretalk(event)
     return _resp(404, {"error": "not found"})

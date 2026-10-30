@@ -44,6 +44,9 @@ In the demo story, **Maria is an example person**, labeled as one everywhere. Th
 - **Decision history.** A public page, "How ClimateGuard decides", lists every decision the live agent made, including each time it chose not to alert.
 - **Demo mode.** Real past events replayed through the live agent, sample photos, sample area, no email. If the budget is spent, it shows earlier saved real runs, not an error.
 - **Languages.** The screens and alerts come in 7 languages. A native Vietnamese speaker reviewed the Vietnamese wording; a Spanish reviewer is still wanted. Chinese, Tagalog, Korean and Arabic are **machine-translated and labeled as such** everywhere. Arabic switches the page to right-to-left.
+- Saved demo replay alerts use pre-generated translations so changing the screen language also changes the alert text. Live alert cards translate on demand and offer a retry if translation is unavailable; read-aloud requires a matching device voice.
+
+The demo replay translation back-check matched 23 of 24 messages. It flagged the saved, human-reviewed Vietnamese flood wording for making the instruction to move to higher ground conditional; that wording was retained as requested and should be re-reviewed by a native speaker.
 
 ## Meta tooling
 

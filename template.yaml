@@ -301,6 +301,9 @@ Resources:
         Ask:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /ask }
+        Translate:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /translate }
         Transcribe:  # a spoken question (WAV) -> text, Muse Voice Transcribe
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /transcribe }

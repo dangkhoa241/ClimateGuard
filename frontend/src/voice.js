@@ -73,6 +73,7 @@ export async function startRecording({ onAutoStop } = {}) {
 // BCP 47 prefixes per app language, best first; Tagalog voices are usually tagged Filipino ("fil-PH").
 const VOICE_LANGS = { en: ['en-US', 'en'], es: ['es-US', 'es-MX', 'es'], vi: ['vi'], zh: ['zh-CN', 'zh'],
   tl: ['fil', 'tl'], ko: ['ko'], ar: ['ar'] }
+const SPEECH_LANGS = { en: 'en-US', es: 'es-MX', vi: 'vi-VN', zh: 'zh-CN', tl: 'fil-PH', ko: 'ko-KR', ar: 'ar-SA' }
 // Higher-quality voices by name: iOS "Enhanced"/"Premium" downloads, Edge's online "Natural" voices
 // (e.g. "Microsoft HoaiMy Online (Natural) - Vietnamese (Vietnam)"), and a few known good ones.
 const QUALITY = [[/natural|neural|premium/i, 3], [/enhanced|online/i, 2],
@@ -95,6 +96,14 @@ export function voicesFor(all, lang) {
   return all
     .filter((v) => langRank(v, lang) !== null)
     .sort((a, b) => quality(b) - quality(a) || langRank(a, lang) - langRank(b, lang) || a.name.localeCompare(b.name))
+}
+
+export function speechLanguage(lang, voice) {
+  const voiceLang = voice?.lang?.replace('_', '-')
+  const prefix = lang === 'tl' ? /^(fil|tl)(-|$)/i : new RegExp(`^${lang}(-|$)`, 'i')
+  return voiceLang && voiceLang.includes('-') && prefix.test(voiceLang)
+    ? voiceLang
+    : (SPEECH_LANGS[lang] || 'en-US')
 }
 
 const storeKey = (lang) => `cg-voice-${lang}`
@@ -135,7 +144,7 @@ export function chunks(text) {
 
 // Must run directly in the tap handler (iOS only speaks from a user gesture), so every chunk is queued
 // right away. cancel() only when something is playing: on iOS, cancel() then speak() can drop the speech.
-export function speak(text, voice, { onEnd } = {}) {
+export function speak(text, voice, { onEnd, lang = 'en' } = {}) {
   const synth = window.speechSynthesis
   if (synth.speaking || synth.pending) synth.cancel()
   const parts = chunks(text)
@@ -149,7 +158,7 @@ export function speak(text, voice, { onEnd } = {}) {
   parts.forEach((part, i) => {
     const u = new SpeechSynthesisUtterance(part)
     u.voice = voice
-    u.lang = voice.lang
+    u.lang = speechLanguage(lang, voice)
     u.rate = 0.95 // a little slower than default: plain, clear speech
     u.onerror = finish
     if (i === parts.length - 1) u.onend = finish

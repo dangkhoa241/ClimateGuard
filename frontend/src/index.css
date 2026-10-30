@@ -357,6 +357,7 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 .text-size-toggle { min-height: 44px; padding: 0 10px; white-space: nowrap; font-size: 0.85rem; }
 .app-footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--line); }
 .app-footer a { color: var(--accent); font-weight: 600; }
+.text-button { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; text-decoration: underline; }
 .how-steps { margin: 20px 0 28px; padding-inline-start: 28px; }
 .how-steps li { margin: 0 0 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
 .how-steps li::marker { color: var(--accent); font-weight: 700; }

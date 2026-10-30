@@ -116,7 +116,25 @@ def test_failed_or_slow_live_run_shows_the_saved_run(monkeypatch, failure):
 def test_saved_run_never_calls_a_model_even_for_automatic_languages(monkeypatch):
     monkeypatch.setattr(demo, "translate_alert", lambda *a: pytest.fail("no model calls for saved runs"))
     [a] = demo.saved_result("smoke_2020", "zh", "budget")["alerts"]
-    assert a["lang"] == "en" and a["automatic"] is False
+    assert a["lang"] == "zh" and a["automatic"] is True
+    assert a["translations"]["zh"] == a["text"]
+    assert a["translations"]["es"] == demo.saved()["smoke_2020"]["sent"][0]["messages"]["es"]
+
+
+def test_static_demo_translations_cover_every_saved_alert_and_language():
+    from climateguard.monitor import MEDICAL_TERMS
+    from climateguard.guardrails import mentions_mask
+
+    for event, alerts in demo.saved().items():
+        for alert in alerts["sent"]:
+            fixture = demo.translations()[event][alert["hazard"]]
+            assert fixture["en"] == alert["messages"]["en"]
+            assert set(fixture) == {"en", "es", "vi", "zh", "tl", "ko", "ar"}
+            assert all(text.strip() for text in fixture.values())
+            for lang, text in fixture.items():
+                assert not MEDICAL_TERMS.search(text)
+                if event != "smoke_2020":
+                    assert not mentions_mask(text)
 
 
 def test_handler_over_budget_returns_saved_run_not_an_error(monkeypatch):

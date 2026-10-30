@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ALERT_LANGS, getZoneAlerts, subscribe } from './api.js'
+import { ALERT_LANGS, getZoneAlerts, subscribe, translateAlert } from './api.js'
 import { HazardIcon, hazardKind } from './icons.jsx'
 import LocationPicker from './LocationPicker.jsx'
 import ReadAloud from './ReadAloud.jsx'
@@ -17,10 +17,13 @@ function NotCoveredNotice({ t }) {
 function RecentAlerts({ zone, lang, t }) {
   const [state, setState] = useState({ loading: true, alerts: [], error: false })
   const [attempt, setAttempt] = useState(0)
+  const [translations, setTranslations] = useState({})
+  const [translating, setTranslating] = useState({})
 
   useEffect(() => {
     let cancelled = false
     setState({ loading: true, alerts: [], error: false })
+    setTranslations({})
     getZoneAlerts(zone)
       .then((alerts) => !cancelled && setState({ loading: false, alerts, error: false }))
       .catch(() => !cancelled && setState({ loading: false, alerts: [], error: true }))
@@ -28,6 +31,27 @@ function RecentAlerts({ zone, lang, t }) {
       cancelled = true
     }
   }, [zone, attempt])
+
+  async function retryTranslation(alert) {
+    const key = `${alert.sent_at}-${alert.hazard}-${lang}`
+    setTranslating((current) => ({ ...current, [key]: true }))
+    try {
+      const result = await translateAlert({ zone, sentAt: alert.sent_at, hazard: alert.hazard, lang })
+      setTranslations((current) => ({ ...current, [key]: result.text }))
+    } catch {
+      setTranslations((current) => ({ ...current, [key]: null }))
+    } finally {
+      setTranslating((current) => ({ ...current, [key]: false }))
+    }
+  }
+
+  useEffect(() => {
+    if (lang === 'en') return
+    for (const alert of state.alerts) {
+      const key = `${alert.sent_at}-${alert.hazard}-${lang}`
+      if (!alert.messages[lang] && translations[key] === undefined) retryTranslation(alert)
+    }
+  }, [lang, state.alerts])
 
   return (
     <section className="recent" aria-live="polite">
@@ -40,7 +64,12 @@ function RecentAlerts({ zone, lang, t }) {
         </div>
       )}
       {!state.error && state.alerts.length === 0 && <p className="muted">{t.noAlerts}</p>}
-      {state.alerts.map((a) => (
+      {state.alerts.map((a) => {
+        const key = `${a.sent_at}-${a.hazard}-${lang}`
+        const translated = a.messages[lang] || translations[key]
+        const text = translated || a.messages.en
+        const textLang = translated ? lang : 'en'
+        return (
         <article key={a.sent_at + a.hazard} className={`alert-card sev-${a.severity} hz-${hazardKind(a.hazard)}`}>
           <div className="alert-meta">
             <span className="alert-kind"><HazardIcon hazard={a.hazard} t={t} /><strong>{t.severity[a.severity] || a.severity}</strong></span>
@@ -48,11 +77,19 @@ function RecentAlerts({ zone, lang, t }) {
               {new Date(a.sent_at).toLocaleString(lang, { weekday: 'short', hour: 'numeric', minute: '2-digit' })}
             </time>
           </div>
-          <p>{a.messages[lang] || a.messages.en}</p>
-          <ReadAloud text={a.messages[lang] || a.messages.en} lang={a.messages[lang] ? lang : 'en'} t={t} />
-          <ShareWhatsApp text={a.messages[lang] || a.messages.en} zone={zone} lang={lang} t={t} />
+          <p lang={textLang}>{text}</p>
+          {!translated && lang !== 'en' && (
+            <div className="muted small" role="status">
+              <span>{translating[key] ? t.loading : t.translationUnavailable}</span>{' '}
+              {!translating[key] && (
+                <button type="button" className="text-button" onClick={() => retryTranslation(a)}>{t.retry}</button>
+              )}
+            </div>
+          )}
+          <ReadAloud text={text} lang={textLang} t={t} />
+          <ShareWhatsApp text={text} zone={zone} lang={lang} t={t} />
         </article>
-      ))}
+      )})}
     </section>
   )
 }

@@ -24,6 +24,7 @@ from .translate import translate_alert
 # One button per event: the moment that shows the agent's judgment best.
 DEMO_MOMENTS = {"heat_2022": "record_day_morning", "flood_2023": "warning_night", "smoke_2020": "peak"}
 SAVED_PATH = Path(__file__).parent / "data" / "demo_saved.json"  # not in data/replays: that folder is the catalog
+TRANSLATIONS_PATH = Path(__file__).parent / "data" / "demo_translations.json"
 LIVE_WAIT_S = 23  # the Ask Lambda stops at 28 s and API Gateway at 30 s
 LAUNCH_DAY = date(2026, 10, 27)  # first day of the deployed usage log
 COST_CACHE_S = 900
@@ -39,6 +40,11 @@ def saved() -> dict:
     return json.loads(SAVED_PATH.read_text(encoding="utf-8"))
 
 
+@lru_cache(maxsize=1)
+def translations() -> dict:
+    return json.loads(TRANSLATIONS_PATH.read_text(encoding="utf-8"))
+
+
 def catalog() -> list[dict]:
     out = []
     for event, moment in DEMO_MOMENTS.items():
@@ -50,21 +56,29 @@ def catalog() -> list[dict]:
     return out
 
 
-def _alerts_in(sent: list[dict], lang: str, translate: bool) -> list[dict]:
+def _alerts_in(sent: list[dict], event: str, lang: str, translate: bool) -> list[dict]:
     """Each sent alert in `lang`: the agent's own text for EN/ES/VI, otherwise an automatic translation of
     the English (labeled), or the English itself when translating isn't possible."""
     out = []
     for s in sent:
         msgs = s["messages"]
-        if lang in msgs:
+        fixture = translations().get(event, {}).get(s["hazard"])
+        if fixture and fixture.get("en") == msgs.get("en"):
+            text = fixture.get(lang, msgs["en"])
+            shown = lang if lang in fixture else "en"
+            auto = shown not in REVIEWED
+        elif lang in msgs:
             text, shown, auto = msgs[lang], lang, False
         elif translate:
             text, auto = translate_alert(msgs["en"], lang)
             shown = lang if auto else "en"
         else:
             text, shown, auto = msgs["en"], "en", False
-        out.append({"hazard": s["hazard"], "severity": s["severity"], "text": text, "lang": shown,
-                    "automatic": auto})
+        alert = {"hazard": s["hazard"], "severity": s["severity"], "text": text, "lang": shown,
+                 "automatic": auto}
+        if fixture and fixture.get("en") == msgs.get("en"):
+            alert["translations"] = fixture
+        out.append(alert)
     return out
 
 
@@ -76,7 +90,7 @@ def _result(event: str, lang: str, decision: dict, *, source: str, why: str | No
             "decision": {"action": decision["action"], "reason": decision["reason"], "model_calls": calls,
                          "cost_usd": cost, "cached": source == "live" and calls > 0 and cost == 0},
             "typical_cost_usd": round(float(saved()[event]["cost_usd"]), 4),
-            "alerts": _alerts_in(decision.get("sent") or [], lang, translate)}
+            "alerts": _alerts_in(decision.get("sent") or [], event, lang, translate)}
 
 
 def saved_result(event: str, lang: str, why: str) -> dict:

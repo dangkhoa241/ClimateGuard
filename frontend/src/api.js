@@ -41,6 +41,13 @@ export const locateByCoords = (lat, lon) =>
 
 export const getZoneAlerts = (zone) => request(`/zones/${zone}/alerts`)
 
+export const translateAlert = ({ zone, sentAt, hazard, lang }) =>
+  request('/translate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ zone, sent_at: sentAt, hazard, lang }),
+  })
+
 export const subscribe = ({ email, lang, location, website }) =>
   request('/subscribe', {
     method: 'POST',

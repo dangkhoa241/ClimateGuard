@@ -20,7 +20,8 @@ export default function ReadAloud({ text, lang, t, options = false }) {
     setSilentHint(false)
   }, [text])
   const voice = voices.find((v) => v.voiceURI === uri) || voices[0]
-  if (!voice || !text) return null
+  if (!text) return null
+  if (!voice) return <p className="muted small" role="status">{t.voiceUnavailable}</p>
 
   function toggle() {
     if (speaking) {
@@ -31,7 +32,7 @@ export default function ReadAloud({ text, lang, t, options = false }) {
     }
     setSpeaking(true)
     setSilentHint(isIOS())
-    speak(text, voice, { onEnd: () => setSpeaking(false) })
+    speak(text, voice, { lang, onEnd: () => setSpeaking(false) })
   }
 
   function choose(e) {
