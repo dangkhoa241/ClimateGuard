@@ -1,5 +1,20 @@
 {
  "zh": {
+  "howWorksTitle": "工作原理",
+  "howSteps": [
+    "NWS 数据每 15 分钟更新",
+    "撰写提醒",
+    "代码中的安全规则",
+    "翻译并以相应语言发送",
+    "朗读",
+    "使用 Muse Voice Transcribe 提问",
+    "使用 SAM 3.1 分析受损照片",
+    "撰写报告"
+  ],
+  "howWhyTitle": "为什么发送了这条提醒？",
+  "howNoAlerts": "过去 7 天没有发送提醒。",
+  "howLoadError": "无法加载最近的提醒决定。请检查网络后重试。",
+  "retry": "重试",
   "tagline": "高温、烟雾、洪水和暴风提醒，用您的语言发送。",
   "alerts": "获取提醒",
   "ask": "提问题",
@@ -259,6 +274,21 @@
   }
  },
  "tl": {
+  "howWorksTitle": "Paano ito gumagana",
+  "howSteps": [
+    "Datos ng NWS, ina-update kada 15 minuto",
+    "Pagsulat ng alerto",
+    "Mga panuntunang pangkaligtasan sa code",
+    "Pagsasalin at pagpapadala sa wika mo",
+    "Pagbasa nang malakas",
+    "Magtanong gamit ang Muse Voice Transcribe",
+    "Pagsusuri ng mga larawan gamit ang SAM 3.1",
+    "Pagsulat ng ulat"
+  ],
+  "howWhyTitle": "Bakit ipinadala ang alertong ito?",
+  "howNoAlerts": "Walang alertong naipadala sa nakalipas na 7 araw.",
+  "howLoadError": "Hindi ma-load ang mga kamakailang desisyon sa alerto. Suriin ang koneksyon at subukan muli.",
+  "retry": "Subukan muli",
   "tagline": "Mga alerto sa init, usok, baha at bagyo sa iyong wika.",
   "alerts": "Kumuha ng mga alerto",
   "ask": "Magtanong",
@@ -518,6 +548,21 @@
   }
  },
  "ko": {
+  "howWorksTitle": "작동 방식",
+  "howSteps": [
+    "15분마다 업데이트되는 NWS 데이터",
+    "알림 작성",
+    "코드로 적용하는 안전 규칙",
+    "번역 및 언어별 전달",
+    "소리 내어 읽기",
+    "Muse Voice Transcribe로 질문하기",
+    "SAM 3.1로 피해 사진 분석",
+    "보고서 작성"
+  ],
+  "howWhyTitle": "이 알림은 왜 발송되었나요?",
+  "howNoAlerts": "지난 7일 동안 발송된 알림이 없습니다.",
+  "howLoadError": "최근 알림 결정을 불러오지 못했습니다. 연결을 확인하고 다시 시도하세요.",
+  "retry": "다시 시도",
   "tagline": "더위, 연기, 홍수와 폭풍 알림을 당신의 언어로 받아보세요.",
   "alerts": "알림 받기",
   "ask": "질문하기",
@@ -777,6 +822,21 @@
   }
  },
  "ar": {
+  "howWorksTitle": "كيف يعمل",
+  "howSteps": [
+    "بيانات NWS، تُحدّث كل 15 دقيقة",
+    "كتابة التنبيه",
+    "قواعد السلامة مطبّقة في البرنامج",
+    "الترجمة والإرسال بلغتك",
+    "القراءة بصوت عالٍ",
+    "اسأل باستخدام Muse Voice Transcribe",
+    "تحليل صور الأضرار باستخدام SAM 3.1",
+    "كتابة التقرير"
+  ],
+  "howWhyTitle": "لماذا أُرسل هذا التنبيه؟",
+  "howNoAlerts": "لم تُرسل تنبيهات خلال الأيام السبعة الماضية.",
+  "howLoadError": "تعذّر تحميل قرارات التنبيه الأخيرة. تحقق من اتصالك وحاول مرة أخرى.",
+  "retry": "حاول مرة أخرى",
   "tagline": "تنبيهات الحرارة والدخان والفيضانات والعواصف بلغتك.",
   "alerts": "احصل على التنبيهات",
   "ask": "اسأل سؤالاً",

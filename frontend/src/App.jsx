@@ -5,16 +5,17 @@ import AskScreen from './AskScreen.jsx'
 import DemoScreen from './DemoScreen.jsx'
 import { FEATURE_ICONS, Globe, Logo } from './icons.jsx'
 import HistoryScreen from './HistoryScreen.jsx'
+import HowItWorksScreen from './HowItWorksScreen.jsx'
 import RecoveryScreen from './RecoveryScreen.jsx'
 import SupervisorScreen from './SupervisorScreen.jsx'
 
-const SCREENS = { alerts: 'alerts', ask: 'ask', recovery: 'recovery', supervisor: 'supervisor', history: 'history', demo: 'demoTitle' } // screen -> title key
+const SCREENS = { alerts: 'alerts', ask: 'ask', recovery: 'recovery', supervisor: 'supervisor', history: 'history', demo: 'demoTitle', 'how-it-works': 'howWorksTitle' } // screen -> title key
 // Demo mode's sample area (a demo zone: always monitored). Kept apart from the person's own saved area.
 const STOCKTON = { zone: 'CAZ159', name: 'Central San Joaquin County Including Stockton Metro', place: 'Stockton, CA',
   state: 'CA', tz: 'America/Los_Angeles', demo: true, monitored: true, calosha_applies: true }
 
 const ZONE_RE = /^[A-Z]{2}Z\d{3}$/
-const WIDE = new Set(['home', 'demo', 'history']) // the rest are forms and reports: reading width
+const WIDE = new Set(['home', 'demo', 'history', 'how-it-works']) // the rest are forms and reports: reading width
 const FEATURES = [ // screen, description key
   ['alerts', 'cardAlerts'], ['ask', 'cardAsk'], ['recovery', 'cardRecovery'], ['supervisor', 'cardSupervisor'],
   ['history', 'cardHistory'],
@@ -181,8 +182,14 @@ export default function App() {
           </button>
           {demo && screen === 'demo' && <button className="back demo-exit" onClick={leaveDemo}>{t.demoExit}</button>}
           <h1>{t[SCREENS[screen]]}</h1>
-          {demo && ['ask', 'supervisor'].includes(screen) && <p className="notice demo-note small">{t.demoSampleArea}</p>}
+          {demo && (
+            <aside className="notice demo-note small">
+              <p>{t.demoSampleArea}</p>
+              <a href="#/how-it-works">{t.howWorksTitle}</a>
+            </aside>
+          )}
           {screen === 'demo' && <DemoScreen lang={lang} t={t} go={(next) => go(next)} />}
+          {screen === 'how-it-works' && <HowItWorksScreen lang={lang} t={t} />}
           {screen === 'ask' && <AskScreen lang={lang} t={t} zone={area} setZone={setArea} demo={demo} />}
           {screen === 'alerts' && <AlertsScreen lang={lang} t={t} zone={zone} setZone={setZone} />}
           {screen === 'supervisor' && <SupervisorScreen lang={lang} t={t} zone={area} setZone={setArea} />}
@@ -190,6 +197,9 @@ export default function App() {
           {screen === 'history' && <HistoryScreen lang={lang} t={t} zone={demo ? null : zone} />}
         </>
       )}
+      <footer className="app-footer">
+        <a href="#/how-it-works">{t.howWorksTitle}</a>
+      </footer>
     </main>
   )
 }

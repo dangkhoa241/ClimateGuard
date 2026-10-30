@@ -174,6 +174,9 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 .read-aloud[aria-pressed='true'] { border-color: var(--accent); color: var(--accent); }
 .read-aloud-row { margin-top: 10px; }
 .read-aloud-row .read-aloud { margin-top: 0; }
+.alert-card .read-aloud {
+  min-height: 44px; padding: 8px 14px; border: 2px solid var(--accent); color: var(--accent); font-weight: 600;
+}
 .read-aloud-row p { margin: 6px 0 0; }
 .read-aloud-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .voice-picker {
@@ -309,6 +312,8 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 /* Demo mode (home entry, replay results, sample photos and questions) */
 .demo-exit { margin-inline-start: 8px; }
 .demo-note { background: #fff7e6; border: 2px solid #b45309; margin: 0 0 8px; }
+.demo-note p { margin: 0 0 6px; }
+.demo-note a { color: var(--accent); font-weight: 600; }
 .demo-section { margin-top: 24px; }
 .demo-section h2 { font-size: 1.2rem; margin: 0 0 6px; }
 .demo-section .actions { gap: 8px; }
@@ -346,6 +351,14 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 :where(button, select, a, summary, input, textarea):focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
 
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; }
+.app-footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--line); }
+.app-footer a { color: var(--accent); font-weight: 600; }
+.how-steps { margin: 20px 0 28px; padding-inline-start: 28px; }
+.how-steps li { margin: 0 0 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.how-steps li::marker { color: var(--accent); font-weight: 700; }
+.how-steps h2 { margin: 0; font-size: 1.05rem; }
+.how-steps p { margin: 6px 0 0; overflow-wrap: anywhere; }
+.how-decisions > h2 { font-size: 1.2rem; }
 .brand {
   display: inline-flex; align-items: center; gap: 8px; padding: 0; border: 0; background: none; color: inherit;
   font: inherit; font-weight: 700; font-size: 1.05rem; cursor: pointer;

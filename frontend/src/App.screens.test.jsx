@@ -122,7 +122,7 @@ describe('error boundary', () => {
 
 describe('the URL follows the screen (refresh, Back and Forward)', () => {
   const SCREENS = [['ask', t.ask], ['alerts', t.alerts], ['recovery', t.recovery], ['supervisor', t.supervisor],
-    ['history', t.history], ['demo', t.demoTitle]]
+    ['history', t.history], ['demo', t.demoTitle], ['how-it-works', t.howWorksTitle]]
 
   it.each(SCREENS)('loading #/%s opens that screen', async (name, title) => {
     await mount(`/#/${name}`)
@@ -204,10 +204,27 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
       select.value = 'vi'
       select.dispatchEvent(new Event('change', { bubbles: true }))
     })
+
     expect(heading()).toBe(STRINGS.vi.ask)
     await remount(window.location.href)
     expect(heading()).toBe(STRINGS.vi.ask)
     expect(document.documentElement.lang).toBe('vi')
+  })
+
+  it('the How it works page lists the pipeline and loads sent decisions', async () => {
+    await mount('/#/how-it-works')
+    expect(heading()).toBe(t.howWorksTitle)
+    expect(container.querySelectorAll('.how-steps > li')).toHaveLength(8)
+    expect(container.textContent).toContain('Muse Spark Open')
+    expect(container.textContent).toContain('SAM 3.1')
+    expect(globalThis.fetch.mock.calls.some(([url]) => String(url).includes('/decisions?'))).toBe(true)
+  })
+
+  it('the footer and demo banner link to How it works', async () => {
+    await mount()
+    expect(container.querySelector('.app-footer a').getAttribute('href')).toBe('#/how-it-works')
+    await remount('/?demo=1')
+    expect(container.querySelector('.demo-note a').getAttribute('href')).toBe('#/how-it-works')
   })
 
   it('the recovery screen restarts at its first step on refresh instead of crashing', async () => {
