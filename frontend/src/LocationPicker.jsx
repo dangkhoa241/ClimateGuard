@@ -7,10 +7,12 @@ export default function LocationPicker({ t, zone, onLocated }) {
   const [zip, setZip] = useState('')
   const [status, setStatus] = useState('idle') // idle | busy | error
   const [error, setError] = useState(null)
+  const [retry, setRetry] = useState(null)
 
   async function run(lookup, location) {
     setStatus('busy')
     setError(null)
+    setRetry(() => () => run(lookup, location))
     try {
       const z = await lookup()
       onLocated(z, location)
@@ -67,7 +69,12 @@ export default function LocationPicker({ t, zone, onLocated }) {
         📍 {t.useMyLocation}
       </button>
       {status === 'busy' && <p className="muted">{t.locating}</p>}
-      {status === 'error' && <p className="notice error" role="alert">{t.errors[error] || t.errors.default}</p>}
+      {status === 'error' && (
+        <div className="notice error" role="alert">
+          <p>{t.errors[error] || t.errors.default}</p>
+          {retry && <button type="button" className="secondary" onClick={retry}>{t.retry}</button>}
+        </div>
+      )}
       {zone && (
         <p className="zone-chip" aria-live="polite">
           {t.yourArea}: <strong>{zone.place || zone.name}</strong>

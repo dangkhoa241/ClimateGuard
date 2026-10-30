@@ -43,6 +43,7 @@ function Decision({ d, lang, t }) {
 
 export default function HistoryScreen({ lang, t, zone }) {
   const [onlyMine, setOnlyMine] = useState(Boolean(zone))
+  const [attempt, setAttempt] = useState(0)
   const [state, setState] = useState({ loading: true })
 
   useEffect(() => {
@@ -54,7 +55,7 @@ export default function HistoryScreen({ lang, t, zone }) {
     return () => {
       cancelled = true
     }
-  }, [onlyMine, zone])
+  }, [onlyMine, zone, attempt])
 
   const data = state.data
   return (
@@ -71,7 +72,12 @@ export default function HistoryScreen({ lang, t, zone }) {
         </div>
       )}
       {state.loading && <p className="muted">{t.loading}</p>}
-      {state.error && <p className="notice error">{t.loadError}</p>}
+      {state.error && (
+        <div className="notice error" role="alert">
+          <p>{t.howLoadError}</p>
+          <button type="button" className="secondary" onClick={() => setAttempt((n) => n + 1)}>{t.retry}</button>
+        </div>
+      )}
       {data && (
         <>
           <section className="stats" aria-label={t.historyLast7}>

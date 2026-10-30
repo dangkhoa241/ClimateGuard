@@ -239,6 +239,36 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
     }
   })
 
+  it('demo cold starts show loading and failed requests can be retried', async () => {
+    let rejectInitial
+    const response = (body) => ({ ok: true, status: 200, json: () => Promise.resolve(body) })
+    globalThis.fetch = vi.fn()
+      .mockImplementationOnce(() => new Promise((_, reject) => { rejectInitial = reject }))
+      .mockResolvedValueOnce(response({ events: [{ event: 'heat_2022' }], over_budget: false }))
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce(response({
+        event: 'heat_2022', source: 'live',
+        decision: { action: 'skipped', reason: 'No risk found.', model_calls: 1, cost_usd: 0.001 },
+        alerts: [],
+      }))
+
+    await mount('/?demo=1')
+    expect(container.querySelector('[role="status"]').textContent).toBe(t.loading)
+    await act(async () => rejectInitial(new Error('cold start')))
+    await settle()
+    expect(container.textContent).toContain(t.errors.default)
+    expect(button(t.retry)).toBeTruthy()
+    await click(button(t.retry))
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2)
+
+    await click(button(t.demoEvents.heat_2022))
+    expect(container.textContent).toContain(t.errors.network)
+    expect(button(t.retry)).toBeTruthy()
+    await click(button(t.retry))
+    expect(globalThis.fetch).toHaveBeenCalledTimes(4)
+    expect(container.textContent).toContain('No risk found.')
+  })
+
   it('the recovery screen restarts at its first step on refresh instead of crashing', async () => {
     await mount('/#/recovery')
     expect(button(t.recCheck).disabled).toBe(true) // no photos yet

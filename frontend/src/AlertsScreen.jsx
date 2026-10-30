@@ -16,6 +16,7 @@ function NotCoveredNotice({ t }) {
 
 function RecentAlerts({ zone, lang, t }) {
   const [state, setState] = useState({ loading: true, alerts: [], error: false })
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -26,13 +27,18 @@ function RecentAlerts({ zone, lang, t }) {
     return () => {
       cancelled = true
     }
-  }, [zone])
+  }, [zone, attempt])
 
-  if (state.loading) return null
   return (
     <section className="recent" aria-live="polite">
       <h2>{t.recentAlerts}</h2>
-      {state.error && <p className="muted">{t.loadError}</p>}
+      {state.loading && <p className="muted" role="status">{t.loading}</p>}
+      {state.error && (
+        <div className="notice error" role="alert">
+          <p>{t.loadError}</p>
+          <button type="button" className="secondary" onClick={() => setAttempt((n) => n + 1)}>{t.retry}</button>
+        </div>
+      )}
       {!state.error && state.alerts.length === 0 && <p className="muted">{t.noAlerts}</p>}
       {state.alerts.map((a) => (
         <article key={a.sent_at + a.hazard} className={`alert-card sev-${a.severity} hz-${hazardKind(a.hazard)}`}>
@@ -63,8 +69,7 @@ export default function AlertsScreen({ lang, t, zone, setZone }) {
 
   useEffect(() => setAlertLang(lang), [lang])
 
-  async function onSubmit(e) {
-    e.preventDefault()
+  async function submitSubscription() {
     setStatus('sending')
     setError(null)
     try {
@@ -74,6 +79,11 @@ export default function AlertsScreen({ lang, t, zone, setZone }) {
       setError(err.code)
       setStatus('error')
     }
+  }
+
+  function onSubmit(e) {
+    e.preventDefault()
+    submitSubscription()
   }
 
   const canSubmit = email && location && status !== 'sending'
@@ -121,9 +131,10 @@ export default function AlertsScreen({ lang, t, zone, setZone }) {
                 onChange={(e) => setWebsite(e.target.value)} />
             </div>
             {status === 'error' && (
-              <p className="notice error" role="alert">
-                {t.errors[error] || t.errors.default}
-              </p>
+              <div className="notice error" role="alert">
+                <p>{t.errors[error] || t.errors.default}</p>
+                <button type="button" className="secondary" onClick={submitSubscription}>{t.retry}</button>
+              </div>
             )}
             <button className="big" type="submit" disabled={!canSubmit}>
               {status === 'sending' ? t.sending : t.signupButton}

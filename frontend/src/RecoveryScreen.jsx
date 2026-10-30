@@ -101,6 +101,7 @@ export default function RecoveryScreen({ lang, t, zone, demo }) {
   const [phase, setPhase] = useState('pick') // pick | working | results | deleted
   const [step, setStep] = useState('')
   const [error, setError] = useState(null)
+  const [retryAction, setRetryAction] = useState(null)
   const [view, setView] = useState(null)
   const [outlines, setOutlines] = useState(true)
   const [answers, setAnswers] = useState({})
@@ -143,6 +144,7 @@ export default function RecoveryScreen({ lang, t, zone, demo }) {
   // when it's the first photo; mixed samples go back to "let the agent decide".
   async function addSample(sample) {
     setError(null)
+    setRetryAction(null)
     try {
       const res = await fetch(`/samples/${sample.id}.jpg`)
       if (!res.ok) throw new Error('photo_unreadable')
@@ -151,6 +153,7 @@ export default function RecoveryScreen({ lang, t, zone, demo }) {
       setDisaster((d) => (photos.length === 0 ? sample.disaster : d === sample.disaster ? d : 'auto'))
     } catch {
       setError('photo_unreadable')
+      setRetryAction(() => () => addSample(sample))
     }
   }
 
@@ -174,6 +177,7 @@ export default function RecoveryScreen({ lang, t, zone, demo }) {
 
   async function run() {
     setError(null)
+    setRetryAction(null)
     setPhase('working')
     try {
       setStep(t.recStepPrepare)
@@ -191,12 +195,14 @@ export default function RecoveryScreen({ lang, t, zone, demo }) {
     } catch (err) {
       if (!alive.current) return
       setError(err.code || 'default')
+      setRetryAction(() => run)
       setPhase('pick')
     }
   }
 
   async function makeReport() {
     setError(null)
+    setRetryAction(null)
     setPhase('reporting')
     try {
       const v = await waitWhile(view.job, await sendRecoveryAnswers(view.job, answers), 'reporting')
@@ -207,15 +213,22 @@ export default function RecoveryScreen({ lang, t, zone, demo }) {
     } catch (err) {
       if (!alive.current) return
       setError(err.code || 'default')
+      setRetryAction(() => makeReport)
       setPhase('results')
     }
   }
 
   async function removeAll() {
+    setError(null)
+    setRetryAction(null)
     try {
       await deleteRecovery(view.job)
     } catch (err) {
-      if (err.code !== 'job_not_found') return setError(err.code || 'default')
+      if (err.code !== 'job_not_found') {
+        setError(err.code || 'default')
+        setRetryAction(() => removeAll)
+        return
+      }
     }
     photos.forEach((p) => URL.revokeObjectURL(p.url))
     setPhotos([])
@@ -226,6 +239,8 @@ export default function RecoveryScreen({ lang, t, zone, demo }) {
   function startOver() {
     setView(null)
     setAnswers({})
+    setError(null)
+    setRetryAction(null)
     setPhase('pick')
   }
 
@@ -233,7 +248,12 @@ export default function RecoveryScreen({ lang, t, zone, demo }) {
     <>
       {(phase === 'pick' || phase === 'working') && <p>{t.recIntro}</p>}
       <p className="muted small">{t.recPrivacy}</p>
-      {error && <p ref={errorRef} className="notice error" role="alert">{t.errors[error] || t.errors.default}</p>}
+      {error && (
+        <div ref={errorRef} className="notice error" role="alert">
+          <p>{t.errors[error] || t.errors.default}</p>
+          {retryAction && <button type="button" className="secondary" onClick={retryAction}>{t.retry}</button>}
+        </div>
+      )}
 
       {phase === 'deleted' && (
         <>

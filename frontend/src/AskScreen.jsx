@@ -26,6 +26,7 @@ function VoiceInput({ lang, t, onText, disabled }) {
   const [state, setState] = useState('idle') // idle | recording | working
   const [error, setError] = useState(null)
   const [secs, setSecs] = useState(0)
+  const [lastWav, setLastWav] = useState(null)
   const recRef = useRef(null)
 
   useEffect(() => {
@@ -39,6 +40,7 @@ function VoiceInput({ lang, t, onText, disabled }) {
     setState('working')
     try {
       const wav = await recRef.current.stop()
+      setLastWav(wav)
       const { text } = await transcribeAudio(wav, lang)
       if (text) onText(text)
       else setError('no_speech')
@@ -49,9 +51,24 @@ function VoiceInput({ lang, t, onText, disabled }) {
     setState('idle')
   }
 
+  async function retryTranscription() {
+    if (!lastWav) return
+    setError(null)
+    setState('working')
+    try {
+      const { text } = await transcribeAudio(lastWav, lang)
+      if (text) onText(text)
+      else setError('no_speech')
+    } catch (err) {
+      setError(err.code || 'transcribe_failed')
+    }
+    setState('idle')
+  }
+
   async function toggle() {
     if (state === 'recording') return finish()
     setError(null)
+    setLastWav(null)
     try {
       recRef.current = await startRecording({ onAutoStop: finish })
       setState('recording')
@@ -70,6 +87,7 @@ function VoiceInput({ lang, t, onText, disabled }) {
         {state === 'recording' ? `${t.voiceStop} (${secs}s)` : state === 'working' ? t.voiceWorking : t.voiceSpeak}
       </button>
       {error && <p className="notice error" role="alert">{t.errors[error] || t.errors.default}</p>}
+      {error && lastWav && <button type="button" className="secondary" onClick={retryTranscription} disabled={state === 'working'}>{t.retry}</button>}
     </div>
   )
 }
@@ -134,8 +152,7 @@ export default function AskScreen({ lang, t, zone, setZone, demo }) {
   const step = useAskStep(status === 'asking')
   const stepText = [t.askStepData, t.askStepWriting, t.askStepAlmost][step]
 
-  async function onSubmit(e) {
-    e.preventDefault()
+  async function submitQuestion() {
     setStatus('asking')
     setError(null)
     setFromVoice(false)
@@ -146,6 +163,11 @@ export default function AskScreen({ lang, t, zone, setZone, demo }) {
       setError(err.code)
       setStatus('error')
     }
+  }
+
+  function onSubmit(e) {
+    e.preventDefault()
+    submitQuestion()
   }
 
   return (
@@ -175,7 +197,10 @@ export default function AskScreen({ lang, t, zone, setZone, demo }) {
             onText={(text) => { setQuestion(text.slice(0, MAX_CHARS)); setFromVoice(true) }} />
           {fromVoice && question && <p className="muted small">{t.voiceCheck}</p>}
           {status === 'error' && (
-            <p className="notice error" role="alert">{t.errors[error] || t.errors.default}</p>
+            <div className="notice error" role="alert">
+              <p>{t.errors[error] || t.errors.default}</p>
+              <button type="button" className="secondary" onClick={submitQuestion}>{t.retry}</button>
+            </div>
           )}
           <button className="big" type="submit" disabled={!question.trim() || status === 'asking'}>
             {status === 'asking' ? stepText : t.askButton}

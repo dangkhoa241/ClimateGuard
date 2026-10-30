@@ -46,7 +46,12 @@ export default function SupervisorScreen({ lang, t, zone, setZone }) {
           {state.status === 'loading' ? t.makingTalk : t.makeTalk}
         </button>
       )}
-      {state.status === 'error' && <p className="notice error" role="alert">{t.errors[state.error] || t.errors.default}</p>}
+      {state.status === 'error' && (
+        <div className="notice error" role="alert">
+          <p>{t.errors[state.error] || t.errors.default}</p>
+          <button type="button" className="secondary" onClick={load}>{t.retry}</button>
+        </div>
+      )}
       {data && (
         <>
           <Today d={data.today} t={t} />

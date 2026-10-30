@@ -72,14 +72,27 @@ function HowItWorks({ t, lang, cost, onHistory }) {
 
 export default function DemoScreen({ lang, t, go }) {
   const [info, setInfo] = useState(null) // GET /demo: {events, cost, over_budget}
+  const [infoStatus, setInfoStatus] = useState('loading')
+  const [infoAttempt, setInfoAttempt] = useState(0)
   const [running, setRunning] = useState(null) // event id
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
+  const [failedEvent, setFailedEvent] = useState(null)
   const resultRef = useRef(null)
 
   useEffect(() => {
-    getDemo().then(setInfo).catch(() => setInfo(null)) // buttons still work without it
-  }, [])
+    let cancelled = false
+    setInfoStatus('loading')
+    getDemo()
+      .then((data) => {
+        if (!cancelled) {
+          setInfo(data)
+          setInfoStatus('done')
+        }
+      })
+      .catch(() => !cancelled && setInfoStatus('error'))
+    return () => { cancelled = true }
+  }, [infoAttempt])
   useEffect(() => {
     if (result) reveal(resultRef.current, { focus: true })
   }, [result])
@@ -87,11 +100,13 @@ export default function DemoScreen({ lang, t, go }) {
   async function replay(event) {
     setRunning(event)
     setError(null)
+    setFailedEvent(null)
     setResult(null)
     try {
       setResult(await runDemoReplay({ event, lang }))
     } catch (err) {
       setError(err.code || 'default')
+      setFailedEvent(event)
     }
     setRunning(null)
   }
@@ -99,6 +114,13 @@ export default function DemoScreen({ lang, t, go }) {
   return (
     <>
       <p>{t.demoIntro}</p>
+      {infoStatus === 'loading' && <p className="muted" role="status">{t.loading}</p>}
+      {infoStatus === 'error' && (
+        <div className="notice error" role="alert">
+          <p>{t.errors.default}</p>
+          <button type="button" className="secondary" onClick={() => setInfoAttempt((n) => n + 1)}>{t.retry}</button>
+        </div>
+      )}
       {info?.over_budget && <p className="notice warn">{t.demoBudgetNote}</p>}
 
       <section className="demo-section">
@@ -112,7 +134,14 @@ export default function DemoScreen({ lang, t, go }) {
           ))}
         </div>
         {running && <p className="muted" role="status">{t.demoRunning}</p>}
-        {error && <p className="notice error" role="alert">{t.errors[error] || t.errors.default}</p>}
+        {error && (
+          <div className="notice error" role="alert">
+            <p>{t.errors[error] || t.errors.default}</p>
+            <button type="button" className="secondary" onClick={() => replay(failedEvent)} disabled={!failedEvent}>
+              {t.retry}
+            </button>
+          </div>
+        )}
         {result && <ReplayResult r={result} lang={lang} t={t} headingRef={resultRef} />}
       </section>
 
