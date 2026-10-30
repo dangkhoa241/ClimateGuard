@@ -239,6 +239,19 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
     }
   })
 
+  it('the text-size toggle is accessible and persists the selected size', async () => {
+    await mount()
+    const toggle = () => container.querySelector('.text-size-toggle')
+    expect(toggle().getAttribute('aria-pressed')).toBe('false')
+    await click(toggle())
+    expect(toggle().getAttribute('aria-pressed')).toBe('true')
+    expect(document.documentElement.classList.contains('large-text')).toBe(true)
+    await remount('/')
+    expect(toggle().getAttribute('aria-pressed')).toBe('true')
+    await click(toggle())
+    expect(document.documentElement.classList.contains('large-text')).toBe(false)
+  })
+
   it('demo cold starts show loading and failed requests can be retried', async () => {
     let rejectInitial
     const response = (body) => ({ ok: true, status: 200, json: () => Promise.resolve(body) })

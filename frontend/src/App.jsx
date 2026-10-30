@@ -45,6 +45,10 @@ function initialLang() {
   return [fromUrl, readStorage('lang')].find((v) => v && allowed.includes(v)) || 'en'
 }
 
+function initialTextSize() {
+  return readStorage('textSize') === 'large' ? 'large' : 'normal'
+}
+
 // The current screen lives in the URL hash (#/ask, #/demo...) so refresh and the browser's Back and Forward
 // buttons work. Only the screen name and the demo flag go in the URL, never a ZIP code, question or photo.
 function screenFromUrl() {
@@ -85,6 +89,7 @@ function LanguagePicker({ lang, setLang, label }) {
 
 export default function App() {
   const [lang, setLang] = useState(initialLang)
+  const [textSize, setTextSize] = useState(initialTextSize)
   const [zone, setZone] = useState(initialZone)
   const [demo, setDemo] = useState(demoInUrl)
   const [demoZone, setDemoZone] = useState(STOCKTON)
@@ -99,6 +104,10 @@ export default function App() {
     document.documentElement.dir = meta.rtl ? 'rtl' : 'ltr' // Arabic reads right to left
     save('lang', lang)
   }, [lang, meta.rtl])
+  useEffect(() => {
+    document.documentElement.classList.toggle('large-text', textSize === 'large')
+    save('textSize', textSize)
+  }, [textSize])
   useEffect(() => save('zone', zone ? JSON.stringify(zone) : null), [zone])
   useEffect(() => {
     // braces: current Chrome's scrollTo() returns a Promise, and an effect must return a function or nothing
@@ -145,7 +154,13 @@ export default function App() {
     <main className={WIDE.has(screen) ? 'app wide' : 'app'}>
       <header className="topbar">
         {screen !== 'home' && <button className="brand" type="button" onClick={() => go('home')}><Logo size={28} />ClimateGuard</button>}
-        <LanguagePicker lang={lang} setLang={setLang} label={t.language} />
+        <div className="header-actions">
+          <button type="button" className="text-size-toggle secondary" aria-label={t.textSizeToggle}
+            aria-pressed={textSize === 'large'} onClick={() => setTextSize((size) => size === 'large' ? 'normal' : 'large')}>
+            {textSize === 'large' ? t.normalText : t.largeText}
+          </button>
+          <LanguagePicker lang={lang} setLang={setLang} label={t.language} />
+        </div>
       </header>
       {meta.auto && <p className="muted small">{t.autoUiNote}</p>}
       {screen === 'home' ? (
