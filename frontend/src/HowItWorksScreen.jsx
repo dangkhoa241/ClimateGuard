@@ -23,12 +23,11 @@ function Arrow() {
 
 function Flow({ flow, lang, t, activeId, onSelect }) {
   const nodes = flow.nodeIds.map((id) => HOW_NODES.find((node) => node.id === id))
-  const columns = nodes.flatMap((_, index) => index < nodes.length - 1 ? ['minmax(0, 1fr)', '32px'] : ['minmax(0, 1fr)'])
 
   return (
     <div className={`how-flow-wrap how-flow-wrap-${flow.id}`}>
       {flow.titleKey && <h4 className="how-flow-title">{t[flow.titleKey]}</h4>}
-      <ol className={`how-flow how-flow-${flow.id}`} style={{ gridTemplateColumns: columns.join(' ') }}>
+      <ol className={`how-flow how-flow-${flow.id}`}>
         {nodes.map((node, index) => (
           <Fragment key={node.id}>
             <li className="how-flow-item">
