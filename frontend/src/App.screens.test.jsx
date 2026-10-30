@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App.jsx'
 import ErrorBoundary from './ErrorBoundary.jsx'
+import FIXTURES from './demoTranslations.json'
 import { HOW_LANES, HOW_NODES } from './howItWorksData.js'
 import { STRINGS } from './i18n.js'
 
@@ -294,6 +295,31 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
     expect(container.querySelector('.app-footer a').getAttribute('href')).toBe('#/how-it-works')
     await remount('/?demo=1')
     expect(container.querySelector('.demo-note a').getAttribute('href')).toBe('#/how-it-works')
+  })
+
+  it('a demo replay changes language after it ran: the alert card shows the fixture text for the new language', async () => {
+    const live = { // a live run: the agent's own English, no translations from the server
+      event: 'heat_2022', source: 'live', why: null, ran_at: '2026-10-28T04:30:51+00:00',
+      decision: { action: 'sent', reason: 'Heat', model_calls: 5, cost_usd: 0.0048, cached: false },
+      alerts: [{ hazard: 'heat', severity: 'extreme', text: 'Live English heat text.', lang: 'en', automatic: false }],
+    }
+    globalThis.fetch = vi.fn((url) => Promise.resolve({ ok: true, status: 200,
+      json: () => Promise.resolve(String(url).endsWith('/demo/replay') ? live : { events: [{ event: 'heat_2022' }] }) }))
+    await mount('/?demo=1')
+    await click(button(t.demoEvents.heat_2022))
+    expect(container.querySelector('.alert-card p[lang]').textContent).toBe('Live English heat text.')
+    const select = container.querySelector('.lang-select select')
+    for (const code of ['vi', 'es']) {
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(select, code)
+        select.dispatchEvent(new Event('change', { bubbles: true }))
+      })
+      const p = container.querySelector('.alert-card p[lang]')
+      expect(p.getAttribute('lang')).toBe(code)
+      expect(p.textContent).toBe(FIXTURES.heat_2022.heat[code])
+      expect(container.querySelector('.demo-result').textContent).not.toContain(STRINGS[code].demoEnglishShown)
+    }
+    expect(globalThis.fetch.mock.calls.filter(([u]) => String(u).endsWith('/demo/replay'))).toHaveLength(1)
   })
 
   it('hides the How it works self-links there and shows the bundled demo sample without any API call', async () => {

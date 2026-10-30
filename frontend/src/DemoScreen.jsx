@@ -4,6 +4,7 @@ import { HazardIcon, hazardKind } from './icons.jsx'
 import ReadAloud from './ReadAloud.jsx'
 import { fill } from './RecoveryReport.jsx'
 import { reveal } from './reveal.js'
+import FIXTURES from './demoTranslations.json'
 
 // Demo mode: everything a judge needs in about a minute, with no sign-up, no email and no photos of their own.
 // Replays run the real alert agent on real past events (labeled REPLAY); when that isn't possible the server
@@ -39,8 +40,13 @@ function ReplayResult({ r, lang, t, headingRef }) {
             <span className="alert-kind"><HazardIcon hazard={a.hazard} t={t} /><strong>{t.severity[a.severity] || a.severity}</strong></span>
           </div>
           {(() => {
-            const text = a.translations?.[lang] || a.text
-            const shownLang = a.translations?.[lang] ? lang : a.lang
+            // The replay result is fetched once, in the language chosen at that moment, and a live run's English
+            // rarely matches the fixture word for word (so the server sends no translations). Take the text for
+            // the language selected now from the bundled fixtures; the agent's own text is kept in the language it was run in.
+            const fixture = lang === a.lang ? null : FIXTURES[r.event]?.[a.hazard]?.[lang]
+            const translated = a.translations?.[lang] || fixture
+            const text = translated || a.text
+            const shownLang = translated ? lang : a.lang
             return (
               <>
                 <p lang={shownLang} dir={shownLang === 'en' ? 'ltr' : undefined}>{text}</p>
