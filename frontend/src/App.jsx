@@ -151,7 +151,7 @@ export default function App() {
   }
 
   return (
-    <main className={WIDE.has(screen) ? 'app wide' : 'app'}>
+    <main className={WIDE.has(screen) ? `app wide${screen === 'how-it-works' ? ' how-app' : ''}` : 'app'}>
       <header className="topbar">
         {screen !== 'home' && <button className="brand" type="button" onClick={() => go('home')}><Logo size={28} />ClimateGuard</button>}
         <div className="header-actions">

@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App.jsx'
 import ErrorBoundary from './ErrorBoundary.jsx'
+import { HOW_LANES, HOW_NODES } from './howItWorksData.js'
 import { STRINGS } from './i18n.js'
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
@@ -214,10 +215,39 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
   it('the How it works page lists the pipeline and loads sent decisions', async () => {
     await mount('/#/how-it-works')
     expect(heading()).toBe(t.howWorksTitle)
-    expect(container.querySelectorAll('.how-steps > li')).toHaveLength(8)
+    expect(container.querySelectorAll('.how-fallback li')).toHaveLength(11)
+    expect(container.querySelectorAll('.how-flow-wrap-alerts .how-node')).toHaveLength(5)
+    expect(container.querySelectorAll('.how-flow-wrap-ask .how-node')).toHaveLength(2)
+    expect(container.querySelectorAll('.how-flow-wrap-recovery .how-node')).toHaveLength(4)
     expect(container.textContent).toContain('Muse Spark Open')
     expect(container.textContent).toContain('SAM 3.1')
     expect(globalThis.fetch.mock.calls.some(([url]) => String(url).includes('/decisions?'))).toBe(true)
+  })
+
+  it('shows a selected node description and cost on keyboard focus', async () => {
+    await mount('/#/how-it-works')
+    const node = container.querySelector('[data-node-id="sam"]')
+    await act(async () => node.focus())
+    const details = container.querySelector('#how-node-details')
+    expect(node.getAttribute('aria-pressed')).toBe('true')
+    expect(details.textContent).toContain(STRINGS.en.howNodeDescriptions[8])
+    expect(details.textContent).toContain('$0.0025')
+  })
+
+  it('shows the latest live decision hazard, action and cost', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true, status: 200,
+      json: () => Promise.resolve({ decisions: [{
+        ts: '2026-10-30T12:00:00Z', place: 'Stockton', action: 'sent', reason: 'Official warning active',
+        cost_usd: 0.0123, alerts: [{ hazard: 'heat', messages: { en: 'Heat warning.' } }],
+      }] }),
+    })
+    await mount('/#/how-it-works')
+    const panel = container.querySelector('.how-decisions')
+    expect(panel.textContent).toContain(STRINGS.en.howLatestDecision)
+    expect(panel.textContent).toContain(STRINGS.en.hazardNames.heat)
+    expect(panel.textContent).toContain(STRINGS.en.decisionSent)
+    expect(panel.textContent).toContain('$0.0123')
   })
 
   it('the footer and demo banner link to How it works', async () => {
@@ -244,6 +274,7 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
     expect(container.textContent).toContain(STRINGS.en.howDemoSample)
     expect(container.textContent).toContain('Flood Warning active')
     expect(container.textContent).toContain('Move to higher ground now.')
+    expect(container.textContent).toContain('$0.0123')
     expect(globalThis.fetch.mock.calls.some(([url]) => String(url).endsWith('/demo'))).toBe(true)
     expect(globalThis.fetch.mock.calls.some(([url]) => String(url).includes('/decisions?'))).toBe(false)
   })
@@ -263,11 +294,22 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
       await remount('/#/how-it-works')
       expect(heading()).toBe(STRINGS[code].howWorksTitle)
       expect(STRINGS[code].howDemoSample).toBeTruthy()
-      expect(container.querySelectorAll('.how-steps > li')).toHaveLength(8)
+      expect(STRINGS[code].howSteps).toHaveLength(HOW_NODES.length)
+      expect(STRINGS[code].howNodeDescriptions).toHaveLength(HOW_NODES.length)
+      expect(STRINGS[code].howNodeCosts).toHaveLength(HOW_NODES.length)
+      expect(container.querySelectorAll('.how-fallback li')).toHaveLength(11)
       if (['zh', 'tl', 'ko', 'ar'].includes(code)) {
         expect(container.textContent).toContain(STRINGS[code].autoUiNote)
       }
     }
+  })
+
+  it('keeps every flow node resolvable from the canonical model source', () => {
+    const nodeIds = new Set(HOW_NODES.map((node) => node.id))
+    for (const flow of HOW_LANES.flatMap((lane) => lane.flows)) {
+      expect(flow.nodeIds.every((id) => nodeIds.has(id))).toBe(true)
+    }
+    expect(new Set(HOW_LANES.flatMap((lane) => lane.flows.flatMap((flow) => flow.nodeIds)))).toEqual(nodeIds)
   })
 
   it('relocalizes live alert cards after a language switch and can retry a failed translation', async () => {

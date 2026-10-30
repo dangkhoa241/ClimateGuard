@@ -111,7 +111,7 @@ flowchart LR
   COL --> PRE
   PRE -- "no risk or no change" --> SKIP
   PRE -- "risk and changed" --> BUD
-  BUD -- "under budget, or an active Warning" --> AGENT
+  BUD -- "under budget" --> AGENT
   AGENT --> GUARD
   GUARD --> TR
   TR --> SNS
@@ -135,13 +135,15 @@ flowchart LR
   L3 --> DB
 ```
 
-The same diagram is in [docs/architecture.mmd](docs/architecture.mmd). It is not exported to SVG or PNG yet (no Mermaid CLI on the build machine); GitHub draws it above.
+The same system diagram is in [docs/architecture.mmd](docs/architecture.mmd). The interactive How it works page uses a separate, mobile-friendly workflow diagram; its static SVG is shown below and generated from the same model-label source as the app.
+
+![ClimateGuard alerts, Ask, and recovery workflow](docs/architecture.svg)
 
 ## Safety and trust
 
 - **No medical advice.** Alerts, answers, talks and reports are checked in code for symptoms, diagnoses, medicines and injury care. A question about symptoms gets a fixed answer (call 911 in an emergency, otherwise a doctor), and the model never sees it.
 - **No building verdicts, no costs.** The recovery agent never says whether a home is safe or unsafe to enter or live in, and never gives a repair cost or price. Reports say "Not an official damage estimate" on every printed page. If the photos show danger, the first line is "Leave the area now and call 911."
-- **An active official Warning is never skipped.** If the AI agent declines an active NWS Warning (other than the short-fuse types above), code sends it back to write the alert, up to twice. It may adjust the wording. If our data disagrees with the warning, temperatures are left out and the warning's own wording is used. Exceptions: the same hazard was already alerted in the last 24 hours, the daily cap applies, or the warning ends within 3 hours and the hazard is gone.
+- **Active official Warnings are prioritized.** If the AI agent declines an active NWS Warning (other than the short-fuse types above), code sends it back to write the alert, up to twice. It may adjust the wording. If our data disagrees with the warning, temperatures are left out and the warning's own wording is used. Exceptions: the same hazard was already alerted in the last 24 hours, the daily cap applies, or the warning ends within 3 hours and the hazard is gone.
 - **Official level names, enforced.** Spanish and Vietnamese alerts are checked in code so a Watch is never called a Warning, and the reverse.
 - **N95 only for smoke.** Mask advice is rejected unless the data shows smoke or dust (particle pollution). N95 masks do not help with ozone.
 - **What we do not claim.** **Tornado, Flash Flood, Severe Thunderstorm and Extreme Wind warnings** give only minutes of notice. ClimateGuard checks every 15 minutes and sends email, which is too slow, so it never sends them. Keep **Wireless Emergency Alerts** on in your phone settings and use a **NOAA Weather Radio**. Watches for these hazards, which come hours ahead, are covered.

@@ -10,7 +10,7 @@ flowchart LR
     COL["Collector Lambda<br/>one snapshot per monitored zone"]
     PRE{"Pre-filter + change check<br/>any risk? did the data change?"}
     SKIP["Skip: no AI call, $0"]
-    BUD{"Under $5/day?"}
+    BUD{"Under $3/day?"}
     AGENT["Monitoring agent<br/>Muse Spark Open on Baseten<br/>tools: alerts, forecast, AQI, sent alerts, safety guidance"]
     GUARD["Guardrails in code (send_alert)<br/>no duplicates, daily cap, no medical advice,<br/>N95 only for smoke, NWS level names, accents"]
     TR["Muse Spark 1.3<br/>translates the checked English alert<br/>(zh, tl, ko, ar)"]
@@ -46,7 +46,7 @@ flowchart LR
   COL --> PRE
   PRE -- "no risk or no change" --> SKIP
   PRE -- "risk and changed" --> BUD
-  BUD -- "under budget, or an active Warning" --> AGENT
+  BUD -- "under budget" --> AGENT
   AGENT --> GUARD
   GUARD --> TR
   TR --> SNS
