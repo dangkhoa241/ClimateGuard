@@ -171,6 +171,15 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
     expect(heading()).toBe('ClimateGuard')
   })
 
+  it('clicking the header brand returns to home', async () => {
+    await mount()
+    await click(button(t.ask))
+    expect(heading()).toBe(t.ask)
+    await click(button('ClimateGuard'))
+    expect(heading()).toBe('ClimateGuard')
+    expect(window.location.hash).toBe('#/')
+  })
+
   it('demo mode survives a refresh, on the demo page and on a screen opened from it', async () => {
     await mount('/?demo=1')
     expect(heading()).toBe(t.demoTitle)

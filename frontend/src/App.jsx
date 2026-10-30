@@ -143,7 +143,7 @@ export default function App() {
   return (
     <main className={WIDE.has(screen) ? 'app wide' : 'app'}>
       <header className="topbar">
-        {screen !== 'home' && <span className="brand"><Logo size={28} />ClimateGuard</span>}
+        {screen !== 'home' && <button className="brand" type="button" onClick={() => go('home')}><Logo size={28} />ClimateGuard</button>}
         <LanguagePicker lang={lang} setLang={setLang} label={t.language} />
       </header>
       {meta.auto && <p className="muted small">{t.autoUiNote}</p>}
