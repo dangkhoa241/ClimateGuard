@@ -455,13 +455,21 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 .how-decision-text { min-width: 0; }
 .how-decision-text p { margin: 0 0 8px; overflow-wrap: anywhere; }
 
-/* Step details: a compact popover under the "steps" label (top right of the diagram toolbar) */
+/* Step details: a small neutral card (not node-like). Wide screens: in the empty space right of the Ask nodes;
+   narrower: directly under the tapped node, pushing the next nodes down. */
 .how-node-dialog {
-  position: absolute; inset-block-start: calc(100% + 6px); inset-inline-end: 0; z-index: 5; box-sizing: border-box;
-  width: 240px; max-width: 100%; padding: 10px; border: 1px solid var(--line);
-  border-top: 4px solid #ea580c; border-radius: 10px; background: #fff; text-align: start;
-  box-shadow: 0 6px 20px rgba(29, 29, 27, 0.18);
+  position: relative; box-sizing: border-box; width: 240px; max-width: 100%; padding: 10px;
+  border: 1px solid #d6d3d1; border-radius: 8px; background: #fafaf9; text-align: start;
+  box-shadow: 0 2px 8px rgba(29, 29, 27, 0.1);
 }
+.how-flow-wrap-ask.has-details { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; }
+.how-flow-wrap-ask.has-details .how-flow-title { grid-column: 1 / -1; }
+.how-flow-wrap-ask.has-details .how-flow { grid-column: 2; }
+.how-details-side { grid-column: 3; justify-self: start; margin-inline-start: 16px; min-width: 0; }
+.how-details-row { display: flex; justify-content: center; margin-top: 10px; }
+.how-details-row .how-node-dialog { width: 320px; }
+.how-details-item { display: flex; justify-content: center; width: 100%; margin: 4px 0 0; padding: 0; }
+.how-details-item .how-node-dialog { width: min(100%, 320px); }
 /* 24px circle, 44px touch target */
 .how-dialog-close {
   position: absolute; inset-block-start: 0; inset-inline-end: 0; display: grid; place-items: center;
@@ -473,7 +481,7 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 .how-node-dialog > * { font-size: 13px; line-height: 1.4; }
 .how-node-dialog h2 { margin: 0 34px 2px 0; font-size: 14px; line-height: 1.3; }
 .how-node-dialog p { margin: 4px 0 0; overflow-wrap: anywhere; }
-.how-node-dialog .how-card-kicker { margin: 0 34px 0 0; font-size: 12px; }
+.how-node-dialog .how-card-kicker { margin: 0 34px 0 0; color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
 :root.large-text .how-node-dialog > * { font-size: 15px; }
 :root.large-text .how-node-dialog h2 { font-size: 16px; }
 :root.large-text .how-node-dialog .how-card-kicker { font-size: 14px; }
@@ -487,7 +495,6 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
   .how-flow-arrow .how-arrow-horizontal { display: none; }
   .how-flow-arrow .how-arrow-vertical { display: block !important; }
   .how-flow-arrow circle { animation-name: how-flow-dot-vertical; }
-  .how-node-dialog { position: static; flex: 0 0 100%; width: 100%; margin-top: 4px; }
   .how-decisions article { grid-template-columns: minmax(0, 1fr); }
   .how-view-switch { width: 100%; border-radius: 16px; }
   .how-view-switch button { flex: 1 1 auto; }

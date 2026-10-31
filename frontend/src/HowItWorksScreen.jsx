@@ -28,11 +28,32 @@ function Arrow() {
   )
 }
 
-function Flow({ flow, lang, t, activeId, onSelect }) {
+// How the page is laid out: 'wide' (1100px and up) shows the step details to the right of the Ask nodes, 'row' (900 to 1099px)
+// shows them under the row of the tapped node, 'column' (phones) directly under the tapped node.
+const MODE_QUERIES = [['(min-width: 1100px)', 'wide'], ['(min-width: 900px)', 'row']]
+const layoutMode = () => {
+  if (typeof window === 'undefined' || !window.matchMedia) return 'column'
+  return MODE_QUERIES.find(([query]) => window.matchMedia(query).matches)?.[1] || 'column'
+}
+function useLayoutMode() {
+  const [mode, setMode] = useState(layoutMode)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined
+    const lists = MODE_QUERIES.map(([query]) => window.matchMedia(query))
+    const update = () => setMode(layoutMode())
+    lists.forEach((list) => list.addEventListener?.('change', update))
+    return () => lists.forEach((list) => list.removeEventListener?.('change', update))
+  }, [])
+  return mode
+}
+
+function Flow({ flow, lang, t, activeId, onSelect, mode, anchored, details }) {
   const nodes = flow.nodeIds.map((id) => HOW_NODES.find((node) => node.id === id))
+  const sideDetails = anchored && flow.id === 'ask' && details
+  const rowDetails = !anchored && mode === 'row' && nodes.some((node) => node.id === activeId) && details
 
   return (
-    <div className={`how-flow-wrap how-flow-wrap-${flow.id}`}>
+    <div className={`how-flow-wrap how-flow-wrap-${flow.id}${sideDetails ? ' has-details' : ''}`}>
       {flow.titleKey && <h4 className="how-flow-title">{t[flow.titleKey]}</h4>}
       <ol className={`how-flow how-flow-${flow.id}`}>
         {nodes.map((node, index) => (
@@ -52,10 +73,13 @@ function Flow({ flow, lang, t, activeId, onSelect }) {
                 {shownModel(node) && <span className="how-model-label" lang="en" dir="ltr">{shownModel(node)}</span>}
               </button>
             </li>
+            {!anchored && mode === 'column' && activeId === node.id && details && <li className="how-details-item">{details}</li>}
             {index < nodes.length - 1 && <li className="how-arrow-item" aria-hidden="true"><Arrow /></li>}
           </Fragment>
         ))}
       </ol>
+      {sideDetails && <div className="how-details-side">{details}</div>}
+      {rowDetails && <div className="how-details-row">{details}</div>}
     </div>
   )
 }
@@ -103,6 +127,7 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
   const [state, setState] = useState({ loading: true })
   const closeButtonRef = useRef(null)
   const popoverRef = useRef(null)
+  const mode = useLayoutMode()
   const restoreFocus = useRef(true)
 
   useEffect(() => {
@@ -122,6 +147,7 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
 
     restoreFocus.current = true
     closeButtonRef.current?.focus({ preventScroll: true })
+    popoverRef.current?.scrollIntoView?.({ block: 'nearest' }) // opened under a node near the bottom: keep it on screen
 
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
@@ -153,6 +179,24 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
   })).filter((lane) => lane.flows.length > 0)
   const visibleNodeCount = visibleLanes.reduce((count, lane) =>
     count + lane.flows.reduce((flowCount, flow) => flowCount + flow.nodeIds.length, 0), 0)
+  const details = activeNode && (
+    <section id="how-node-details" ref={popoverRef} className="how-node-dialog" role="dialog" aria-modal="false"
+      aria-labelledby="how-node-dialog-title" aria-describedby="how-node-dialog-description">
+      <button ref={closeButtonRef} type="button" className="how-dialog-close"
+        aria-label={t.howCloseDetails} onClick={() => setOpenNodeId(null)}>
+        <span aria-hidden="true">
+          <svg viewBox="0 0 14 14" width="14" height="14" focusable="false"><path d="M2 2l10 10M12 2 2 12" /></svg>
+        </span>
+      </button>
+      <p className="how-card-kicker">{t.howDetails}</p>
+      <h2 id="how-node-dialog-title">{t.howSteps[activeNode.stepIndex]}</h2>
+      <p className="how-dialog-model" lang="en" dir="ltr">{activeNode.modelLabel}</p>
+      <p id="how-node-dialog-description">{t.howNodeDescriptions[activeNode.infoIndex]}</p>
+      <p><strong>{t.howCallCost}:</strong> {t.howNodeCosts[activeNode.infoIndex]}</p>
+    </section>
+  )
+  const askVisible = visibleLanes.some((lane) => lane.flows.some((flow) => flow.id === 'ask'))
+  const anchored = mode === 'wide' && askVisible // the Ask lane has the room; otherwise the details open under the tapped node
   const chooseView = (nextView) => {
     setView(nextView)
     setOpenNodeId(null)
@@ -187,29 +231,13 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
               <span><i className="how-legend-swatch code" aria-hidden="true" />{t.howNoMetaBadge}</span>
             </div>
             <span className="how-node-count">{visibleNodeCount} {t.howStepsLabel}</span>
-            {activeNode && (
-              <section id="how-node-details" ref={popoverRef} className="how-node-dialog" role="dialog" aria-modal="false"
-                aria-labelledby="how-node-dialog-title" aria-describedby="how-node-dialog-description">
-                <button ref={closeButtonRef} type="button" className="how-dialog-close"
-                  aria-label={t.howCloseDetails} onClick={() => setOpenNodeId(null)}>
-                  <span aria-hidden="true">
-                    <svg viewBox="0 0 14 14" width="14" height="14" focusable="false"><path d="M2 2l10 10M12 2 2 12" /></svg>
-                  </span>
-                </button>
-                <p className="how-card-kicker">{t.howSelectedStep}</p>
-                <h2 id="how-node-dialog-title">{t.howSteps[activeNode.stepIndex]}</h2>
-                <p className="how-dialog-model" lang="en" dir="ltr">{activeNode.modelLabel}</p>
-                <p id="how-node-dialog-description">{t.howNodeDescriptions[activeNode.infoIndex]}</p>
-                <p><strong>{t.howCallCost}:</strong> {t.howNodeCosts[activeNode.infoIndex]}</p>
-              </section>
-            )}
           </div>
           <div className="how-lanes">
             {visibleLanes.map((lane) => (
               <section className={`how-lane how-lane-${lane.id}`} key={lane.id} aria-labelledby={`how-lane-${lane.id}`}>
                 <h3 id={`how-lane-${lane.id}`} className="how-lane-title">{t[lane.titleKey]}</h3>
                 {lane.flows.map((flow) => (
-                  <Flow key={flow.id} flow={flow} lang={lang} t={t} activeId={openNodeId} onSelect={selectNode} />
+                  <Flow key={flow.id} flow={flow} lang={lang} t={t} activeId={openNodeId} onSelect={selectNode} mode={mode} anchored={anchored} details={details} />
                 ))}
               </section>
             ))}
