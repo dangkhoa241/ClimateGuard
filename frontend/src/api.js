@@ -29,7 +29,8 @@ async function request(path, options) {
     throw new ApiError('network', 0)
   }
   const body = await res.json().catch(() => ({}))
-  if (!res.ok) throw new ApiError(body.error || 'default', res.status)
+  // API Gateway's own answers (throttling 429, a crashed Lambda 5xx) carry no error code of ours
+  if (!res.ok) throw new ApiError(body.error || (res.status === 429 ? 'rate_limited' : res.status >= 500 ? 'busy' : 'default'), res.status)
   return body
 }
 
