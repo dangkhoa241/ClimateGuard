@@ -382,11 +382,11 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 .how-view-switch button[aria-pressed='true'] {
   border-color: var(--line); background: #fff; color: var(--fg); box-shadow: 0 1px 3px rgba(29, 29, 27, 0.12);
 }
-.how-diagram-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin: 16px 0 12px; }
+.how-diagram-meta { position: relative; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin: 16px 0 12px; }
 .how-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0; font-size: 0.85rem; }
 .how-legend span { display: inline-flex; align-items: center; gap: 7px; }
-.how-legend-swatch { width: 16px; height: 16px; border: 1px solid var(--line); border-top: 4px solid #ea580c; border-radius: 4px; background: #fff; }
-.how-legend-swatch.code { border-top-color: #a8a29e; }
+.how-legend-swatch { width: 16px; height: 16px; border: 1px solid #f4c79a; border-top: 4px solid #ea580c; border-radius: 4px; background: #fff1e3; }
+.how-legend-swatch.code { border-color: var(--line); border-top-color: #a8a29e; background: #fff; }
 .how-node-count { color: var(--muted); font-size: 0.8rem; }
 
 /* Lanes are centered cards; the nodes of a lane sit centered inside it */
@@ -397,29 +397,32 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 .how-flow-title { margin: 0 0 12px; font-size: 1rem; text-align: center; }
 .how-flow { display: flex; flex-wrap: nowrap; align-items: stretch; justify-content: center; margin: 0; padding: 0; list-style: none; }
 .how-flow-item, .how-arrow-item { margin: 0; padding: 0; }
-/* --n = most nodes in a row of this lane: 168px each when they fit, shrinking evenly when they don't */
-.how-flow-item { display: flex; flex: 0 0 min(168px, calc((100% - (var(--n, 5) - 1) * 40px) / var(--n, 5))); min-width: 0; }
+.how-flow-item { display: flex; flex: 0 1 auto; align-items: center; width: fit-content; min-width: 96px; max-width: 200px; }
 .how-arrow-item { display: flex; flex: 0 0 40px; align-items: center; justify-content: center; }
 
+/* Nodes fit their content (no equal-size rule) and sit vertically centered against their arrows */
 .how-node {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-  width: 100%; min-width: 0; min-height: var(--node-h, 0); padding: 12px 10px; border: 1px solid var(--line);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid var(--line);
   border-top: 4px solid #a8a29e; border-radius: 10px; background: #fff; color: var(--fg);
   box-shadow: 0 1px 3px rgba(29, 29, 27, 0.08); font: inherit; text-align: center; cursor: pointer; overflow-wrap: anywhere;
   transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
 }
-.how-node-meta { border-top-color: #ea580c; }
+/* Meta nodes: light orange tint, dark brown text (7C2D12 on FFF1E3 = 8.45:1, 9A3412 on FFF1E3 = 6.59:1) */
+.how-node-meta { border-color: #f4c79a; border-top-color: #ea580c; background: #fff1e3; }
 .how-node:hover { border-color: #a8a29e; box-shadow: 0 4px 12px rgba(29, 29, 27, 0.14); transform: translateY(-1px); }
-.how-node-meta:hover { border-top-color: #ea580c; }
+.how-node-meta:hover { border-color: #e9a867; border-top-color: #ea580c; }
 .how-node:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 3px; }
 .how-node.active { outline: 2px solid #c2410c; outline-offset: 2px; box-shadow: 0 0 0 6px rgba(234, 88, 12, 0.18); }
 .how-node.active:focus-visible { outline: 3px solid #1d4ed8; }
 .how-node-badge {
-  display: inline-block; padding: 1px 8px; border: 1px solid #fdba74; border-radius: 999px;
-  background: #fff7ed; color: #1d1d1b; font-size: 0.75rem; font-weight: 600; line-height: 1.5;
+  display: inline-block; padding: 0 8px; border: 1px solid #f4c79a; border-radius: 999px;
+  background: #fff; color: #7c2d12; font-size: 0.75rem; font-weight: 600; line-height: 1.5;
 }
 .how-node-title { color: #1d1d1b; font-size: 1rem; font-weight: 600; line-height: 1.3; }
-.how-model-label { color: #57534e; font-size: 0.875rem; font-weight: 500; line-height: 1.35; }
+.how-model-label { color: #57534e; font-size: 0.875rem; font-weight: 500; line-height: 1.3; }
+.how-node-meta .how-node-title { color: #7c2d12; }
+.how-node-meta .how-model-label { color: #9a3412; }
 
 .how-flow-arrow { display: grid; place-items: center; width: 100%; }
 .how-flow-arrow svg { display: block; overflow: visible; }
@@ -440,39 +443,52 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
   100% { transform: translateY(26px); opacity: 0; }
 }
 
-.how-support-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-content: start; }
-.how-decisions { padding: 16px 18px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
-.how-decisions > h2 { margin: 0; font-size: 1.1rem; line-height: 1.3; }
-.how-decisions article { margin-bottom: 0; }
-.how-decision-fields { margin: 12px 0; }
-.how-decision-fields > div { display: grid; grid-template-columns: minmax(72px, auto) 1fr; gap: 8px; padding: 4px 0; }
+.how-layout { display: grid; gap: 16px; }
+.how-decisions { padding: 14px 18px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+.how-decisions > h2 { margin: 0 0 8px; font-size: 1.1rem; line-height: 1.3; }
+.how-decisions article { display: grid; grid-template-columns: minmax(220px, 340px) minmax(0, 1fr); gap: 4px 28px; align-items: start; margin-bottom: 0; }
+.how-decision-facts .alert-meta { margin-bottom: 2px; }
+.how-decision-fields { margin: 4px 0 0; }
+.how-decision-fields > div { display: grid; grid-template-columns: minmax(90px, auto) 1fr; gap: 8px; padding: 3px 0; }
 .how-decision-fields dt { color: var(--muted); font-weight: 600; }
 .how-decision-fields dd { margin: 0; overflow-wrap: anywhere; }
-.how-decisions article > p { overflow-wrap: anywhere; }
-.how-node-dialog {
-  position: relative; min-width: 0; padding: 16px; border: 1px solid var(--line);
-  border-inline-start: 5px solid #ea580c; border-radius: 18px; background: #fff;
-  box-shadow: 0 2px 10px rgba(29, 29, 27, 0.07);
-}
-.how-dialog-close {
-  position: absolute; inset-block-start: 10px; inset-inline-end: 10px; display: grid; place-items: center;
-  width: 36px; height: 36px; padding: 0; border: 1px solid var(--line); border-radius: 50%;
-  background: #fff; color: var(--fg); font: inherit; font-size: 1.35rem; line-height: 1; cursor: pointer;
-}
-.how-node-dialog h2 { margin: 0 36px 6px 0; font-size: 1.1rem; line-height: 1.3; }
-.how-node-dialog p:not(.how-card-kicker) { margin: 7px 0 0; font-size: 0.9rem; line-height: 1.4; overflow-wrap: anywhere; }
-.how-node-dialog .how-card-kicker { font-size: 0.8rem; }
-.how-dialog-model { color: var(--muted); font-size: 0.85rem !important; }
+.how-decision-text { min-width: 0; }
+.how-decision-text p { margin: 0 0 8px; overflow-wrap: anywhere; }
 
-/* Stacked: the same width for every node, centered, with a vertical arrow between them */
+/* Step details: a compact popover under the "steps" label (top right of the diagram toolbar) */
+.how-node-dialog {
+  position: absolute; inset-block-start: calc(100% + 6px); inset-inline-end: 0; z-index: 5; box-sizing: border-box;
+  width: 240px; max-width: 100%; padding: 10px; border: 1px solid var(--line);
+  border-top: 4px solid #ea580c; border-radius: 10px; background: #fff; text-align: start;
+  box-shadow: 0 6px 20px rgba(29, 29, 27, 0.18);
+}
+/* 24px circle, 44px touch target */
+.how-dialog-close {
+  position: absolute; inset-block-start: 0; inset-inline-end: 0; display: grid; place-items: center;
+  width: 44px; height: 44px; padding: 0; border: 0; background: none; color: var(--fg); cursor: pointer;
+}
+.how-dialog-close span { display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid var(--line); border-radius: 50%; background: #fff; }
+.how-dialog-close svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.how-dialog-close:focus-visible { outline: 3px solid #1d4ed8; outline-offset: -4px; border-radius: 12px; }
+.how-node-dialog > * { font-size: 13px; line-height: 1.4; }
+.how-node-dialog h2 { margin: 0 34px 2px 0; font-size: 14px; line-height: 1.3; }
+.how-node-dialog p { margin: 4px 0 0; overflow-wrap: anywhere; }
+.how-node-dialog .how-card-kicker { margin: 0 34px 0 0; font-size: 12px; }
+:root.large-text .how-node-dialog > * { font-size: 15px; }
+:root.large-text .how-node-dialog h2 { font-size: 16px; }
+:root.large-text .how-node-dialog .how-card-kicker { font-size: 14px; }
+.how-dialog-model { color: var(--muted); }
+
+/* Stacked: each node fits its content, centered, with a vertical arrow between them */
 @media (max-width: 899px) {
   .how-flow { flex-direction: column; align-items: center; }
-  .how-flow-item { flex: 0 0 auto; width: min(100%, 320px); }
+  .how-flow-item { flex: 0 0 auto; max-width: min(100%, 320px); }
   .how-arrow-item { flex: 0 0 auto; width: 100%; height: 40px; }
   .how-flow-arrow .how-arrow-horizontal { display: none; }
   .how-flow-arrow .how-arrow-vertical { display: block !important; }
   .how-flow-arrow circle { animation-name: how-flow-dot-vertical; }
-  .how-support-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+  .how-node-dialog { position: static; flex: 0 0 100%; width: 100%; margin-top: 4px; }
+  .how-decisions article { grid-template-columns: minmax(0, 1fr); }
   .how-view-switch { width: 100%; border-radius: 16px; }
   .how-view-switch button { flex: 1 1 auto; }
 }
@@ -481,17 +497,6 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
   .how-diagram { padding: 12px; }
   .how-lane { padding: 14px 8px; }
   .how-view-switch button { padding-inline: 8px; }
-}
-
-@media (min-width: 900px) {
-  .how-support-grid { grid-template-columns: minmax(0, 1fr); }
-}
-
-/* Wide: the side panels get their own column (260px) and the step details follow the page while reading */
-@media (min-width: 1000px) {
-  .how-layout { grid-template-columns: minmax(0, 1fr) 260px; }
-  .how-support-grid { align-self: stretch; }
-  .how-node-dialog { position: sticky; inset-block-start: 12px; z-index: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

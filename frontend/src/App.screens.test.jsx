@@ -226,7 +226,7 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
     expect(globalThis.fetch.mock.calls.some(([url]) => String(url).includes('/decisions?'))).toBe(true)
   })
 
-  it('shows step details beside the workflow and closes them by clicking again, the close button, or Escape', async () => {
+  it('shows step details in a popover in the diagram card and closes them by clicking again, the close button, Escape, or a press outside', async () => {
     await mount('/#/how-it-works')
     const node = container.querySelector('[data-node-id="sam"]')
     await act(async () => node.focus())
@@ -238,7 +238,8 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
     expect(node.getAttribute('aria-controls')).toBe('how-node-details')
     expect(details.getAttribute('aria-modal')).toBe('false')
     expect(container.querySelector('.how-dialog-backdrop')).toBeNull()
-    expect(details.parentElement.classList.contains('how-support-grid')).toBe(true)
+    expect(details.closest('.how-diagram')).not.toBeNull()
+    expect(container.querySelector('.how-support-grid')).toBeNull()
     expect(details.textContent).toContain(STRINGS.en.howNodeDescriptions[8])
     expect(details.textContent).toContain('$0.0025')
     expect(document.activeElement).toBe(container.querySelector('.how-dialog-close'))
@@ -258,6 +259,11 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
 
     await click(node)
     await act(async () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
+    expect(container.querySelector('[role="dialog"]')).toBeNull()
+    expect(document.activeElement).toBe(node) // closing returns focus to the node that opened it
+
+    await click(node)
+    await act(async () => document.body.dispatchEvent(new Event('pointerdown', { bubbles: true })))
     expect(container.querySelector('[role="dialog"]')).toBeNull()
   })
 

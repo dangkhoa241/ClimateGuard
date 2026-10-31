@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { getDecisions } from './api.js'
 import { HOW_LANES, HOW_NODES } from './howItWorksData.js'
 import DEMO_SAMPLE from './demoSample.json'
@@ -68,6 +68,7 @@ function DecisionPanel({ decision, lang, t, demo }) {
 
   return (
     <article className={`decision decision-${decision.action || 'skipped'}`}>
+      <div className="how-decision-facts">
       <div className="alert-meta">
         {/* the demo sample is an earlier replay of a past event: name the event, never show a date as if it were live */}
         <strong>{demo ? t.demoEvents[decision.event] || decision.place : decision.place || decision.event || decision.zone}</strong>
@@ -82,10 +83,13 @@ function DecisionPanel({ decision, lang, t, demo }) {
         {decision.model_calls != null && <div><dt>{t.howDecisionCalls}</dt><dd>{decision.model_calls}</dd></div>}
         <div><dt>{t.howDecisionCost}</dt><dd>${Number(decision.cost_usd || 0).toFixed(4)}</dd></div>
       </dl>
-      <p lang="en" dir="ltr">{decision.reason}</p>
-      {decision.alerts?.map((alert) => (
-        <p className="small" key={alert.hazard}>{alert.messages?.[lang] || alert.messages?.en}</p>
-      ))}
+      </div>
+      <div className="how-decision-text">
+        <p lang="en" dir="ltr">{decision.reason}</p>
+        {decision.alerts?.map((alert) => (
+          <p className="small" key={alert.hazard}>{alert.messages?.[lang] || alert.messages?.en}</p>
+        ))}
+      </div>
     </article>
   )
 }
@@ -98,7 +102,8 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
   const [view, setView] = useState('all')
   const [state, setState] = useState({ loading: true })
   const closeButtonRef = useRef(null)
-  const lanesRef = useRef(null)
+  const popoverRef = useRef(null)
+  const restoreFocus = useRef(true)
 
   useEffect(() => {
     if (demo) return undefined // demo mode shows the bundled sample: no API call, so nothing to fail
@@ -115,7 +120,8 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
   useEffect(() => {
     if (!openNodeId) return undefined
 
-    closeButtonRef.current?.focus()
+    restoreFocus.current = true
+    closeButtonRef.current?.focus({ preventScroll: true })
 
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
@@ -123,11 +129,19 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
         setOpenNodeId(null)
       }
     }
+    // A press anywhere outside the popover closes it (a press on a node is handled by the node itself)
+    function handlePress(event) {
+      if (popoverRef.current?.contains(event.target) || event.target.closest?.('.how-node')) return
+      restoreFocus.current = false // the person moved on: don't pull focus back
+      setOpenNodeId(null)
+    }
 
     document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('pointerdown', handlePress)
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
-      document.querySelector(`[data-node-id="${openNodeId}"]`)?.focus()
+      document.removeEventListener('pointerdown', handlePress)
+      if (restoreFocus.current) document.querySelector(`[data-node-id="${openNodeId}"]`)?.focus({ preventScroll: true })
     }
   }, [openNodeId])
 
@@ -139,23 +153,6 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
   })).filter((lane) => lane.flows.length > 0)
   const visibleNodeCount = visibleLanes.reduce((count, lane) =>
     count + lane.flows.reduce((flowCount, flow) => flowCount + flow.nodeIds.length, 0), 0)
-  // Nodes in a lane share the height of its tallest one (side by side only; stacked nodes keep their own).
-  useLayoutEffect(() => {
-    const root = lanesRef.current
-    if (!root) return undefined
-    const equalize = () => {
-      for (const lane of root.querySelectorAll('.how-lane')) {
-        const nodes = [...lane.querySelectorAll('.how-node')]
-        lane.style.removeProperty('--node-h')
-        if (getComputedStyle(lane.querySelector('.how-flow')).flexDirection !== 'row') continue
-        lane.style.setProperty('--node-h', `${Math.max(...nodes.map((node) => node.offsetHeight))}px`)
-      }
-    }
-    equalize()
-    window.addEventListener('resize', equalize)
-    document.fonts?.ready?.then(equalize)
-    return () => window.removeEventListener('resize', equalize)
-  }, [view, lang, t])
   const chooseView = (nextView) => {
     setView(nextView)
     setOpenNodeId(null)
@@ -190,11 +187,26 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
               <span><i className="how-legend-swatch code" aria-hidden="true" />{t.howNoMetaBadge}</span>
             </div>
             <span className="how-node-count">{visibleNodeCount} {t.howStepsLabel}</span>
+            {activeNode && (
+              <section id="how-node-details" ref={popoverRef} className="how-node-dialog" role="dialog" aria-modal="false"
+                aria-labelledby="how-node-dialog-title" aria-describedby="how-node-dialog-description">
+                <button ref={closeButtonRef} type="button" className="how-dialog-close"
+                  aria-label={t.howCloseDetails} onClick={() => setOpenNodeId(null)}>
+                  <span aria-hidden="true">
+                    <svg viewBox="0 0 14 14" width="14" height="14" focusable="false"><path d="M2 2l10 10M12 2 2 12" /></svg>
+                  </span>
+                </button>
+                <p className="how-card-kicker">{t.howSelectedStep}</p>
+                <h2 id="how-node-dialog-title">{t.howSteps[activeNode.stepIndex]}</h2>
+                <p className="how-dialog-model" lang="en" dir="ltr">{activeNode.modelLabel}</p>
+                <p id="how-node-dialog-description">{t.howNodeDescriptions[activeNode.infoIndex]}</p>
+                <p><strong>{t.howCallCost}:</strong> {t.howNodeCosts[activeNode.infoIndex]}</p>
+              </section>
+            )}
           </div>
-          <div className="how-lanes" ref={lanesRef}>
+          <div className="how-lanes">
             {visibleLanes.map((lane) => (
-              <section className={`how-lane how-lane-${lane.id}`} key={lane.id} aria-labelledby={`how-lane-${lane.id}`}
-                style={{ '--n': Math.max(...lane.flows.map((flow) => flow.nodeIds.length)) }}>
+              <section className={`how-lane how-lane-${lane.id}`} key={lane.id} aria-labelledby={`how-lane-${lane.id}`}>
                 <h3 id={`how-lane-${lane.id}`} className="how-lane-title">{t[lane.titleKey]}</h3>
                 {lane.flows.map((flow) => (
                   <Flow key={flow.id} flow={flow} lang={lang} t={t} activeId={openNodeId} onSelect={selectNode} />
@@ -213,32 +225,18 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
             </ol>
           </section>
         </section>
-        <div className="how-support-grid">
-          {activeNode && (
-            <section id="how-node-details" className="how-node-dialog" role="dialog" aria-modal="false"
-              aria-labelledby="how-node-dialog-title" aria-describedby="how-node-dialog-description">
-              <button ref={closeButtonRef} type="button" className="how-dialog-close"
-                aria-label={t.howCloseDetails} onClick={() => setOpenNodeId(null)}>×</button>
-              <p className="how-card-kicker">{t.howSelectedStep}</p>
-              <h2 id="how-node-dialog-title">{t.howSteps[activeNode.stepIndex]}</h2>
-              <p className="how-dialog-model" lang="en" dir="ltr">{activeNode.modelLabel}</p>
-              <p id="how-node-dialog-description">{t.howNodeDescriptions[activeNode.infoIndex]}</p>
-              <p><strong>{t.howCallCost}:</strong> {t.howNodeCosts[activeNode.infoIndex]}</p>
-            </section>
+        <section className="how-decisions" aria-labelledby="how-decisions-title">
+          {demo && <p className="how-card-kicker">{t.howDemoSample}</p>}
+          <h2 id="how-decisions-title">{demo ? t.howWhyTitle : t.howLatestDecision}</h2>
+          {!demo && state.loading && <p className="muted" role="status">{t.loading}</p>}
+          {!demo && state.error && (
+            <div className="notice error" role="alert">
+              <p>{t.howLoadError}</p>
+              <button type="button" className="secondary" onClick={() => setAttempt((n) => n + 1)}>{t.retry}</button>
+            </div>
           )}
-          <section className="how-decisions" aria-labelledby="how-decisions-title">
-            {demo && <p className="how-card-kicker">{t.howDemoSample}</p>}
-            <h2 id="how-decisions-title">{demo ? t.howWhyTitle : t.howLatestDecision}</h2>
-            {!demo && state.loading && <p className="muted" role="status">{t.loading}</p>}
-            {!demo && state.error && (
-              <div className="notice error" role="alert">
-                <p>{t.howLoadError}</p>
-                <button type="button" className="secondary" onClick={() => setAttempt((n) => n + 1)}>{t.retry}</button>
-              </div>
-            )}
-            {(demo || state.data) && <DecisionPanel decision={decision} lang={lang} t={t} demo={demo} />}
-          </section>
-        </div>
+          {(demo || state.data) && <DecisionPanel decision={decision} lang={lang} t={t} demo={demo} />}
+        </section>
       </div>
     </div>
   )
