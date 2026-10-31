@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { getDecisions } from './api.js'
 import { HOW_LANES, HOW_NODES } from './howItWorksData.js'
 import DEMO_SAMPLE from './demoSample.json'
@@ -7,16 +7,22 @@ function when(ts, lang) {
   return new Date(ts).toLocaleString(lang, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
+// The legend already says which steps use no Meta model, so a node shows only the model it runs.
+function shownModel(node) {
+  if (node.meta) return node.modelLabel
+  return node.modelLabel.replace(/\s*·\s*no Meta model$/i, '').replace(/^no Meta model$/i, '')
+}
+
 function Arrow() {
   return (
     <span className="how-flow-arrow">
-      <svg className="how-arrow-horizontal" viewBox="0 0 32 16" aria-hidden="true" focusable="false">
-        <path d="M2 8h25m-6-5 6 5-6 5" />
-        <circle cx="4" cy="8" r="2" />
+      <svg className="how-arrow-horizontal" viewBox="0 0 40 16" aria-hidden="true" focusable="false">
+        <path d="M3 8h31m-7-6 8 6-8 6" />
+        <circle cx="5" cy="8" r="2.5" />
       </svg>
-      <svg className="how-arrow-vertical" viewBox="0 0 16 32" aria-hidden="true" focusable="false">
-        <path d="M8 2v25m-5-6 5 6 5-6" />
-        <circle cx="8" cy="4" r="2" />
+      <svg className="how-arrow-vertical" viewBox="0 0 16 40" aria-hidden="true" focusable="false">
+        <path d="M8 3v31m-6-7 6 8 6-8" />
+        <circle cx="8" cy="5" r="2.5" />
       </svg>
     </span>
   )
@@ -41,11 +47,9 @@ function Flow({ flow, lang, t, activeId, onSelect }) {
                 aria-label={`${t.howSteps[node.stepIndex]}. ${node.modelLabel}`}
                 onClick={() => onSelect(node.id)}
               >
-                <span className={`how-node-badge ${node.meta ? 'meta' : ''}`}>
-                  {node.meta ? t.howMetaBadge : t.howNoMetaBadge}
-                </span>
+                {node.meta && <span className="how-node-badge">{t.howMetaBadge}</span>}
                 <span className="how-node-title" lang={lang} dir="auto">{t.howSteps[node.stepIndex]}</span>
-                <span className="how-model-label" lang="en" dir="ltr">{node.modelLabel}</span>
+                {shownModel(node) && <span className="how-model-label" lang="en" dir="ltr">{shownModel(node)}</span>}
               </button>
             </li>
             {index < nodes.length - 1 && <li className="how-arrow-item" aria-hidden="true"><Arrow /></li>}
@@ -56,7 +60,7 @@ function Flow({ flow, lang, t, activeId, onSelect }) {
   )
 }
 
-function DecisionPanel({ decision, lang, t }) {
+function DecisionPanel({ decision, lang, t, demo }) {
   if (!decision) return <p className="muted">{t.howNoAlerts}</p>
   const action = decision.action === 'sent' ? t.decisionSent
     : decision.action === 'error' ? t.decisionError : t.decisionSkipped
@@ -65,8 +69,9 @@ function DecisionPanel({ decision, lang, t }) {
   return (
     <article className={`decision decision-${decision.action || 'skipped'}`}>
       <div className="alert-meta">
-        <strong>{decision.place || decision.event || decision.zone}</strong>
-        {decision.ts && <time dateTime={decision.ts}>{when(decision.ts, lang)}</time>}
+        {/* the demo sample is an earlier replay of a past event: name the event, never show a date as if it were live */}
+        <strong>{demo ? t.demoEvents[decision.event] || decision.place : decision.place || decision.event || decision.zone}</strong>
+        {!demo && decision.ts && <time dateTime={decision.ts}>{when(decision.ts, lang)}</time>}
       </div>
       <dl className="how-decision-fields">
         <div><dt>{t.howDecisionHazard}</dt><dd>{hazards.length ? hazards.join(', ') : t.howNoHazard}</dd></div>
@@ -85,18 +90,23 @@ function DecisionPanel({ decision, lang, t }) {
   )
 }
 
+const LOAD_TIMEOUT_MS = 12000
+
 export default function HowItWorksScreen({ lang, t, demo = false }) {
   const [attempt, setAttempt] = useState(0)
   const [openNodeId, setOpenNodeId] = useState(null)
   const [view, setView] = useState('all')
   const [state, setState] = useState({ loading: true })
   const closeButtonRef = useRef(null)
+  const lanesRef = useRef(null)
 
   useEffect(() => {
     if (demo) return undefined // demo mode shows the bundled sample: no API call, so nothing to fail
     let cancelled = false
     setState({ loading: true })
-    getDecisions({ days: 7 })
+    // Never leave "Loading..." forever: a call that takes too long becomes the retryable error.
+    const slow = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), LOAD_TIMEOUT_MS))
+    Promise.race([getDecisions({ days: 7 }), slow])
       .then((data) => !cancelled && setState({ loading: false, data }))
       .catch(() => !cancelled && setState({ loading: false, error: true }))
     return () => { cancelled = true }
@@ -129,6 +139,23 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
   })).filter((lane) => lane.flows.length > 0)
   const visibleNodeCount = visibleLanes.reduce((count, lane) =>
     count + lane.flows.reduce((flowCount, flow) => flowCount + flow.nodeIds.length, 0), 0)
+  // Nodes in a lane share the height of its tallest one (side by side only; stacked nodes keep their own).
+  useLayoutEffect(() => {
+    const root = lanesRef.current
+    if (!root) return undefined
+    const equalize = () => {
+      for (const lane of root.querySelectorAll('.how-lane')) {
+        const nodes = [...lane.querySelectorAll('.how-node')]
+        lane.style.removeProperty('--node-h')
+        if (getComputedStyle(lane.querySelector('.how-flow')).flexDirection !== 'row') continue
+        lane.style.setProperty('--node-h', `${Math.max(...nodes.map((node) => node.offsetHeight))}px`)
+      }
+    }
+    equalize()
+    window.addEventListener('resize', equalize)
+    document.fonts?.ready?.then(equalize)
+    return () => window.removeEventListener('resize', equalize)
+  }, [view, lang, t])
   const chooseView = (nextView) => {
     setView(nextView)
     setOpenNodeId(null)
@@ -137,11 +164,7 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
 
   return (
     <div className="how-page">
-      <section className="how-intro" aria-labelledby="how-intro-title">
-        <p className="how-intro-kicker">{t.howWorksTitle}</p>
-        <h2 id="how-intro-title">{t.howIntroTitle}</h2>
-        <p>{t.howIntroBody}</p>
-      </section>
+      <p className="how-intro">{t.howIntroBody}</p>
       <div className="how-layout">
         <section className="how-diagram" aria-label={t.howDiagramTitle}>
           <div className="how-diagram-header">
@@ -168,9 +191,10 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
             </div>
             <span className="how-node-count">{visibleNodeCount} {t.howStepsLabel}</span>
           </div>
-          <div className="how-lanes">
+          <div className="how-lanes" ref={lanesRef}>
             {visibleLanes.map((lane) => (
-              <section className={`how-lane how-lane-${lane.id}`} key={lane.id} aria-labelledby={`how-lane-${lane.id}`}>
+              <section className={`how-lane how-lane-${lane.id}`} key={lane.id} aria-labelledby={`how-lane-${lane.id}`}
+                style={{ '--n': Math.max(...lane.flows.map((flow) => flow.nodeIds.length)) }}>
                 <h3 id={`how-lane-${lane.id}`} className="how-lane-title">{t[lane.titleKey]}</h3>
                 {lane.flows.map((flow) => (
                   <Flow key={flow.id} flow={flow} lang={lang} t={t} activeId={openNodeId} onSelect={selectNode} />
@@ -203,7 +227,7 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
             </section>
           )}
           <section className="how-decisions" aria-labelledby="how-decisions-title">
-            <p className="how-card-kicker">{demo ? t.howDemoSample : t.howLatestDecision}</p>
+            {demo && <p className="how-card-kicker">{t.howDemoSample}</p>}
             <h2 id="how-decisions-title">{demo ? t.howWhyTitle : t.howLatestDecision}</h2>
             {!demo && state.loading && <p className="muted" role="status">{t.loading}</p>}
             {!demo && state.error && (
@@ -212,7 +236,7 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
                 <button type="button" className="secondary" onClick={() => setAttempt((n) => n + 1)}>{t.retry}</button>
               </div>
             )}
-            {(demo || state.data) && <DecisionPanel decision={decision} lang={lang} t={t} />}
+            {(demo || state.data) && <DecisionPanel decision={decision} lang={lang} t={t} demo={demo} />}
           </section>
         </div>
       </div>
