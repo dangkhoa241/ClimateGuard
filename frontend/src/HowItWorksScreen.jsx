@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { getDecisions } from './api.js'
 import { HOW_LANES, HOW_NODES } from './howItWorksData.js'
 import DEMO_SAMPLE from './demoSample.json'
@@ -28,9 +28,13 @@ function Arrow() {
   )
 }
 
-// How the page is laid out: 'wide' (1100px and up) shows the step details to the right of the Ask nodes, 'row' (900 to 1099px)
-// shows them under the row of the tapped node, 'column' (phones) directly under the tapped node.
-const MODE_QUERIES = [['(min-width: 1100px)', 'wide'], ['(min-width: 900px)', 'row']]
+// How the page is laid out: 'wide' (1100px and up, mouse or pen) shows the step details in a draggable floating card,
+// 'row' (900 to 1099px, or touch) shows them under the row of the tapped node, 'column' (phones) directly under the node.
+const MODE_QUERIES = [['(min-width: 1100px) and (pointer: fine)', 'wide'], ['(min-width: 900px)', 'row']]
+const CARD_WIDTH = 240
+const EDGE = 16 // the diagram card's padding: the floating card starts at its right edge
+const STEP = 16
+const BIG_STEP = 48
 const layoutMode = () => {
   if (typeof window === 'undefined' || !window.matchMedia) return 'column'
   return MODE_QUERIES.find(([query]) => window.matchMedia(query).matches)?.[1] || 'column'
@@ -47,13 +51,12 @@ function useLayoutMode() {
   return mode
 }
 
-function Flow({ flow, lang, t, activeId, onSelect, mode, anchored, details }) {
+function Flow({ flow, lang, t, activeId, onSelect, mode, details }) {
   const nodes = flow.nodeIds.map((id) => HOW_NODES.find((node) => node.id === id))
-  const sideDetails = anchored && flow.id === 'ask' && details
-  const rowDetails = !anchored && mode === 'row' && nodes.some((node) => node.id === activeId) && details
+  const rowDetails = mode === 'row' && nodes.some((node) => node.id === activeId) && details
 
   return (
-    <div className={`how-flow-wrap how-flow-wrap-${flow.id}${sideDetails ? ' has-details' : ''}`}>
+    <div className={`how-flow-wrap how-flow-wrap-${flow.id}`}>
       {flow.titleKey && <h4 className="how-flow-title">{t[flow.titleKey]}</h4>}
       <ol className={`how-flow how-flow-${flow.id}`}>
         {nodes.map((node, index) => (
@@ -73,12 +76,11 @@ function Flow({ flow, lang, t, activeId, onSelect, mode, anchored, details }) {
                 {shownModel(node) && <span className="how-model-label" lang="en" dir="ltr">{shownModel(node)}</span>}
               </button>
             </li>
-            {!anchored && mode === 'column' && activeId === node.id && details && <li className="how-details-item">{details}</li>}
+            {mode === 'column' && activeId === node.id && details && <li className="how-details-item">{details}</li>}
             {index < nodes.length - 1 && <li className="how-arrow-item" aria-hidden="true"><Arrow /></li>}
           </Fragment>
         ))}
       </ol>
-      {sideDetails && <div className="how-details-side">{details}</div>}
       {rowDetails && <div className="how-details-row">{details}</div>}
     </div>
   )
@@ -129,6 +131,11 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
   const popoverRef = useRef(null)
   const mode = useLayoutMode()
   const restoreFocus = useRef(true)
+  const diagramRef = useRef(null)
+  const lanesRef = useRef(null)
+  const dragRef = useRef(null)
+  const [floatPos, setFloatPos] = useState(null) // where the person dragged the card; null = the default spot
+  const [defaultPos, setDefaultPos] = useState(null)
 
   useEffect(() => {
     if (demo) return undefined // demo mode shows the bundled sample: no API call, so nothing to fail
@@ -147,7 +154,7 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
 
     restoreFocus.current = true
     closeButtonRef.current?.focus({ preventScroll: true })
-    popoverRef.current?.scrollIntoView?.({ block: 'nearest' }) // opened under a node near the bottom: keep it on screen
+    if (mode !== 'wide') popoverRef.current?.scrollIntoView?.({ block: 'nearest' }) // opened under a node near the bottom: keep it on screen
 
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
@@ -169,7 +176,7 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
       document.removeEventListener('pointerdown', handlePress)
       if (restoreFocus.current) document.querySelector(`[data-node-id="${openNodeId}"]`)?.focus({ preventScroll: true })
     }
-  }, [openNodeId])
+  }, [openNodeId, mode])
 
   const activeNode = HOW_NODES.find((node) => node.id === openNodeId)
   const decision = demo ? DEMO_SAMPLE : state.data?.decisions?.[0]
@@ -179,24 +186,112 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
   })).filter((lane) => lane.flows.length > 0)
   const visibleNodeCount = visibleLanes.reduce((count, lane) =>
     count + lane.flows.reduce((flowCount, flow) => flowCount + flow.nodeIds.length, 0), 0)
+  const floating = mode === 'wide'
+  const pos = floatPos || defaultPos
+
+  // Sizes inside the diagram card, in px. The card is positioned against its padding box (inside the 1px border)
+  // and is kept fully inside it.
+  const measure = () => {
+    const diagramEl = diagramRef.current
+    const diagram = diagramEl?.getBoundingClientRect()
+    const lanes = lanesRef.current?.getBoundingClientRect()
+    if (!diagram || !lanes) return null
+    const card = popoverRef.current?.getBoundingClientRect()
+    return { width: diagramEl.clientWidth || diagram.width, height: diagramEl.clientHeight || diagram.height,
+      cardW: card?.width || CARD_WIDTH, cardH: card?.height || 0, lanesTop: lanes.top - diagram.top - (diagramEl.clientTop || 0) }
+  }
+  const clamp = (p, m) => ({
+    x: Math.round(Math.min(Math.max(0, p.x), Math.max(0, m.width - m.cardW))),
+    y: Math.round(Math.min(Math.max(0, p.y), Math.max(0, m.height - m.cardH))),
+  })
+  const same = (a, b) => a && b && a.x === b.x && a.y === b.y
+
+  // Default spot: the right edge of the diagram card, near the top of the lanes. Re-fitted when anything resizes
+  // (window, language, Large text, another step's text), so the card can't end up outside the diagram card.
+  useLayoutEffect(() => {
+    if (!floating || !openNodeId) return undefined
+    const fit = () => {
+      const m = measure()
+      if (!m) return
+      const next = clamp({ x: m.width - m.cardW - EDGE, y: m.lanesTop + 8 }, m)
+      setDefaultPos((current) => (same(current, next) ? current : next))
+      setFloatPos((current) => {
+        if (!current) return current
+        const kept = clamp(current, m)
+        return same(current, kept) ? current : kept
+      })
+    }
+    fit()
+    window.addEventListener('resize', fit)
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(fit)
+    for (const el of [diagramRef.current, popoverRef.current]) if (el) observer?.observe(el)
+    return () => {
+      window.removeEventListener('resize', fit)
+      observer?.disconnect()
+    }
+  }, [floating, openNodeId, lang, view])
+
+  const endDrag = (event) => {
+    if (!dragRef.current) return
+    dragRef.current = null
+    document.documentElement.classList.remove('how-dragging')
+    event?.currentTarget?.releasePointerCapture?.(event.pointerId)
+  }
+  useEffect(() => () => document.documentElement.classList.remove('how-dragging'), [])
+  const startDrag = (event) => {
+    if (event.pointerType === 'touch' || (event.button != null && event.button > 0)) return // mouse and pen only
+    const m = measure()
+    if (!m || !pos) return
+    dragRef.current = { x: event.clientX, y: event.clientY, from: pos, m }
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+    document.documentElement.classList.add('how-dragging') // no text selection while dragging
+    event.preventDefault()
+  }
+  const moveDrag = (event) => {
+    const drag = dragRef.current
+    if (!drag) return
+    setFloatPos(clamp({ x: drag.from.x + event.clientX - drag.x, y: drag.from.y + event.clientY - drag.y }, drag.m))
+  }
+  const handleKey = (event) => {
+    const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }
+    if (event.key === 'Home') {
+      event.preventDefault()
+      setFloatPos(null)
+    } else if (arrows[event.key]) {
+      event.preventDefault()
+      const m = measure()
+      if (!m || !pos) return
+      const step = event.shiftKey ? BIG_STEP : STEP
+      const [dx, dy] = arrows[event.key]
+      setFloatPos(clamp({ x: pos.x + dx * step, y: pos.y + dy * step }, m))
+    }
+  }
+
   const details = activeNode && (
-    <section id="how-node-details" ref={popoverRef} className="how-node-dialog" role="dialog" aria-modal="false"
-      aria-labelledby="how-node-dialog-title" aria-describedby="how-node-dialog-description">
+    <section id="how-node-details" ref={popoverRef} className={`how-node-dialog${floating ? ' floating' : ''}`} role="dialog" aria-modal="false"
+      aria-labelledby="how-node-dialog-title" aria-describedby="how-node-dialog-description"
+      style={floating ? (pos ? { left: pos.x, top: pos.y } : { visibility: 'hidden' }) : undefined}>
       <button ref={closeButtonRef} type="button" className="how-dialog-close"
         aria-label={t.howCloseDetails} onClick={() => setOpenNodeId(null)}>
         <span aria-hidden="true">
           <svg viewBox="0 0 14 14" width="14" height="14" focusable="false"><path d="M2 2l10 10M12 2 2 12" /></svg>
         </span>
       </button>
-      <p className="how-card-kicker">{t.howDetails}</p>
+      {floating ? (
+        <div className="how-details-handle" role="button" tabIndex={0} aria-label={t.howMoveDetails}
+          onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag}
+          onDoubleClick={() => setFloatPos(null)} onKeyDown={handleKey}>
+          <span className="how-card-kicker">{t.howDetails}</span>
+        </div>
+      ) : (
+        <p className="how-card-kicker">{t.howDetails}</p>
+      )}
       <h2 id="how-node-dialog-title">{t.howSteps[activeNode.stepIndex]}</h2>
       <p className="how-dialog-model" lang="en" dir="ltr">{activeNode.modelLabel}</p>
       <p id="how-node-dialog-description">{t.howNodeDescriptions[activeNode.infoIndex]}</p>
       <p><strong>{t.howCallCost}:</strong> {t.howNodeCosts[activeNode.infoIndex]}</p>
     </section>
   )
-  const askVisible = visibleLanes.some((lane) => lane.flows.some((flow) => flow.id === 'ask'))
-  const anchored = mode === 'wide' && askVisible // the Ask lane has the room; otherwise the details open under the tapped node
   const chooseView = (nextView) => {
     setView(nextView)
     setOpenNodeId(null)
@@ -207,7 +302,7 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
     <div className="how-page">
       <p className="how-intro">{t.howIntroBody}</p>
       <div className="how-layout">
-        <section className="how-diagram" aria-label={t.howDiagramTitle}>
+        <section className="how-diagram" aria-label={t.howDiagramTitle} ref={diagramRef}>
           <div className="how-diagram-header">
             <div>
               <h2>{t.howDiagramTitle}</h2>
@@ -232,16 +327,17 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
             </div>
             <span className="how-node-count">{visibleNodeCount} {t.howStepsLabel}</span>
           </div>
-          <div className="how-lanes">
+          <div className="how-lanes" ref={lanesRef}>
             {visibleLanes.map((lane) => (
               <section className={`how-lane how-lane-${lane.id}`} key={lane.id} aria-labelledby={`how-lane-${lane.id}`}>
                 <h3 id={`how-lane-${lane.id}`} className="how-lane-title">{t[lane.titleKey]}</h3>
                 {lane.flows.map((flow) => (
-                  <Flow key={flow.id} flow={flow} lang={lang} t={t} activeId={openNodeId} onSelect={selectNode} mode={mode} anchored={anchored} details={details} />
+                  <Flow key={flow.id} flow={flow} lang={lang} t={t} activeId={openNodeId} onSelect={selectNode} mode={mode} details={details} />
                 ))}
               </section>
             ))}
           </div>
+          {floating && details}
           <section className="sr-only how-fallback" aria-labelledby="how-fallback-title">
             <h2 id="how-fallback-title">{t.howFallbackTitle}</h2>
             <ol>

@@ -365,7 +365,7 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 .how-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
 .how-diagram, .how-decisions { min-width: 0; }
 .how-diagram {
-  padding: 16px; border: 1px solid var(--line); border-radius: 20px; background: #fff;
+  position: relative; padding: 16px; border: 1px solid var(--line); border-radius: 20px; background: #fff;
   box-shadow: 0 2px 10px rgba(29, 29, 27, 0.05);
 }
 .how-diagram-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 14px; }
@@ -462,14 +462,16 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
   border: 1px solid #d6d3d1; border-radius: 8px; background: #fafaf9; text-align: start;
   box-shadow: 0 2px 8px rgba(29, 29, 27, 0.1);
 }
-.how-flow-wrap-ask.has-details { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; }
-.how-flow-wrap-ask.has-details .how-flow-title { grid-column: 1 / -1; }
-.how-flow-wrap-ask.has-details .how-flow { grid-column: 2; }
-.how-details-side { grid-column: 3; justify-self: start; margin-inline-start: 16px; min-width: 0; }
 .how-details-row { display: flex; justify-content: center; margin-top: 10px; }
 .how-details-row .how-node-dialog { width: 320px; }
 .how-details-item { display: flex; justify-content: center; width: 100%; margin: 4px 0 0; padding: 0; }
 .how-details-item .how-node-dialog { width: min(100%, 320px); }
+/* Wide screens: a floating card in the diagram card, dragged by its header */
+.how-node-dialog.floating { position: absolute; z-index: 5; }
+.how-details-handle { display: flex; align-items: center; min-height: 24px; margin: 0 34px 2px 0; cursor: grab; user-select: none; touch-action: none; }
+.how-details-handle:active { cursor: grabbing; }
+.how-details-handle:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; border-radius: 4px; }
+.how-dragging, .how-dragging * { cursor: grabbing !important; user-select: none !important; }
 /* 24px circle, 44px touch target */
 .how-dialog-close {
   position: absolute; inset-block-start: 0; inset-inline-end: 0; display: grid; place-items: center;
@@ -481,7 +483,7 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 .how-node-dialog > * { font-size: 13px; line-height: 1.4; }
 .how-node-dialog h2 { margin: 0 34px 2px 0; font-size: 14px; line-height: 1.3; }
 .how-node-dialog p { margin: 4px 0 0; overflow-wrap: anywhere; }
-.how-node-dialog .how-card-kicker { margin: 0 34px 0 0; color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.how-node-dialog .how-card-kicker { margin: 0; color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
 :root.large-text .how-node-dialog > * { font-size: 15px; }
 :root.large-text .how-node-dialog h2 { font-size: 16px; }
 :root.large-text .how-node-dialog .how-card-kicker { font-size: 14px; }

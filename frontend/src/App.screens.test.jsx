@@ -352,6 +352,118 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
     expect(button(STRINGS.en.retry)).not.toBeUndefined()
   })
 
+  describe('the floating step details card (wide screens with a mouse)', () => {
+    const DIAGRAM = { width: 1000, height: 700 }
+    const CARD = { width: 240, height: 160 }
+    const LANES_TOP = 120
+    const original = Element.prototype.getBoundingClientRect
+    const rect = (left, top, width, height) => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top })
+
+    beforeEach(() => {
+      window.matchMedia = vi.fn(() => ({ matches: true, addEventListener() {}, removeEventListener() {} }))
+      // jsdom does no layout: give the three boxes the card is measured against fixed sizes
+      Element.prototype.getBoundingClientRect = function boxes() {
+        if (this.classList?.contains('how-diagram')) return rect(0, 0, DIAGRAM.width, DIAGRAM.height)
+        if (this.classList?.contains('how-lanes')) return rect(16, LANES_TOP, 968, 500)
+        if (this.classList?.contains('how-node-dialog')) return rect(0, 0, CARD.width, CARD.height)
+        return original.call(this)
+      }
+    })
+    afterEach(() => {
+      Element.prototype.getBoundingClientRect = original
+      delete window.matchMedia
+    })
+
+    const card = () => container.querySelector('.how-node-dialog')
+    const at = () => [parseInt(card().style.left, 10), parseInt(card().style.top, 10)]
+    const handle = () => container.querySelector('.how-details-handle')
+    const open = async () => {
+      await mount('/#/how-it-works')
+      await click(container.querySelector('[data-node-id="ask-answer"]'))
+    }
+    const pointer = (el, type, x, y, extra = {}) => act(async () => {
+      const event = new MouseEvent(type, { bubbles: true, clientX: x, clientY: y })
+      Object.assign(event, extra)
+      el.dispatchEvent(event)
+    })
+    const drag = async (from, to, extra) => {
+      await pointer(handle(), 'pointerdown', from[0], from[1], extra)
+      await pointer(handle(), 'pointermove', to[0], to[1], extra)
+      await pointer(handle(), 'pointerup', to[0], to[1], extra)
+    }
+    const key = (el, init) => act(async () => el.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, ...init })))
+    const DEFAULT = [DIAGRAM.width - CARD.width - 16, LANES_TOP + 8]
+
+    it('starts at the right edge of the diagram card, near the top of the lanes, inside it', async () => {
+      await open()
+      expect(card().classList.contains('floating')).toBe(true)
+      expect(at()).toEqual(DEFAULT)
+      expect(DEFAULT[0] + CARD.width).toBeLessThanOrEqual(DIAGRAM.width - 16)
+      expect(handle().getAttribute('role')).toBe('button')
+      expect(handle().getAttribute('aria-label')).toBe(STRINGS.en.howMoveDetails)
+    })
+
+    it('drags by its header, stays inside the diagram card, and keeps its place when another node is tapped', async () => {
+      await open()
+      await drag([800, 140], [700, 200])
+      expect(at()).toEqual([DEFAULT[0] - 100, DEFAULT[1] + 60])
+      await drag([700, 200], [-5000, -5000])
+      expect(at()).toEqual([0, 0])
+      await drag([10, 10], [9000, 9000])
+      expect(at()).toEqual([DIAGRAM.width - CARD.width, DIAGRAM.height - CARD.height])
+      const moved = at()
+      await click(container.querySelector('[data-node-id="sam"]'))
+      expect(container.querySelector('#how-node-dialog-title').textContent).toBe(STRINGS.en.howSteps[8])
+      expect(at()).toEqual(moved)
+      expect(document.documentElement.classList.contains('how-dragging')).toBe(false)
+    })
+
+    it('does not drag from a finger (touch)', async () => {
+      await open()
+      await drag([800, 140], [700, 200], { pointerType: 'touch' })
+      expect(at()).toEqual(DEFAULT)
+    })
+
+    it('goes back to the default spot on a double-click of the header', async () => {
+      await open()
+      await drag([800, 140], [600, 300])
+      expect(at()).not.toEqual(DEFAULT)
+      await act(async () => handle().dispatchEvent(new MouseEvent('dblclick', { bubbles: true })))
+      expect(at()).toEqual(DEFAULT)
+    })
+
+    it('moves with the arrow keys (16px, 48px with Shift) and Home resets', async () => {
+      await open()
+      await act(async () => handle().focus())
+      await key(handle(), { key: 'ArrowLeft' })
+      expect(at()).toEqual([DEFAULT[0] - 16, DEFAULT[1]])
+      await key(handle(), { key: 'ArrowDown', shiftKey: true })
+      expect(at()).toEqual([DEFAULT[0] - 16, DEFAULT[1] + 48])
+      await key(handle(), { key: 'ArrowRight' })
+      await key(handle(), { key: 'ArrowRight' }) // already at the right edge of the allowed area: 16 + 16 would leave it
+      expect(at()[0]).toBeLessThanOrEqual(DIAGRAM.width - CARD.width)
+      await key(handle(), { key: 'Home' })
+      expect(at()).toEqual(DEFAULT)
+    })
+
+    it('Escape closes the card from the handle and returns focus to the node', async () => {
+      await open()
+      await act(async () => handle().focus())
+      await key(handle(), { key: 'Escape' })
+      expect(container.querySelector('[role="dialog"]')).toBeNull()
+      expect(document.activeElement).toBe(container.querySelector('[data-node-id="ask-answer"]'))
+    })
+  })
+
+  it('under 1100px or on touch the details stay inline under the tapped node, with no drag handle', async () => {
+    await mount('/#/how-it-works') // no matchMedia in jsdom: the narrow layout
+    await click(container.querySelector('[data-node-id="report"]'))
+    const card = () => container.querySelector('.how-node-dialog')
+    expect(card().classList.contains('floating')).toBe(false)
+    expect(container.querySelector('.how-details-handle')).toBeNull()
+    expect(card().closest('.how-details-item')).not.toBeNull()
+  })
+
   it('the How it works title and step names render in all seven languages', async () => {
     for (const code of ['en', 'es', 'vi', 'zh', 'tl', 'ko', 'ar']) {
       localStorage.setItem('lang', code)
