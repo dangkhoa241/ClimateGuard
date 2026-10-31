@@ -355,23 +355,50 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
   describe('the floating step details card (wide screens with a mouse)', () => {
     const DIAGRAM = { width: 1000, height: 700 }
     const CARD = { width: 240, height: 160 }
-    const LANES_TOP = 120
+    const ASK_TOP = 300 // the Ask lane starts here (diagram card coordinates)
     const original = Element.prototype.getBoundingClientRect
     const rect = (left, top, width, height) => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top })
+    let diagramWidth = DIAGRAM.width
+
+    // A made-up but realistic page, in diagram card coordinates: the Alerts row (5 nodes), the Ask row (2 nodes, centered,
+    // with empty space on both sides), the Recovery row (4 nodes). Nodes are 200px wide (less when the card is narrow).
+    const ROWS = [
+      { ids: ['nws', 'decision', 'safety', 'translation', 'read-aloud'], top: 150, height: 130 },
+      { ids: ['ask-transcribe', 'ask-answer'], top: ASK_TOP + 40, height: 120 },
+      { ids: ['recovery-photos', 'sam', 'image-analysis', 'report'], top: 540, height: 130 },
+    ]
+    const nodeBox = (id) => {
+      const row = ROWS.find((r) => r.ids.includes(id))
+      const count = row.ids.length
+      const w = Math.min(200, (diagramWidth - 64 - (count - 1) * 40) / count)
+      const left = (diagramWidth - (count * w + (count - 1) * 40)) / 2 + row.ids.indexOf(id) * (w + 40)
+      return rect(left, row.top, w, row.height)
+    }
 
     beforeEach(() => {
       window.matchMedia = vi.fn(() => ({ matches: true, addEventListener() {}, removeEventListener() {} }))
       // jsdom does no layout: give the three boxes the card is measured against fixed sizes
       Element.prototype.getBoundingClientRect = function boxes() {
-        if (this.classList?.contains('how-diagram')) return rect(0, 0, DIAGRAM.width, DIAGRAM.height)
-        if (this.classList?.contains('how-lanes')) return rect(16, LANES_TOP, 968, 500)
-        if (this.classList?.contains('how-node-dialog')) return rect(0, 0, CARD.width, CARD.height)
+        const has = (name) => this.classList?.contains(name)
+        // the diagram card grows by the room reserved under the lanes (as it does in a browser)
+        if (has('how-diagram')) return rect(0, 0, diagramWidth, DIAGRAM.height + (parseInt(this.querySelector('.how-lanes')?.style.paddingBottom, 10) || 0))
+        if (has('how-lanes')) return rect(16, 120, diagramWidth - 32, 560)
+        if (has('how-lane-alerts')) return rect(16, 120, diagramWidth - 32, 400)
+        if (has('how-lane-recovery')) return rect(16, 520, diagramWidth - 32, 160)
+        if (has('how-flow-wrap-ask')) return rect(16, ASK_TOP, diagramWidth - 32, 190)
+        if (has('how-node-dialog')) return rect(0, 0, CARD.width, CARD.height)
+        if (has('how-node')) return nodeBox(this.dataset.nodeId)
+        if (has('how-arrow-item')) {
+          const before = nodeBox(this.previousElementSibling.querySelector('.how-node').dataset.nodeId)
+          return rect(before.right, before.top + before.height / 2 - 8, 40, 16)
+        }
         return original.call(this)
       }
     })
     afterEach(() => {
       Element.prototype.getBoundingClientRect = original
       delete window.matchMedia
+      diagramWidth = DIAGRAM.width
     })
 
     const card = () => container.querySelector('.how-node-dialog')
@@ -392,9 +419,9 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
       await pointer(handle(), 'pointerup', to[0], to[1], extra)
     }
     const key = (el, init) => act(async () => el.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, ...init })))
-    const DEFAULT = [DIAGRAM.width - CARD.width - 16, LANES_TOP + 8]
+    const DEFAULT = [DIAGRAM.width - CARD.width - 16, ASK_TOP + 8]
 
-    it('starts at the right edge of the diagram card, near the top of the lanes, inside it', async () => {
+    it('starts at the right edge of the diagram card, level with the top of the Ask lane, inside it', async () => {
       await open()
       expect(card().classList.contains('floating')).toBe(true)
       expect(at()).toEqual(DEFAULT)
@@ -416,6 +443,35 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
       expect(container.querySelector('#how-node-dialog-title').textContent).toBe(STRINGS.en.howSteps[8])
       expect(at()).toEqual(moved)
       expect(document.documentElement.classList.contains('how-dragging')).toBe(false)
+    })
+
+    it.each([1248, 1068])('its default spot overlaps no node or arrow when the diagram card is %ipx wide (1280px and 1100px windows)', async (width) => {
+      diagramWidth = width
+      await mount('/#/how-it-works')
+      const overlaps = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom
+      for (const node of HOW_NODES) {
+        await click(container.querySelector(`[data-node-id="${node.id}"]`))
+        const [x, y] = at()
+        const box = rect(x, y, CARD.width, CARD.height)
+        expect(x + CARD.width).toBe(width - 16) // right-aligned, 16px from the right padding
+        expect(y).toBe(ASK_TOP + 8)
+        for (const other of container.querySelectorAll('.how-node, .how-arrow-item')) {
+          expect(overlaps(box, other.getBoundingClientRect()), `${node.id} card over ${other.dataset.nodeId || 'an arrow'}`).toBe(false)
+        }
+        await click(container.querySelector(`[data-node-id="${node.id}"]`)) // close it again
+      }
+    })
+
+    it('with the Ask lane hidden by a filter it sits right-aligned just below the last visible lane', async () => {
+      await mount('/#/how-it-works')
+      await click(button(STRINGS.en.howLaneAlerts))
+      await click(container.querySelector('[data-node-id="nws"]'))
+      expect(container.querySelector('.how-flow-wrap-ask')).toBeNull()
+      expect(at()).toEqual([DIAGRAM.width - CARD.width - 16, 400 + 120 + 8]) // Alerts lane bottom (120 + 400) + 8
+      expect(container.querySelector('.how-lanes').style.paddingBottom).toBe(`${CARD.height + 16}px`) // room for it
+      await click(button(STRINGS.en.howLaneRecovery))
+      await click(container.querySelector('[data-node-id="report"]'))
+      expect(at()).toEqual([DIAGRAM.width - CARD.width - 16, 520 + 160 + 8])
     })
 
     it('does not drag from a finger (touch)', async () => {

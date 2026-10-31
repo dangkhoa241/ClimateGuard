@@ -190,15 +190,21 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
   const pos = floatPos || defaultPos
 
   // Sizes inside the diagram card, in px. The card is positioned against its padding box (inside the 1px border)
-  // and is kept fully inside it.
+  // and is kept fully inside it. `anchorTop` is where the default spot starts: the top of the Ask lane, or, when a
+  // filter hides the Ask lane, just under the last visible lane.
   const measure = () => {
     const diagramEl = diagramRef.current
     const diagram = diagramEl?.getBoundingClientRect()
     const lanes = lanesRef.current?.getBoundingClientRect()
     if (!diagram || !lanes) return null
     const card = popoverRef.current?.getBoundingClientRect()
+    const originTop = diagram.top + (diagramEl.clientTop || 0)
+    const ask = diagramEl.querySelector('.how-flow-wrap-ask')?.getBoundingClientRect()
+    const laneEls = diagramEl.querySelectorAll('.how-lane')
+    const lastLane = laneEls[laneEls.length - 1]?.getBoundingClientRect()
     return { width: diagramEl.clientWidth || diagram.width, height: diagramEl.clientHeight || diagram.height,
-      cardW: card?.width || CARD_WIDTH, cardH: card?.height || 0, lanesTop: lanes.top - diagram.top - (diagramEl.clientTop || 0) }
+      cardW: card?.width || CARD_WIDTH, cardH: card?.height || 0, hasAsk: !!ask,
+      anchorTop: ask ? ask.top - originTop : (lastLane ? lastLane.bottom - originTop : lanes.top - originTop) }
   }
   const clamp = (p, m) => ({
     x: Math.round(Math.min(Math.max(0, p.x), Math.max(0, m.width - m.cardW))),
@@ -206,14 +212,21 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
   })
   const same = (a, b) => a && b && a.x === b.x && a.y === b.y
 
-  // Default spot: the right edge of the diagram card, near the top of the lanes. Re-fitted when anything resizes
+  // Default spot: the right edge of the diagram card, level with the Ask lane (the empty space right of its nodes). Re-fitted when anything resizes
   // (window, language, Large text, another step's text), so the card can't end up outside the diagram card.
   useLayoutEffect(() => {
     if (!floating || !openNodeId) return undefined
     const fit = () => {
+      // With the Ask lane hidden the card sits under the last lane: make room for it there first, so it never
+      // lands on a node and the clamp below sees the final height of the diagram card.
+      const room = lanesRef.current
+      if (room) {
+        const needsRoom = !diagramRef.current.querySelector('.how-flow-wrap-ask')
+        room.style.paddingBottom = needsRoom ? `${(popoverRef.current?.getBoundingClientRect().height || 0) + 16}px` : ''
+      }
       const m = measure()
       if (!m) return
-      const next = clamp({ x: m.width - m.cardW - EDGE, y: m.lanesTop + 8 }, m)
+      const next = clamp({ x: m.width - m.cardW - EDGE, y: m.anchorTop + 8 }, m)
       setDefaultPos((current) => (same(current, next) ? current : next))
       setFloatPos((current) => {
         if (!current) return current
@@ -228,6 +241,7 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
     return () => {
       window.removeEventListener('resize', fit)
       observer?.disconnect()
+      if (lanesRef.current) lanesRef.current.style.paddingBottom = ''
     }
   }, [floating, openNodeId, lang, view])
 
