@@ -330,7 +330,6 @@ Resources:
           AIRNOW_API_KEY_PARAM: /climateguard/airnow-api-key  # on-demand snapshots for unmonitored zones
           BASETEN_API_KEY_PARAM: /climateguard/baseten-api-key  # POST /demo/replay runs the monitoring agent
           USE_CONTRIBUTOR: "false"
-      ReservedConcurrentExecutions: 2
       Policies:
         - DynamoDBReadPolicy: { TableName: !Ref SnapshotsTable }
         - DynamoDBCrudPolicy: { TableName: !Ref AlertsTable }  # demo replays log to DEMO-* keys (never live ones)
@@ -372,7 +371,6 @@ Resources:
         Variables:
           MODEL_API_KEY_PARAM: /climateguard/meta-model-api-key
           USE_CONTRIBUTOR: "false"  # real photos: never contributor mode
-      ReservedConcurrentExecutions: 2
       EventInvokeConfig:
         MaximumRetryAttempts: 0  # a failed analysis shows "try again" rather than running (and billing) twice
       Policies:

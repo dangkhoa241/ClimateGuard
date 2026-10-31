@@ -106,6 +106,12 @@ if (-not $urlGiven) {
 # Origins are compared exactly (API Gateway rejects duplicates), so normalize before deciding.
 $FrontendUrl = $FrontendUrl.Trim().TrimEnd("/").ToLowerInvariant()
 $tpl = Get-Content (Join-Path $PSScriptRoot "template.yaml") -Raw
+# The Free plan caps the account at 10 concurrent Lambda executions and requires 10 to stay unreserved, so any reserved
+# or provisioned concurrency makes CloudFormation fail and roll back (it did once). Catch it before SAM runs.
+if ($tpl -match "(?m)^\s*(ReservedConcurrentExecutions|ProvisionedConcurrencyConfig)\s*:") {
+    Report "Lambda concurrency settings" "FAIL" "template.yaml sets $($Matches[1]); not allowed on the Free plan (account limit 10)"
+}
+else { Report "Lambda concurrency settings" "OK" "none reserved or provisioned" }
 $localDev = @([regex]::Matches($tpl, "LocalDevOrigin2?:\s*\r?\n\s*Type: String\s*\r?\n\s*Default:\s*(\S+)") |
     ForEach-Object { $_.Groups[1].Value.ToLowerInvariant() })
 if (-not $localDev) { $localDev = @("http://localhost:5173", "http://localhost:5174") }
