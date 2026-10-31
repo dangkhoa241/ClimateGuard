@@ -109,26 +109,28 @@ def claim_subscription(email: str, subscription_id: str, max_per_email: int, max
     if config.STORAGE == "dynamodb":
         from botocore.exceptions import ClientError
 
-        values = {":zero": {"N": "0"}, ":one": {"N": "1"}}
+        # table.meta.client is a boto3 *resource* client: it serializes plain Python values to DynamoDB types
+        # itself, so values here must NOT be pre-typed ({"N": "1"}), or they are stored/compared as maps.
+        values = {":zero": 0, ":one": 1}
 
         def update(key: str, maximum: int, with_ttl: bool) -> dict:
             result = {
                 "TableName": config.RATELIMIT_TABLE,
-                "Key": {"k": {"S": key}},
+                "Key": {"k": key},
                 "UpdateExpression": "SET #n = if_not_exists(#n, :zero) + :one"
                                   + (", #ttl = :ttl" if with_ttl else ""),
                 "ConditionExpression": "attribute_not_exists(#n) OR #n < :maximum",
                 "ExpressionAttributeNames": {"#n": "n", **({"#ttl": "ttl"} if with_ttl else {})},
-                "ExpressionAttributeValues": {**values, ":maximum": {"N": str(maximum)}},
+                "ExpressionAttributeValues": {**values, ":maximum": maximum},
             }
             if with_ttl:
-                result["ExpressionAttributeValues"][":ttl"] = {"N": str(expires)}
+                result["ExpressionAttributeValues"][":ttl"] = expires
             return result
 
         try:
             _table().meta.client.transact_write_items(TransactItems=[
                 {"Put": {"TableName": config.RATELIMIT_TABLE,
-                         "Item": {"k": {"S": marker}, "ttl": {"N": str(expires)}},
+                         "Item": {"k": marker, "ttl": expires},
                          "ConditionExpression": "attribute_not_exists(k)"}},
                 {"Update": update(email_count, max_per_email, True)},
                 {"Update": update(total_count, max_total, False)},
@@ -168,18 +170,18 @@ def release_subscription(email: str, subscription_id: str) -> None:
     total_count = "count#subscribers"
     if config.STORAGE == "dynamodb":
         _table().meta.client.transact_write_items(TransactItems=[
-            {"Delete": {"TableName": config.RATELIMIT_TABLE, "Key": {"k": {"S": marker}},
+            {"Delete": {"TableName": config.RATELIMIT_TABLE, "Key": {"k": marker},
                         "ConditionExpression": "attribute_exists(k)"}},
-            {"Update": {"TableName": config.RATELIMIT_TABLE, "Key": {"k": {"S": email_count}},
+            {"Update": {"TableName": config.RATELIMIT_TABLE, "Key": {"k": email_count},
                         "UpdateExpression": "ADD #n :minus",
                         "ConditionExpression": "#n >= :one",
                         "ExpressionAttributeNames": {"#n": "n"},
-                        "ExpressionAttributeValues": {":minus": {"N": "-1"}, ":one": {"N": "1"}}}},
-            {"Update": {"TableName": config.RATELIMIT_TABLE, "Key": {"k": {"S": total_count}},
+                        "ExpressionAttributeValues": {":minus": -1, ":one": 1}}},
+            {"Update": {"TableName": config.RATELIMIT_TABLE, "Key": {"k": total_count},
                         "UpdateExpression": "ADD #n :minus",
                         "ConditionExpression": "#n >= :one",
                         "ExpressionAttributeNames": {"#n": "n"},
-                        "ExpressionAttributeValues": {":minus": {"N": "-1"}, ":one": {"N": "1"}}}},
+                        "ExpressionAttributeValues": {":minus": -1, ":one": 1}}},
         ])
         return
     with _local_lock:

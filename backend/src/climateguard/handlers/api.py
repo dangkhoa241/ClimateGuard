@@ -88,6 +88,9 @@ def post_subscribe(event) -> dict:
         headers = ({"Retry-After": "86400" if e.code == "email_subscription_cap" else "3600"}
                    if e.status == 429 else None)
         return _resp(e.status, {"error": e.code}, headers=headers)
+    except Exception:  # a bug or an AWS hiccup: keep the details in the log, give the person a clear "busy"
+        log.exception("sign-up failed")
+        return _resp(503, {"error": "busy"}, headers={"Retry-After": "60"})
 
 
 def get_zone_alerts(zone: str) -> dict:

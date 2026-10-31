@@ -143,6 +143,17 @@ def test_failed_signup_setup_releases_new_subscription_claim(monkeypatch):
     assert ratelimit.peek_counter(f"email-subscriptions#{ratelimit.hashed('maria@example.com')}") == 0
 
 
+def test_unexpected_failure_answers_busy_not_a_bare_500(monkeypatch, caplog):
+    def boom(*args, **kwargs):
+        raise RuntimeError("DynamoDB exploded: secret-internal-detail")
+
+    monkeypatch.setattr(ratelimit, "claim_subscription", boom)
+    status, body = _post(SIGNUP)
+    assert (status, body) == (503, {"error": "busy"})
+    assert "secret-internal-detail" not in json.dumps(body)
+    assert "sign-up failed" in caplog.text and "secret-internal-detail" in caplog.text  # the details stay in the log
+
+
 def test_subscriber_cap(monkeypatch):
     monkeypatch.setattr(config, "MAX_SUBSCRIBERS", 2)
     assert _post({**SIGNUP, "email": "a@example.com"}, ip="1.1.1.1")[0] == 202
