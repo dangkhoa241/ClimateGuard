@@ -10,6 +10,7 @@ export const HOW_MODEL_LABELS = Object.freeze({
   sam: 'SAM 3.1',
   imageAnalysis: 'Muse Spark 1.3',
   report: 'Muse Spark 1.3',
+  wonder: 'Muse Wonder 1.0 (Meta Model API)',
 })
 
 export const HOW_NODES = [
@@ -41,3 +42,26 @@ export const HOW_LANES = [
     flows: [{ id: 'recovery', nodeIds: ['recovery-photos', 'sam', 'image-analysis', 'report'] }],
   },
 ]
+
+// Evaluation only: not a live step, so it is not in HOW_NODES (those match the howSteps / howNodeDescriptions /
+// howNodeCosts lists) and not in any flow of HOW_LANES: nothing leads to it or away from it. Its text has its own keys.
+export const HOW_EVAL_NODES = [
+  { id: 'wonder-review', evalOnly: true, titleKey: 'howEvalStep', descriptionKey: 'howEvalDescription',
+    costLabelKey: 'howEvalCostLabel', costKey: 'howEvalCost', modelLabel: HOW_MODEL_LABELS.wonder, meta: true },
+]
+
+export const ALL_HOW_NODES = [...HOW_NODES, ...HOW_EVAL_NODES]
+
+// The section below the live diagram (dashed border, no arrows to the live path).
+export const HOW_EVAL = {
+  id: 'evaluation',
+  titleKey: 'howEvalTitle',
+  noteKey: 'howEvalNote',
+  flows: [{ id: 'eval', nodeIds: ['wonder-review'] }],
+}
+
+// What a node shows in its box and details card: the live steps read the indexed lists, the evaluation node its own keys.
+export const nodeTitle = (node, t) => (node.titleKey ? t[node.titleKey] : t.howSteps[node.stepIndex])
+export const nodeDescription = (node, t) => (node.descriptionKey ? t[node.descriptionKey] : t.howNodeDescriptions[node.infoIndex])
+export const nodeCostLabel = (node, t) => (node.costLabelKey ? t[node.costLabelKey] : t.howCallCost)
+export const nodeCost = (node, t) => (node.costKey ? t[node.costKey] : t.howNodeCosts[node.infoIndex])

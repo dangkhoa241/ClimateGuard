@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App.jsx'
 import ErrorBoundary from './ErrorBoundary.jsx'
 import FIXTURES from './demoTranslations.json'
-import { HOW_LANES, HOW_NODES } from './howItWorksData.js'
+import { ALL_HOW_NODES, HOW_LANES, HOW_NODES } from './howItWorksData.js'
 import { STRINGS } from './i18n.js'
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
@@ -217,7 +217,7 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
   it('the How it works page lists the pipeline and loads sent decisions', async () => {
     await mount('/#/how-it-works')
     expect(heading()).toBe(t.howWorksTitle)
-    expect(container.querySelectorAll('.how-fallback li')).toHaveLength(11)
+    expect(container.querySelectorAll('.how-fallback li')).toHaveLength(12) // 11 live steps + the evaluation-only node
     expect(container.querySelectorAll('.how-flow-wrap-alerts .how-node')).toHaveLength(5)
     expect(container.querySelectorAll('.how-flow-wrap-ask .how-node')).toHaveLength(2)
     expect(container.querySelectorAll('.how-flow-wrap-recovery .how-node')).toHaveLength(4)
@@ -269,15 +269,41 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
 
   it('filters the workflow with the segmented view controls', async () => {
     await mount('/#/how-it-works')
-    expect(container.querySelectorAll('.how-node')).toHaveLength(11)
+    expect(container.querySelectorAll('.how-node')).toHaveLength(12) // 11 live steps + the evaluation-only node
+    expect(container.querySelector('.how-node-count').textContent).toBe(`11 ${STRINGS.en.howStepsLabel}`) // live steps only
     await click(container.querySelector('[data-node-id="sam"]'))
     expect(container.querySelector('[role="dialog"]')).not.toBeNull()
     await click(button(STRINGS.en.howLaneRecovery))
     expect(container.querySelectorAll('.how-node')).toHaveLength(4)
     expect(container.querySelector('.how-node-count').textContent).toBe(`4 ${STRINGS.en.howStepsLabel}`)
     expect(container.querySelector('[role="dialog"]')).toBeNull()
+    expect(container.querySelector('.how-eval')).toBeNull() // the evaluation section only shows with all steps
     await click(button(STRINGS.en.howViewAll))
-    expect(container.querySelectorAll('.how-node')).toHaveLength(11)
+    expect(container.querySelectorAll('.how-node')).toHaveLength(12)
+  })
+
+  it('shows Muse Wonder as an evaluation-only dashed section with no arrow to or from the live path', async () => {
+    await mount('/#/how-it-works')
+    const section = container.querySelector('.how-eval')
+    expect(section).not.toBeNull()
+    expect(section.closest('.how-lane')).toBeNull() // not inside a live lane
+    expect(section.querySelector('h3').textContent).toBe(STRINGS.en.howEvalTitle)
+    expect(section.querySelectorAll('.how-node')).toHaveLength(1)
+    expect(section.querySelectorAll('.how-arrow-item, .how-flow-arrow')).toHaveLength(0)
+    const wonder = section.querySelector('[data-node-id="wonder-review"]')
+    expect(wonder.classList.contains('how-node-meta')).toBe(true) // the same orange Meta style
+    expect(wonder.textContent).toContain(STRINGS.en.howEvalStep)
+    expect(container.querySelector('.how-legend .how-legend-swatch.eval')).not.toBeNull()
+    expect(container.querySelector('.how-fallback').textContent).toContain('Muse Wonder 1.0')
+
+    await click(wonder)
+    const details = container.querySelector('#how-node-details')
+    expect(details.querySelector('h2').textContent).toBe(STRINGS.en.howEvalStep)
+    expect(details.textContent).toContain(STRINGS.en.howEvalDescription)
+    for (const fact of ['38 of 38', '78 of 92', '$0.02', '$3']) expect(details.textContent).toContain(fact)
+    expect(details.closest('.how-diagram')).not.toBeNull()
+    await click(container.querySelector('.how-dialog-close'))
+    expect(container.querySelector('[role="dialog"]')).toBeNull()
   })
 
   it('shows the latest live decision hazard, action and cost', async () => {
@@ -353,9 +379,10 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
   })
 
   describe('the floating step details card (wide screens with a mouse)', () => {
-    const DIAGRAM = { width: 1000, height: 700 }
+    const DIAGRAM = { width: 1000, height: 900 }
     const CARD = { width: 240, height: 160 }
     const ASK_TOP = 300 // the Ask lane starts here (diagram card coordinates)
+    const EVAL_TOP = 700 // the evaluation-only section starts here, under the Recovery lane
     const original = Element.prototype.getBoundingClientRect
     const rect = (left, top, width, height) => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top })
     let diagramWidth = DIAGRAM.width
@@ -366,6 +393,7 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
       { ids: ['nws', 'decision', 'safety', 'translation', 'read-aloud'], top: 150, height: 130 },
       { ids: ['ask-transcribe', 'ask-answer'], top: ASK_TOP + 40, height: 120 },
       { ids: ['recovery-photos', 'sam', 'image-analysis', 'report'], top: 540, height: 130 },
+      { ids: ['wonder-review'], top: 740, height: 110 }, // the evaluation-only section, below the live lanes
     ]
     const nodeBox = (id) => {
       const row = ROWS.find((r) => r.ids.includes(id))
@@ -385,6 +413,7 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
         if (has('how-lanes')) return rect(16, 120, diagramWidth - 32, 560)
         if (has('how-lane-alerts')) return rect(16, 120, diagramWidth - 32, 400)
         if (has('how-lane-recovery')) return rect(16, 520, diagramWidth - 32, 160)
+        if (has('how-eval')) return rect(16, EVAL_TOP, diagramWidth - 32, 180)
         if (has('how-flow-wrap-ask')) return rect(16, ASK_TOP, diagramWidth - 32, 190)
         if (has('how-node-dialog')) return rect(0, 0, CARD.width, CARD.height)
         if (has('how-node')) return nodeBox(this.dataset.nodeId)
@@ -449,12 +478,12 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
       diagramWidth = width
       await mount('/#/how-it-works')
       const overlaps = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom
-      for (const node of HOW_NODES) {
+      for (const node of ALL_HOW_NODES) { // the 11 live steps and the evaluation-only node
         await click(container.querySelector(`[data-node-id="${node.id}"]`))
         const [x, y] = at()
         const box = rect(x, y, CARD.width, CARD.height)
         expect(x + CARD.width).toBe(width - 16) // right-aligned, 16px from the right padding
-        expect(y).toBe(ASK_TOP + 8)
+        expect(y).toBe(node.evalOnly ? EVAL_TOP + 8 : ASK_TOP + 8) // the tall evaluation card starts at its own section
         for (const other of container.querySelectorAll('.how-node, .how-arrow-item')) {
           expect(overlaps(box, other.getBoundingClientRect()), `${node.id} card over ${other.dataset.nodeId || 'an arrow'}`).toBe(false)
         }
@@ -472,6 +501,16 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
       await click(button(STRINGS.en.howLaneRecovery))
       await click(container.querySelector('[data-node-id="report"]'))
       expect(at()).toEqual([DIAGRAM.width - CARD.width - 16, 520 + 160 + 8])
+    })
+
+    it('the evaluation-only card starts at its own section, keeps that section clear of it and makes room if it is taller', async () => {
+      await mount('/#/how-it-works')
+      await click(container.querySelector('[data-node-id="wonder-review"]'))
+      expect(at()).toEqual([DIAGRAM.width - CARD.width - 16, EVAL_TOP + 8])
+      expect(container.querySelector('.how-eval').classList.contains('has-card')).toBe(true)
+      expect(container.querySelector('.how-lanes').style.paddingBottom).toBe(`${CARD.height + 24 - 180}px`) // card + 24 - section height (180)
+      await click(container.querySelector('[data-node-id="sam"]'))
+      expect(container.querySelector('.how-eval').classList.contains('has-card')).toBe(false)
     })
 
     it('does not drag from a finger (touch)', async () => {
@@ -533,7 +572,7 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
       expect(STRINGS[code].howViewAll).toBeTruthy()
       expect(STRINGS[code].howStepsLabel).toBeTruthy()
       expect(STRINGS[code].howCloseDetails).toBeTruthy()
-      expect(container.querySelectorAll('.how-fallback li')).toHaveLength(11)
+      expect(container.querySelectorAll('.how-fallback li')).toHaveLength(12) // 11 live steps + the evaluation-only node
       if (['zh', 'tl', 'ko', 'ar'].includes(code)) {
         expect(container.textContent).toContain(STRINGS[code].autoUiNote)
       }

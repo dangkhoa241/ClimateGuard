@@ -38,6 +38,10 @@ flowchart LR
 
   S3[("S3 private bucket<br/>photos kept 24 h, GPS removed")]
 
+  subgraph EVAL["Evaluation only (not in the live product)"]
+    WONDER["Muse Wonder 1.0 review<br/>offline, in testing only<br/>back-translates every non-English alert<br/>and checks the six safety rules<br/>nothing it says reaches a user;<br/>flagged messages need a person"]
+  end
+
   NWS --> COL
   AIR --> COL
   OM -.-> COL
@@ -68,3 +72,6 @@ flowchart LR
   L3 --> MS
   L3 --> SAM
   L3 --> DB
+
+  style EVAL stroke-dasharray: 8 6,stroke:#78716c,fill:#ffffff
+  style WONDER stroke-dasharray: 8 6

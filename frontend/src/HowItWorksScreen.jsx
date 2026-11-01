@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { getDecisions } from './api.js'
 import { CoverageList } from './Coverage.jsx'
-import { HOW_LANES, HOW_NODES } from './howItWorksData.js'
+import { ALL_HOW_NODES, HOW_EVAL, HOW_LANES, nodeCost, nodeCostLabel, nodeDescription, nodeTitle } from './howItWorksData.js'
 import DEMO_SAMPLE from './demoSample.json'
 
 function when(ts, lang) {
@@ -53,7 +53,7 @@ function useLayoutMode() {
 }
 
 function Flow({ flow, lang, t, activeId, onSelect, mode, details }) {
-  const nodes = flow.nodeIds.map((id) => HOW_NODES.find((node) => node.id === id))
+  const nodes = flow.nodeIds.map((id) => ALL_HOW_NODES.find((node) => node.id === id))
   const rowDetails = mode === 'row' && nodes.some((node) => node.id === activeId) && details
 
   return (
@@ -69,11 +69,11 @@ function Flow({ flow, lang, t, activeId, onSelect, mode, details }) {
                 data-node-id={node.id}
                 aria-expanded={activeId === node.id}
                 aria-controls={activeId === node.id ? 'how-node-details' : undefined}
-                aria-label={`${t.howSteps[node.stepIndex]}. ${node.modelLabel}`}
+                aria-label={`${nodeTitle(node, t)}. ${node.modelLabel}`}
                 onClick={() => onSelect(node.id)}
               >
                 {node.meta && <span className="how-node-badge">{t.howMetaBadge}</span>}
-                <span className="how-node-title" lang={lang} dir="auto">{t.howSteps[node.stepIndex]}</span>
+                <span className="how-node-title" lang={lang} dir="auto">{nodeTitle(node, t)}</span>
                 {shownModel(node) && <span className="how-model-label" lang="en" dir="ltr">{shownModel(node)}</span>}
               </button>
             </li>
@@ -179,7 +179,7 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
     }
   }, [openNodeId, mode])
 
-  const activeNode = HOW_NODES.find((node) => node.id === openNodeId)
+  const activeNode = ALL_HOW_NODES.find((node) => node.id === openNodeId)
   const decision = demo ? DEMO_SAMPLE : state.data?.decisions?.[0]
   const visibleLanes = HOW_LANES.map((lane) => ({
     ...lane,
@@ -192,7 +192,8 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
 
   // Sizes inside the diagram card, in px. The card is positioned against its padding box (inside the 1px border)
   // and is kept fully inside it. `anchorTop` is where the default spot starts: the top of the Ask lane, or, when a
-  // filter hides the Ask lane, just under the last visible lane.
+  // filter hides the Ask lane, just under the last visible lane. The evaluation-only node's card is much taller than
+  // the others, so it starts at the top of the evaluation section instead (below the live lanes, so it covers no live node).
   const measure = () => {
     const diagramEl = diagramRef.current
     const diagram = diagramEl?.getBoundingClientRect()
@@ -201,11 +202,13 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
     const card = popoverRef.current?.getBoundingClientRect()
     const originTop = diagram.top + (diagramEl.clientTop || 0)
     const ask = diagramEl.querySelector('.how-flow-wrap-ask')?.getBoundingClientRect()
+    const evalBox = activeNode?.evalOnly ? diagramEl.querySelector('.how-eval')?.getBoundingClientRect() : null
     const laneEls = diagramEl.querySelectorAll('.how-lane')
     const lastLane = laneEls[laneEls.length - 1]?.getBoundingClientRect()
     return { width: diagramEl.clientWidth || diagram.width, height: diagramEl.clientHeight || diagram.height,
       cardW: card?.width || CARD_WIDTH, cardH: card?.height || 0, hasAsk: !!ask,
-      anchorTop: ask ? ask.top - originTop : (lastLane ? lastLane.bottom - originTop : lanes.top - originTop) }
+      anchorTop: evalBox ? evalBox.top - originTop
+        : ask ? ask.top - originTop : (lastLane ? lastLane.bottom - originTop : lanes.top - originTop) }
   }
   const clamp = (p, m) => ({
     x: Math.round(Math.min(Math.max(0, p.x), Math.max(0, m.width - m.cardW))),
@@ -223,7 +226,10 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
       const room = lanesRef.current
       if (room) {
         const needsRoom = !diagramRef.current.querySelector('.how-flow-wrap-ask')
-        room.style.paddingBottom = needsRoom ? `${(popoverRef.current?.getBoundingClientRect().height || 0) + 16}px` : ''
+        const cardH = popoverRef.current?.getBoundingClientRect().height || 0
+        // the evaluation node's card starts at the top of its section: make the diagram card as tall as the card needs
+        const evalH = activeNode?.evalOnly ? diagramRef.current.querySelector('.how-eval')?.getBoundingClientRect().height : null
+        room.style.paddingBottom = needsRoom ? `${cardH + 16}px` : evalH != null ? `${Math.max(0, Math.round(cardH + 24 - evalH))}px` : ''
       }
       const m = measure()
       if (!m) return
@@ -301,10 +307,10 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
       ) : (
         <p className="how-card-kicker">{t.howDetails}</p>
       )}
-      <h2 id="how-node-dialog-title">{t.howSteps[activeNode.stepIndex]}</h2>
+      <h2 id="how-node-dialog-title">{nodeTitle(activeNode, t)}</h2>
       <p className="how-dialog-model" lang="en" dir="ltr">{activeNode.modelLabel}</p>
-      <p id="how-node-dialog-description">{t.howNodeDescriptions[activeNode.infoIndex]}</p>
-      <p><strong>{t.howCallCost}:</strong> {t.howNodeCosts[activeNode.infoIndex]}</p>
+      <p id="how-node-dialog-description">{nodeDescription(activeNode, t)}</p>
+      <p><strong>{nodeCostLabel(activeNode, t)}:</strong> {nodeCost(activeNode, t)}</p>
     </section>
   )
   const chooseView = (nextView) => {
@@ -339,6 +345,7 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
             <div className="how-legend" aria-label={t.howLegend}>
               <span><i className="how-legend-swatch meta" aria-hidden="true" />{t.howMetaBadge}</span>
               <span><i className="how-legend-swatch code" aria-hidden="true" />{t.howNoMetaBadge}</span>
+              {view === 'all' && <span><i className="how-legend-swatch eval" aria-hidden="true" />{t.howLegendEval}</span>}
             </div>
             <span className="how-node-count">{visibleNodeCount} {t.howStepsLabel}</span>
           </div>
@@ -351,14 +358,24 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
                 ))}
               </section>
             ))}
+            {/* Evaluation only: below the live lanes, dashed, and in no flow, so no arrow reaches it */}
+            {view === 'all' && (
+              <section className={`how-eval${floating && activeNode?.evalOnly ? ' has-card' : ''}`} aria-labelledby="how-eval-title">
+                <h3 id="how-eval-title" className="how-lane-title">{t[HOW_EVAL.titleKey]}</h3>
+                <p className="how-eval-note">{t[HOW_EVAL.noteKey]}</p>
+                {HOW_EVAL.flows.map((flow) => (
+                  <Flow key={flow.id} flow={flow} lang={lang} t={t} activeId={openNodeId} onSelect={selectNode} mode={mode} details={details} />
+                ))}
+              </section>
+            )}
           </div>
           {floating && details}
           <section className="sr-only how-fallback" aria-labelledby="how-fallback-title">
             <h2 id="how-fallback-title">{t.howFallbackTitle}</h2>
             <ol>
-              {HOW_NODES.map((node) => (
+              {ALL_HOW_NODES.map((node) => (
                 <li key={node.id}>
-                  {t.howSteps[node.stepIndex]}: <span lang="en" dir="ltr">{node.modelLabel}</span>
+                  {nodeTitle(node, t)}{node.evalOnly && ` (${t.howEvalTitle})`}: <span lang="en" dir="ltr">{node.modelLabel}</span>
                 </li>
               ))}
             </ol>

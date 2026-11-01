@@ -1,11 +1,11 @@
 import { writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { HOW_LANES, HOW_NODES } from '../src/howItWorksData.js'
+import { ALL_HOW_NODES, HOW_EVAL, HOW_LANES, nodeTitle } from '../src/howItWorksData.js'
 import { REVIEWED_STRINGS } from '../src/strings.js'
 
 const english = REVIEWED_STRINGS.en
-const nodeById = new Map(HOW_NODES.map((node) => [node.id, node]))
+const nodeById = new Map(ALL_HOW_NODES.map((node) => [node.id, node]))
 const output = resolve(dirname(fileURLToPath(import.meta.url)), '../../docs/architecture.svg')
 const escapeXml = (text) => String(text).replace(/[&<>"']/g, (char) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;',
@@ -49,7 +49,7 @@ function renderNode(node, x, y, width, height) {
     <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="14" fill="${fill}" stroke="${stroke}" stroke-width="2"/>
     <rect x="${x + 14}" y="${y + 13}" width="${badgeWidth}" height="26" rx="13" fill="${node.meta ? '#a3360b' : '#e7e5e4'}" stroke="${node.meta ? '#fff' : '#a8a29e'}"/>
     <text x="${x + 14 + badgeWidth / 2}" y="${y + 31}" text-anchor="middle" class="badge" fill="${node.meta ? '#fff' : '#292524'}">${escapeXml(badge)}</text>
-    <text text-anchor="middle" fill="${foreground}">${textLines(english.howSteps[node.stepIndex], x + width / 2, titleY, Math.max(18, Math.floor(width / 9)), 'title', 21)}</text>
+    <text text-anchor="middle" fill="${foreground}">${textLines(nodeTitle(node, english), x + width / 2, titleY, Math.max(18, Math.floor(width / 9)), 'title', 21)}</text>
     <text text-anchor="middle" fill="${foreground}">${textLines(node.modelLabel, x + width / 2, modelY, Math.max(24, Math.floor(width / 6.7)), 'model', 17)}</text>
   </g>`
 }
@@ -78,12 +78,16 @@ const recoveryLane = HOW_LANES.find((lane) => lane.id === 'recovery')
 const alertsFlow = alertsLane?.flows.find((flow) => flow.id === 'alerts')
 const askFlow = alertsLane?.flows.find((flow) => flow.id === 'ask')
 const recoveryFlow = recoveryLane?.flows.find((flow) => flow.id === 'recovery')
-if (!alertsFlow || !askFlow || !recoveryFlow) throw new Error('Expected alerts, Ask, and recovery flows.')
+const evalFlow = HOW_EVAL.flows[0]
+if (!alertsFlow || !askFlow || !recoveryFlow || !evalFlow) throw new Error('Expected alerts, Ask, recovery and evaluation flows.')
+if (HOW_LANES.some((lane) => lane.flows.some((flow) => flow.nodeIds.some((id) => evalFlow.nodeIds.includes(id))))) {
+  throw new Error('An evaluation node must not be in a live flow.')
+}
 
 const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 890" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1150" role="img" aria-labelledby="title description">
   <title id="title">${escapeXml(english.howDiagramTitle)}</title>
-  <desc id="description">${escapeXml(`${english.howLaneAlerts}: NWS data, alert decision, safety rules, translation and read-aloud; Ask: voice transcription and answer. ${english.howLaneRecovery}: photos, SAM outlines, image analysis and report.`)}</desc>
+  <desc id="description">${escapeXml(`${english.howLaneAlerts}: NWS data, alert decision, safety rules, translation and read-aloud; Ask: voice transcription and answer. ${english.howLaneRecovery}: photos, SAM outlines, image analysis and report. ${english[HOW_EVAL.titleKey]}: Muse Wonder 1.0 review, not connected to the live path.`)}</desc>
   <style>
     text { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
     .lane-title { font-size: 24px; font-weight: 700; fill: #1d1d1b; }
@@ -93,12 +97,14 @@ const svg = `<?xml version="1.0" encoding="UTF-8"?>
     .title { font-size: 17px; font-weight: 700; }
     .model { font-size: 13px; }
   </style>
-  <rect width="1440" height="890" fill="#fffdf8"/>
+  <rect width="1440" height="1150" fill="#fffdf8"/>
   <g transform="translate(40 28)">
     <rect width="14" height="14" rx="4" fill="#c2410c"/>
     <text x="22" y="12" class="legend">${escapeXml(english.howMetaBadge)}</text>
     <rect x="150" width="14" height="14" rx="4" fill="#e7e5e4" stroke="#78716c"/>
     <text x="172" y="12" class="legend">${escapeXml(english.howNoMetaBadge)}</text>
+    <rect x="330" width="14" height="14" rx="4" fill="#fff" stroke="#78716c" stroke-width="2" stroke-dasharray="4 3"/>
+    <text x="352" y="12" class="legend">${escapeXml(english.howLegendEval)}</text>
   </g>
   <rect x="24" y="58" width="1392" height="472" rx="20" fill="#fff" stroke="#e7e1d6" stroke-width="2"/>
   <text x="48" y="94" class="lane-title">${escapeXml(english[alertsLane.titleKey])}</text>
@@ -108,6 +114,10 @@ const svg = `<?xml version="1.0" encoding="UTF-8"?>
   <rect x="24" y="548" width="1392" height="310" rx="20" fill="#fff" stroke="#e7e1d6" stroke-width="2"/>
   <text x="48" y="586" class="lane-title">${escapeXml(english[recoveryLane.titleKey])}</text>
   ${renderFlow(recoveryFlow, { x: 45, y: 610, nodeWidth: 300, nodeHeight: 220, gap: 50 })}
+  <rect x="24" y="882" width="1392" height="244" rx="20" fill="#fff" stroke="#78716c" stroke-width="2.5" stroke-dasharray="10 7"/>
+  <text x="48" y="918" class="lane-title">${escapeXml(english[HOW_EVAL.titleKey])}</text>
+  <text x="48" y="942" class="legend">${escapeXml(english[HOW_EVAL.noteKey])}</text>
+  ${renderFlow(evalFlow, { x: 53, y: 964, nodeWidth: 330, nodeHeight: 140, gap: 62 })}
 </svg>
 `
 
