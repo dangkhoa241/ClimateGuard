@@ -11,6 +11,8 @@ Usage:
   python scripts/run_eval.py real_flood_watch edge_calm
   python scripts/run_eval.py --fresh         # bypass the 1-hour response cache (new samples)
   python scripts/run_eval.py --no-backcheck  # skip the back-translation meaning check
+  python scripts/run_eval.py --no-wonder     # skip the independent Muse Wonder review (~$0.016 per alert)
+  python scripts/run_eval.py --wonder-cap 3  # stop the Muse Wonder review before it passes $3 (default)
 Results: backend/eval/results/<timestamp>.json and .md
 Every case runs in its own EVAL-<id> namespace: nothing is emailed and nothing touches live data.
 """
@@ -29,6 +31,7 @@ from climateguard.languages import AUTO, LANGS
 from climateguard.llm import chat
 from climateguard.monitor import MEDICAL_TERMS, SEVERITIES, run_monitor
 from climateguard.translate import translate_alert
+import wonder_review
 from eval_cases import CASES
 
 OUT = Path(__file__).resolve().parents[1] / "eval" / "results"
@@ -101,7 +104,7 @@ def back_check(messages: dict) -> dict:
         return {"_error": f"{type(e).__name__}: {e}"}
 
 
-def run_case(case: dict, backcheck: bool = True) -> dict:
+def run_case(case: dict, backcheck: bool = True, reviewer: wonder_review.Reviewer | None = None) -> dict:
     ns = f"EVAL-{case['id']}"
     alerts_store.clear_local(ns)
     for hazard, severity in case.get("seed", []):
@@ -118,10 +121,14 @@ def run_case(case: dict, backcheck: bool = True) -> dict:
                                                      for lang in AUTO}}
         checks = score_step(expect, d, prev, snap)
         backchecks = [back_check(s["messages"]) if backcheck else {} for s in d.get("sent", [])]
+        wonders = [wonder_review.review(reviewer, snap, s["hazard"], s["severity"], s["messages"]) if reviewer else None
+                   for s in d.get("sent", [])]
         rejections = [rejection_kind(t["rejected"]) for t in d.get("tools", []) if t.get("rejected")]
         steps.append({"action": d["action"], "reason": d["reason"], "sent": [
             {"hazard": s["hazard"], "severity": s["severity"], "en": s["messages"]["en"],
-             "messages": s["messages"], "backcheck": b} for s, b in zip(d.get("sent", []), backchecks)],
+             "messages": s["messages"], "backcheck": b,
+             **({"wonder": w, "our_checks": wonder_review.our_checks(snap, s["hazard"], s["messages"])} if w else {})}
+            for s, b, w in zip(d.get("sent", []), backchecks, wonders)],
             "checks": checks, "passed": all(checks.values()), "rejections": rejections,
             "model_calls": d.get("model_calls") or 0, "cost_usd": d.get("cost_usd") or 0.0,
             "latency_s": round(latency, 2), "signals": d.get("signals", [])})
@@ -212,10 +219,15 @@ if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if "--fresh" in sys.argv:
         config.CACHE_TTL_SECONDS = 0  # every call is a new sample
+    cap = wonder_review.DEFAULT_CAP_USD
+    if "--wonder-cap" in sys.argv:
+        cap_arg = sys.argv[sys.argv.index("--wonder-cap") + 1]
+        cap, args = float(cap_arg), [a for a in args if a != cap_arg]
     cases = [c for c in CASES if not args or c["id"] in args]
+    reviewer = None if "--no-wonder" in sys.argv else wonder_review.Reviewer(cap)
     results = []
     for c in cases:
-        r = run_case(c, backcheck="--no-backcheck" not in sys.argv)
+        r = run_case(c, backcheck="--no-backcheck" not in sys.argv, reviewer=reviewer)
         results.append(r)
         print(f"{'PASS' if r['passed'] else 'FAIL'}  {c['id']:28} " + " | ".join(
             f"{s['action']}{'(' + ','.join(a['severity'][0] + ':' + a['hazard'] for a in s['sent']) + ')' if s['sent'] else ''}"
@@ -223,9 +235,13 @@ if __name__ == "__main__":
     summary = summarize(results)
     OUT.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d-%H%M")
+    md = markdown(summary, results)
+    if reviewer:
+        wonder = wonder_review.summarize(results, reviewer)
+        summary["wonder"] = wonder
+        md += wonder_review.markdown(wonder, results)
     (OUT / f"{stamp}.json").write_text(json.dumps({"summary": summary, "results": results}, indent=1,
                                                   ensure_ascii=False), encoding="utf-8")
-    md = markdown(summary, results)
     (OUT / f"{stamp}.md").write_text(md, encoding="utf-8")
     print("\n" + md.split("\n\n| Case")[0])
     print(f"\nSaved {OUT / (stamp + '.md')}")
