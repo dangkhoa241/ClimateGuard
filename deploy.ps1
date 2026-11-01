@@ -5,6 +5,12 @@ Deploy the ClimateGuard backend with SAM (Windows PowerShell 5.1+).
   .\deploy.ps1 -Contact you@example.com              # preflight, sam build, then sam deploy (shows the change set first)
   .\deploy.ps1 -Contact you@example.com -FrontendUrl https://your-app.vercel.app   # remembered after a good deploy
   .\deploy.ps1 -Contact you@example.com -SkipBuild   # deploy the existing .aws-sam build as is
+  .\deploy.ps1 -Contact you@example.com -DailyModelBudgetUsd 10   # daily model-spend cap (default 10)
+
+Every numeric template parameter is passed to SAM on each deploy. SAM keeps the stack's previous value for
+any parameter that is NOT passed, so a changed template Default would never reach the live stack. The
+preflight prints the budget being deployed next to the live value, and warns about any parameter that is
+not passed while its live value differs from the template default.
 
 FrontendUrl (CORS origin and the link in alert emails) is saved to deploy.local.json (untracked) after a
 successful deploy that passed it, and reused when -FrontendUrl is left out. If a deploy would switch the
@@ -27,6 +33,8 @@ param(
     [string]$StackName = "climateguard",
     [string]$Region = "us-east-2",            # this account's SCP denies us-west-2 and us-east-1
     [int]$MaxSubscribers = 500,
+    [int]$MaxSubscriptionsPerEmail = 3,       # distinct zone+language subscriptions per email per year
+    [double]$DailyModelBudgetUsd = 10,        # max estimated model spend per UTC day (the live cap)
     [switch]$PreflightOnly,
     [switch]$SkipBuild
 )
@@ -143,6 +151,44 @@ if ($resetsToLocal) {
     Report "FrontendUrl" "WARN" "resets the live stack from $liveUrl to localhost"
 }
 
+# Every template parameter the stack has, as deployed now ("" when the stack does not exist yet).
+# SAM keeps these for parameters that are not passed, which is how a new template Default can fail to arrive.
+$liveParams = @{}
+$lp = Invoke-Aws @("cloudformation", "describe-stacks", "--region", $Region, "--stack-name", $StackName,
+    "--query", "Stacks[0].Parameters[].[ParameterKey,ParameterValue]", "--output", "text")
+if ($lp.Ok) {
+    foreach ($line in ($lp.Text -split "`n")) {
+        $kv = $line.Trim() -split "\s+", 2
+        if ($kv.Count -eq 2) { $liveParams[$kv[0]] = $kv[1] }
+    }
+}
+$tplDefaults = @{}
+foreach ($m in [regex]::Matches($tpl, "(?m)^  (\w+):\s*?
+\s+Type: (?:String|Number)\s*?
+(?:\s+Description:[^
+]*?
+(?:\s{6}[^
+]*?
+)*)?\s+Default:\s*(\S+)")) {
+    $tplDefaults[$m.Groups[1].Value] = $m.Groups[2].Value.Trim('"')
+}
+if ($DailyModelBudgetUsd -le 0) { Report "DailyModelBudgetUsd" "FAIL" "must be greater than 0 (got $DailyModelBudgetUsd)" }
+else {
+    $liveBudget = $liveParams["DailyModelBudgetUsd"]
+    $detail = if ($liveBudget) { if ([double]$liveBudget -eq $DailyModelBudgetUsd) { "deploying `$$DailyModelBudgetUsd/day (live stack: same)" } else { "deploying `$$DailyModelBudgetUsd/day (live stack: `$$liveBudget/day, will change)" } }
+              else { "deploying `$$DailyModelBudgetUsd/day (no live stack value to compare)" }
+    Report "DailyModelBudgetUsd" "OK" $detail
+    if ($tplDefaults["DailyModelBudgetUsd"] -and [double]$tplDefaults["DailyModelBudgetUsd"] -ne $DailyModelBudgetUsd) {
+        Report "DailyModelBudgetUsd vs template" "WARN" "template default is $($tplDefaults['DailyModelBudgetUsd']); this deploy overrides it"
+    }
+}
+# Parameters this script does not pass keep their live value: warn when that differs from the template default.
+foreach ($name in @("LocalDevOrigin", "LocalDevOrigin2")) {
+    if ($liveParams[$name] -and $tplDefaults[$name] -and $liveParams[$name] -ne $tplDefaults[$name]) {
+        Report "$name (not passed)" "WARN" "live value $($liveParams[$name]) differs from the template default $($tplDefaults[$name]); the deploy keeps the live value"
+    }
+}
+
 Write-Host "`n[2/4] Permissions (nothing is created)"
 Test-Permission "cloudformation:CreateChangeSet" @("cloudformation", "create-change-set", "--region", $Region,
     "--stack-name", "$StackName-preflight-probe", "--change-set-name", "probe", "--change-set-type", "CREATE",
@@ -253,6 +299,8 @@ else {
 $overrides = @(
     "FrontendUrl=$FrontendUrl",
     "MaxSubscribers=$MaxSubscribers",
+    "MaxSubscriptionsPerEmail=$MaxSubscriptionsPerEmail",
+    "DailyModelBudgetUsd=$DailyModelBudgetUsd",   # always passed: an unpassed parameter keeps its OLD live value
     "NwsUserAgent=ClimateGuard/0.1(+mailto:$Contact)"   # no spaces: survives argument parsing
 )
 Write-Host "`nDeploying '$StackName' to $Region (SAM shows the change set and waits for 'y')`n" -ForegroundColor Cyan
@@ -289,6 +337,12 @@ if ($code -ne 0) {
 $api = Invoke-Aws @("cloudformation", "describe-stacks", "--region", $Region, "--stack-name", $StackName,
     "--query", "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue", "--output", "text")
 Write-Host "`nDeployed. API URL: $($api.Text)" -ForegroundColor Green
+$after = Invoke-Aws @("cloudformation", "describe-stacks", "--region", $Region, "--stack-name", $StackName,
+    "--query", "Stacks[0].Parameters[?ParameterKey=='DailyModelBudgetUsd'].ParameterValue", "--output", "text")
+if ($after.Ok -and $after.Text.Trim()) {
+    if ([double]$after.Text.Trim() -eq $DailyModelBudgetUsd) { Write-Host "Live DailyModelBudgetUsd is now `$$($after.Text.Trim())/day." -ForegroundColor Green }
+    else { Write-Host "WARNING: live DailyModelBudgetUsd is `$$($after.Text.Trim())/day, not `$$DailyModelBudgetUsd." -ForegroundColor Red }
+}
 if ($urlGiven) {
     @{ FrontendUrl = $FrontendUrl } | ConvertTo-Json | Set-Content -Path $LocalConfig -Encoding ASCII
     Write-Host "FrontendUrl $FrontendUrl saved to deploy.local.json: later deploys reuse it without -FrontendUrl."

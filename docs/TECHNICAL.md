@@ -514,9 +514,11 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass   # if scripts are bl
 .\deploy.ps1 -PreflightOnly                                   # dry run: checks only, creates nothing
 .\deploy.ps1 -Contact you@example.com                         # preflight + sam build + sam deploy
 .\deploy.ps1 -Contact you@example.com -FrontendUrl https://<app>.vercel.app   # once the frontend is live
+.\deploy.ps1 -Contact you@example.com -DailyModelBudgetUsd 10   # daily model-spend cap in USD (default 10)
 ```
 CORS always allows `http://localhost:5173` and `http://localhost:5174` for local dev, plus `FrontendUrl`, which is also the link in alert emails.
 - **Saved after a deploy:** a successful deploy that passes `-FrontendUrl` saves it to `deploy.local.json` (untracked), and later deploys reuse it without the flag.
+- **Every parameter is passed.** SAM keeps the stack's old value for any parameter that is not in `--parameter-overrides`, so a changed `Default` in `template.yaml` would never reach the live stack. `deploy.ps1` therefore passes `FrontendUrl`, `MaxSubscribers`, `MaxSubscriptionsPerEmail`, `DailyModelBudgetUsd` and `NwsUserAgent` every time (a test checks this), and the preflight prints the budget being deployed next to the live value. The two dev-server origins are not passed, and the preflight warns if their live value differs from the template default. After a deploy, the script reads the live budget back and says if it is not the value you asked for.
 - **Guarded against resets:** if a deploy would switch the live stack from a real URL back to localhost, the preflight shows a red warning and the deploy waits for you to type `reset`.
 - Live frontend: https://climate-guard-khaki.vercel.app (Vercel, root directory `frontend`, env `VITE_API_URL`).
 The preflight checks three things, without creating anything:
