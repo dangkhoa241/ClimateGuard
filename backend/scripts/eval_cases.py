@@ -330,6 +330,19 @@ CASES = [
                                                                      "Take breaks in the shade.")]},
                      "advisory-expired"), {"send": False})]},
 
+    {"id": "hard_small_craft_advisory_unsupported", "kind": "hard",
+     "desc": "Control: Small Craft Advisory (boats) is active on a coastal zone, calm on land: not a hazard we cover, don't alert",
+     "steps": [(edge("FLZ173", lambda tz: {"hours": sc.hours(tz, lambda h: 82, lambda h: 70),
+                                             "aqi": sc.aqi(tz, 30, [30, 30]),
+                                             "alerts": [sc.nws_alert(tz, "Small Craft Advisory", "Minor", 10,
+                                                                     "Small Craft Advisory until tonight",
+                                                                     "Northeast winds 20 to 25 knots and seas 6 to 8 "
+                                                                     "feet will create hazardous conditions for small "
+                                                                     "craft.", "Inexperienced mariners should avoid "
+                                                                     "navigating in these conditions.",
+                                                                     "NWS Miami FL")]}, "small-craft"),
+                {"send": False})]},
+
     {"id": "edge_hurricane_watch_fl", "kind": "edge", "desc": "Hurricane Watch, Miami",
      "steps": [(edge("FLZ173", lambda tz: {"hours": sc.hours(tz, lambda h: 86, lambda h: 80, wind_at=lambda h: 30,
                                                              precip_at=lambda h: 70),

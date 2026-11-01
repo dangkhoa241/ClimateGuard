@@ -294,7 +294,16 @@ def test_what_counts_as_an_unalerted_warning():
 
     assert missing(_warning_snapshot()) == ["Extreme Heat Warning"]
     assert missing(_warning_snapshot(event="Flood Warning")) == ["Flood Warning"]
-    assert missing(_warning_snapshot(event="Heat Advisory", severity="Minor")) == []  # only Warnings are required
+    # official Advisories are required too, even over calm data (82F)
+    assert missing(_warning_snapshot(event="Heat Advisory", severity="Minor")) == ["Heat Advisory"]
+    assert missing(_warning_snapshot(event="Wind Advisory", severity="Moderate")) == ["Wind Advisory"]
+    assert missing(_warning_snapshot(event="Heat Advisory", severity="Minor", ends_in=-3)) == []  # ended advisory
+    assert missing(_warning_snapshot(event="Heat Advisory", severity="Minor", ends_in=2)) == []  # ends soon, no heat
+    assert missing(_warning_snapshot(event="Fire Weather Watch", severity="Moderate")) == []  # watches are not
+    # advisories for hazards we don't cover (group "other") are never required
+    assert missing(_warning_snapshot(event="Small Craft Advisory", severity="Minor")) == []
+    assert missing(_warning_snapshot(event="Low Water Advisory", severity="Minor")) == []
+    assert missing(_warning_snapshot(event="Beach Hazards Statement", severity="Minor")) == []
     assert missing(_warning_snapshot(ends_in=-3)) == []  # expired, still in the feed
     assert missing(_warning_snapshot(ends_in=2)) == []  # ends within 3 h and the data no longer shows heat
     assert missing(_warning_snapshot(ends_in=2, peak=104)) == ["Extreme Heat Warning"]  # heat is coming back
@@ -304,6 +313,41 @@ def test_what_counts_as_an_unalerted_warning():
     alerts_store.record_sent("CAZ159", "heat", "high", NO_NUMBERS, "earlier")
     assert missing(_warning_snapshot()) == []  # already alerted in the last 24 h at its severity (dedup)
     assert missing(_warning_snapshot(severity="Extreme")) == ["Extreme Heat Warning"]  # worse than what was sent
+
+
+def test_agent_that_skips_an_active_advisory_is_sent_back_once_and_alerts(monkeypatch):
+    msgs = {"en": "An official Heat Advisory is in effect. Drink water often and rest in the shade.",
+            "es": "Hay una Advertencia oficial de calor. Tome agua seguido y descanse en la sombra.",
+            "vi": "Có Khuyến cáo nắng nóng chính thức. Hãy uống nước thường xuyên và nghỉ trong bóng râm."}
+    fake = FakeModel([
+        {"content": "SKIPPED: the data shows only 82F."},
+        {"tool_calls": [_tool_call(1, "send_alert", _alert(severity="moderate", messages_by_language=msgs))]},
+        {"content": "SENT: official Heat Advisory."},
+    ])
+    monkeypatch.setattr(monitor, "chat", fake)
+    d = monitor.run_monitor("CAZ159", _warning_snapshot(event="Heat Advisory", severity="Minor"))
+    assert d["action"] == "sent" and d["model_calls"] == 3
+    nudge = fake.seen[1][-1]["content"]
+    assert "Heat Advisory" in nudge and "warning or advisory" in nudge and "leave numbers out" in nudge
+
+
+def test_an_expired_advisory_is_not_forced(monkeypatch):
+    fake = FakeModel([{"content": "SKIPPED: the advisory ended."}])
+    monkeypatch.setattr(monitor, "chat", fake)
+    d = monitor.run_monitor("CAZ159", _warning_snapshot(event="Heat Advisory", severity="Minor", ends_in=-3))
+    assert d["action"] == "skipped" and d["model_calls"] == 1
+
+
+def test_prompt_relays_every_official_advisory_and_keeps_the_safety_rules():
+    p = " ".join(monitor.SYSTEM_PROMPT.split())  # the prompt wraps lines
+    assert "ADVISORY for a hazard we cover (heat, wind, frost, dust, flood, dense fog, winter, coastal, fire weather, air quality) is also ALWAYS alerted" in p
+    assert "Small Craft Advisory for boats, are not alerted" in p
+    assert "never skip it because our own forecast or readings look calm" in p
+    assert "this rule never lets you skip an official advisory" in p
+    assert "Only skip an expired/canceled advisory" in p
+    for rule in ("NEVER recommend a mask for ozone", "Never give medical advice", "Never include medical",
+                 "does NOT send Tornado, Flash Flood, Severe Thunderstorm or Extreme Wind WARNINGS"):
+        assert rule.lower() in p.lower(), rule
 
 
 def test_short_fuse_warnings_never_become_required(monkeypatch):

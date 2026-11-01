@@ -70,15 +70,20 @@ How to work:
    data looks milder than the warning. The only exceptions are the two rules in this step (already alerted,
    or about to end with the hazard gone). If the data disagrees with the warning, leave temperatures and other
    numbers out of your message and use the warning's own wording for what is happening and what to do.
-   An active NWS Dense Fog Advisory is also sufficient evidence to alert: do not skip it because the hourly
-   forecast says sunny or does not mention fog/visibility. Use the advisory's official visibility wording,
-   explain in plain words how to drive safely (slow down, low beams, extra distance), and allow extra time for
-   early-morning travel. Do not invent a visibility measurement absent from the advisory. Never include medical
-   advice. Only skip an expired/canceled advisory or a duplicate blocked by the alert rules.
+   An active, not expired NWS ADVISORY for a hazard we cover (heat, wind, frost, dust, flood, dense fog, winter,
+   coastal, fire weather, air quality) is also ALWAYS alerted. Advisories for other things, such as a Small Craft
+   Advisory for boats, are not alerted. For the ones we cover: it is official evidence, so never skip it because our own forecast or readings look calm (a cooler
+   forecast, light hourly wind, a sunny hourly summary, a good AQI). Relay it with its own wording for what is
+   happening and what to do, and leave out numbers our data does not support. Use "moderate" severity unless our
+   data shows worse. For a Dense Fog Advisory use the official visibility wording, explain in plain words how to
+   drive safely (slow down, low beams, extra distance), and allow extra time for early-morning travel. Do not invent
+   a visibility measurement absent from the advisory. Never include medical advice. Only skip an expired/canceled
+   advisory or a duplicate blocked by the alert rules.
    Check each alert's end time ("ends_in_hours") against the forecast. If a warning ends within about 2-3
    hours and the forecast for the rest of today and tomorrow no longer shows that hazard (for heat: no hour
-   near 95F and heat index below 100F), do NOT alert: the danger is over. For watches and advisories, severity
-   must match what the data shows, not only the alert's name. Never write numbers that the data does not support.
+   near 95F and heat index below 100F), do NOT alert: the danger is over. For watches, and for alerts based only on
+   our own data, severity must match what the data shows, not only the alert's name; this rule never lets you skip
+   an official advisory. Never write numbers that the data does not support.
    ClimateGuard does NOT send Tornado, Flash Flood, Severe Thunderstorm or Extreme Wind WARNINGS (they need
    minutes of lead time); never claim to cover them.
 3. Before writing, call search_safety_guidance to ground the protective actions in official guidance.
@@ -306,14 +311,25 @@ def active_warnings(run: Run) -> list[dict]:
             and a.get("hazard") in HAZARDS and (run.hours_left(a) is None or run.hours_left(a) > 0)]
 
 
+SUPPORTED_ADVISORY_HAZARDS = tuple(h for h in HAZARDS if h != "other")  # "other" = types we don't cover (Small Craft...)
+
+
+def active_advisories(run: Run) -> list[dict]:
+    """Active (not expired) official NWS Advisories for this zone, for hazards we cover, which the agent may
+    not skip either."""
+    return [a for a in run.snapshot.get("alerts", []) if (a.get("event") or "").endswith("Advisory")
+            and a.get("hazard") in SUPPORTED_ADVISORY_HAZARDS
+            and (run.hours_left(a) is None or run.hours_left(a) > 0)]
+
+
 def unalerted_warnings(run: Run) -> list[dict]:
-    """Active Warnings the agent has not alerted and may not skip. A Warning does NOT need an alert when:
+    """Active Warnings and Advisories the agent has not alerted and may not skip. One does NOT need an alert when:
     this run already sent one for its hazard; the same hazard was alerted in the last 24 h at its severity
     or higher (dedup); the daily cap blocks it; or it ends within hours and the hazard is gone."""
     recent = alerts_store.recent_sent(run.key, hours=24)
     top_today = max((SEVERITIES.get(r["severity"], 0) for r in recent), default=0)
     missing = []
-    for a in active_warnings(run):
+    for a in active_warnings(run) + active_advisories(run):
         hazard = a["hazard"]
         need = SEVERITIES[WARNING_SEVERITY.get(a.get("severity"), "moderate")]
         if (any(x["hazard"] == hazard for x in run.sent) or _ending_without_hazard(run, hazard)
@@ -326,8 +342,8 @@ def unalerted_warnings(run: Run) -> list[dict]:
 
 def warning_nudge(warnings: list[dict]) -> str:
     lines = "; ".join(f"{a['event']} ({a.get('headline') or 'no headline'}), hazard \"{a['hazard']}\"" for a in warnings)
-    return ("You skipped an active official NWS warning: " + lines + ". ClimateGuard must always alert for an "
-            "active official warning, so call send_alert for it now. You may adjust the wording, but use the "
+    return ("You skipped an active official NWS warning or advisory: " + lines + ". ClimateGuard must always "
+            "alert for an active official warning or advisory, so call send_alert for it now. You may adjust the wording, but use the "
             "warning's own wording for what is happening and what to do. If the numbers in our data disagree with "
             "the warning (for example a temperature), leave numbers out of the message instead of repeating "
             "either one. All the usual message rules still apply.")
