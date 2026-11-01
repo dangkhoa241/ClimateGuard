@@ -1,5 +1,7 @@
 // Small inline SVG icons (no icon library). Decorative unless given a label: the text next to them carries the
 // meaning, and hazard icons pair a color with a shape so color is never the only signal.
+import { hazardKind } from './hazards.js'
+
 const base = { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
   strokeLinecap: 'round', strokeLinejoin: 'round' }
 
@@ -34,11 +36,8 @@ export const FEATURE_ICONS = {
   history: () => <Svg><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></Svg>,
 }
 
-// NWS hazard groups (backend hazards.py) -> the icon and color family shown on alert cards.
-const KIND_OF = { heat: 'heat', smoke: 'smoke', dust: 'smoke', fog: 'smoke', fire: 'smoke', flood: 'flood',
-  coastal: 'flood', tornado: 'storm', thunderstorm: 'storm', tropical: 'storm', wind: 'storm', cold: 'cold',
-  winter: 'cold' }
-export const hazardKind = (hazard) => KIND_OF[hazard] || 'other'
+// NWS hazard groups (backend hazards.py) -> the icon and color family shown on alert cards: see hazards.js.
+export { hazardKind }
 
 const HAZARD_SHAPES = {
   heat: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
@@ -51,5 +50,5 @@ const HAZARD_SHAPES = {
 
 export function HazardIcon({ hazard, t }) {
   const kind = hazardKind(hazard)
-  return <Svg className="hazard-icon" label={t.hazardNames?.[kind]}>{HAZARD_SHAPES[kind]}</Svg>
+  return <Svg className="hazard-icon" label={t.hazardNames?.[hazard] || t.hazardNames?.other}>{HAZARD_SHAPES[kind]}</Svg>
 }

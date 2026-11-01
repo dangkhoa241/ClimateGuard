@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { LANGS, STRINGS } from './i18n.js'
 import AlertsScreen from './AlertsScreen.jsx'
+import { CoverageList, NotCoveredLine } from './Coverage.jsx'
 import AskScreen from './AskScreen.jsx'
 import DemoScreen from './DemoScreen.jsx'
 import { FEATURE_ICONS, Globe, Logo } from './icons.jsx'
@@ -189,6 +190,8 @@ export default function App() {
               )
             })}
           </nav>
+          <CoverageList t={t} />
+          <NotCoveredLine t={t} />
         </>
       ) : (
         <>

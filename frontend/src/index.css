@@ -568,3 +568,18 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 }
 .app.wide .lang-picker { max-width: 560px; }
 .row input { min-width: 0; }
+
+/* What ClimateGuard covers: one card per hazard, one column on phones. */
+.coverage { margin-top: 28px; }
+.coverage h2 { margin: 0 0 8px; font-size: 1.25rem; }
+.coverage > p { margin: 0 0 12px; line-height: 1.45; }
+.coverage-list { list-style: none; margin: 0 0 12px; padding: 0; display: grid; grid-template-columns: 1fr; gap: 8px; }
+.coverage-list li {
+  display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; min-width: 0;
+  border: 1px solid var(--line); border-radius: 10px; background: #fff; overflow-wrap: anywhere;
+}
+.coverage-list strong { font-size: 1rem; }
+.coverage-list span { color: var(--muted); font-size: 0.9rem; line-height: 1.35; }
+.not-covered-line { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: #fff7e6; border: 1px solid #b45309; line-height: 1.4; font-size: 0.95rem; overflow-wrap: anywhere; }
+@media (min-width: 640px) { .coverage-list { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 900px) { .coverage-list { grid-template-columns: repeat(3, 1fr); } }

@@ -1,18 +1,10 @@
 import { useEffect, useState } from 'react'
 import { ALERT_LANGS, getZoneAlerts, subscribe, translateAlert } from './api.js'
+import { CoverageList, NotCoveredNotice } from './Coverage.jsx'
 import { HazardIcon, hazardKind } from './icons.jsx'
 import LocationPicker from './LocationPicker.jsx'
 import ReadAloud from './ReadAloud.jsx'
 import ShareWhatsApp from './ShareWhatsApp.jsx'
-
-function NotCoveredNotice({ t }) {
-  return (
-    <aside className="notice warn" role="note">
-      <strong>{t.notCoveredTitle}</strong>
-      <p>{t.notCoveredBody}</p>
-    </aside>
-  )
-}
 
 function RecentAlerts({ zone, lang, t }) {
   const [state, setState] = useState({ loading: true, alerts: [], error: false })
@@ -180,6 +172,7 @@ export default function AlertsScreen({ lang, t, zone, setZone }) {
           </form>
         )
       )}
+      <CoverageList t={t} />
       <NotCoveredNotice t={t} />
       {zone && <RecentAlerts zone={zone.zone} lang={lang} t={t} />}
     </>

@@ -2,7 +2,7 @@
 
 [![Offline tests](https://github.com/dangkhoa241/ClimateGuard/actions/workflows/offline-tests.yml/badge.svg)](https://github.com/dangkhoa241/ClimateGuard/actions/workflows/offline-tests.yml)
 
-**Free heat, smoke, flood and storm alerts in your own language, and help with the paperwork after a disaster.** Built for farmworkers, outdoor workers and immigrant families in the United States. Stockton, California is the first area.
+**Free weather and air-quality alerts in your own language, and help with the paperwork after a disaster.** Built for farmworkers, outdoor workers and immigrant families in the United States. Stockton, California is the first area.
 
 - **Live app:** https://climate-guard-khaki.vercel.app
 - **Demo (no sign-up, no email, no photos of your own needed):** https://climate-guard-khaki.vercel.app/?demo=1
@@ -34,6 +34,26 @@ ClimateGuard does two jobs:
 - **After:** the person photographs the damage and gets a report and a document checklist to give to an insurer, FEMA or a helper.
 
 In the demo story, **Maria is an example person**, labeled as one everywhere. The events, places and data are real.
+
+## What it covers
+
+Official National Weather Service warnings and advisories for these hazards are relayed in the person's language, and watches may also be sent:
+
+- **Heat:** heat warnings and advisories, and days of 95°F or more.
+- **Wildfire smoke and air quality:** wildfire smoke and air quality alerts.
+- **Flood:** flood warnings and advisories, and heavy rain with flood risk.
+- **Fog:** fog advisories, such as dense fog.
+- **Wind:** high wind warnings and wind advisories.
+- **Winter weather:** snow, ice and winter weather warnings and advisories.
+- **Frost and freeze:** frost, freeze and wind chill warnings and advisories.
+- **Dust:** blowing dust advisories and dust warnings.
+- **Fire weather:** red flag warnings and fire weather alerts.
+- **Coastal:** coastal flood, surge, high surf and rip current alerts.
+- **Tropical:** hurricane and tropical weather alerts.
+
+We also send our own alerts when our data shows very hot days (95°F or more), unhealthy air or heavy rain with flood risk.
+
+**Not covered:** tornado, flash flood, severe thunderstorm and extreme wind warnings. They give only minutes of notice, so follow official sources such as Wireless Emergency Alerts and NOAA Weather Radio.
 
 ## What it does
 

@@ -67,7 +67,7 @@
   "howNoAlerts": "过去 7 天没有可用的决定记录。",
   "howLoadError": "无法加载最近的提醒决定。请检查网络后重试。",
   "retry": "重试",
-  "tagline": "高温、烟雾、洪水和暴风提醒，用您的语言发送。",
+  "tagline": "用您自己的语言接收天气和空气质量提醒。",
   "alerts": "获取提醒",
   "ask": "提问题",
   "recovery": "报告房屋损坏",
@@ -86,7 +86,7 @@
   "autoTranslationNote": "这种语言的提醒是从英文自动翻译的，会这样标明。",
   "email": "您的电子邮箱",
   "emailPlaceholder": "name@example.com",
-  "signupIntro": "只有您的地区有危险时我们才发邮件：极端高温、烟雾、洪水、暴风。",
+  "signupIntro": "只有当您所在地区有危险时，我们才会给您发邮件，比如高温、烟雾、洪水、大风、大雾或霜冻。",
   "signupButton": "给我发提醒",
   "sending": "正在发送…",
   "checkEmailTitle": "快好了！请查收邮件。",
@@ -99,7 +99,7 @@
   "recentAlerts": "最近的提醒",
   "noAlerts": "最近 2 天没有提醒。",
   "loadError": "无法加载提醒。请检查网络。",
-  "askIntro": "问问您住的地方的高温、烟雾、洪水或暴风问题。回答使用今天的官方数据。",
+  "askIntro": "问一问您住的地方的高温、烟雾、洪水、大风或寒冷。回答使用今天的官方数据。",
   "askLabel": "您的问题",
   "askPlaceholder": "今天下午在户外工作安全吗？",
   "askButton": "提问",
@@ -212,7 +212,7 @@
    "other": "其他"
   },
   "demoTry": "试用演示",
-  "demoAbout1": "ClimateGuard 用您自己的语言提醒您高温、烟雾、洪水和暴风。",
+  "demoAbout1": "ClimateGuard 用您自己的语言提醒您高温、烟雾、洪水和其他天气危险。",
   "demoAbout2": "为农场工人、户外工人和移民家庭制作，他们常错过只有英文的警告。",
   "demoAbout3": "灾后，它帮您记录房屋损坏，用于保险或申请救助。",
   "demoTitle": "演示",
@@ -281,11 +281,19 @@
   "cardHistory": "提醒助手做的每个决定及原因。",
   "hazardNames": {
    "heat": "高温",
-   "smoke": "烟雾或空气质量",
+   "smoke": "野火烟雾或空气质量",
    "flood": "洪水",
-   "storm": "暴风或大风",
-   "cold": "寒冷或冬季",
-   "other": "其他危害"
+   "cold": "霜冻或冰冻",
+   "other": "其他危害",
+   "coastal": "海边洪水或大浪",
+   "tropical": "飓风或热带天气",
+   "tornado": "龙卷风观察",
+   "thunderstorm": "强雷暴观察",
+   "winter": "冬季天气",
+   "fire": "火险天气",
+   "dust": "沙尘",
+   "fog": "大雾",
+   "wind": "大风"
   },
   "errors": {
    "mic_denied": "麦克风未允许。请在浏览器设置里允许，或打字提问。",
@@ -330,7 +338,24 @@
    "moderate": "中度风险",
    "high": "高度风险",
    "extreme": "极高风险"
-  }
+  },
+  "coverageTitle": "ClimateGuard 管什么",
+  "coverageIntro": "这些危险的官方 National Weather Service 警报和提醒，会用您的语言转发。也可能发送观察信息。",
+  "coverage": {
+   "heat": "高温警报和提醒，以及 95°F 或更热的天。",
+   "smoke": "野火烟雾和空气质量警报。",
+   "flood": "洪水警报和提醒，以及可能发洪水的大雨。",
+   "fog": "大雾提醒，比如浓雾。",
+   "wind": "大风警报和大风提醒。",
+   "winter": "下雪、结冰和冬季天气警报和提醒。",
+   "cold": "霜冻、冰冻和风寒警报和提醒。",
+   "dust": "浮尘提醒和沙尘警报。",
+   "fire": "红旗警报和火险警报。",
+   "coastal": "海边洪水、大浪和高离岸流警报。",
+   "tropical": "飓风和热带天气警报。"
+  },
+  "coverageOwnData": "当我们的数据显示很热（95°F 或以上）、空气不好或大雨可能发洪水时，我们也会发自己的提醒。",
+  "notCoveredShort": "不包括：龙卷风、突发洪水、强雷暴和强风警报。它们只有几分钟预警，请看官方来源，比如 无线紧急警报 和 NOAA 天气收音机。"
  },
  "tl": {
   "howWorksTitle": "Paano ito gumagana",
@@ -400,7 +425,7 @@
   "howNoAlerts": "Walang desisyong makikita sa nakalipas na 7 araw.",
   "howLoadError": "Hindi ma-load ang mga kamakailang desisyon sa alerto. Suriin ang koneksyon at subukan muli.",
   "retry": "Subukan muli",
-  "tagline": "Mga alerto sa init, usok, baha at bagyo sa iyong wika.",
+  "tagline": "Mga alerto sa panahon at sa kalidad ng hangin sa sarili mong wika.",
   "alerts": "Kumuha ng mga alerto",
   "ask": "Magtanong",
   "recovery": "I-report ang pinsala sa bahay",
@@ -419,7 +444,7 @@
   "autoTranslationNote": "Ang mga alerto sa wikang ito ay awtomatikong isinalin mula sa English at may marka na ganoon.",
   "email": "Iyong email",
   "emailPlaceholder": "name@example.com",
-  "signupIntro": "Nag-e-email lang kami kapag may panganib sa iyong lugar: matinding init, usok, baha, bagyo.",
+  "signupIntro": "Nag-e-email lang kami kapag may panganib sa lugar mo, tulad ng matinding init, usok, baha, hangin, hamog o frost.",
   "signupButton": "Padalhan ako ng mga alerto",
   "sending": "Ipinapadala…",
   "checkEmailTitle": "Malapit na! Tingnan ang iyong email.",
@@ -432,7 +457,7 @@
   "recentAlerts": "Mga kamakailang alerto",
   "noAlerts": "Walang alerto sa huling 2 araw.",
   "loadError": "Hindi ma-load ang mga alerto. Tingnan ang iyong koneksyon.",
-  "askIntro": "Magtanong tungkol sa init, usok, baha o bagyo kung saan ka nakatira. Ang mga sagot ay galing sa opisyal na datos ngayong araw.",
+  "askIntro": "Magtanong tungkol sa init, usok, baha, hangin o lamig kung saan ka nakatira. Ang mga sagot ay galing sa opisyal na datos ngayong araw.",
   "askLabel": "Iyong tanong",
   "askPlaceholder": "Ligtas ba magtrabaho sa labas ngayong hapon?",
   "askButton": "Magtanong",
@@ -545,7 +570,7 @@
    "other": "Iba pa"
   },
   "demoTry": "Subukan ang demo",
-  "demoAbout1": "Binabalaan ka ng ClimateGuard tungkol sa init, usok, baha at bagyo sa iyong sariling wika.",
+  "demoAbout1": "Binabalaan ka ng ClimateGuard tungkol sa init, usok, baha at iba pang panganib sa panahon sa sarili mong wika.",
   "demoAbout2": "Ginawa ito para sa mga farmworker, mga nagtatrabaho sa labas at mga pamilyang imigrante na madalas hindi nakakakuha ng mga babala na English lang.",
   "demoAbout3": "Pagkatapos ng sakuna, tinutulungan ka nitong itala ang pinsala sa iyong bahay para sa insurance o FEMA.",
   "demoTitle": "Demo",
@@ -614,11 +639,19 @@
   "cardHistory": "Bawat desisyon ng alert agent, at bakit.",
   "hazardNames": {
    "heat": "Init",
-   "smoke": "Usok o kalidad ng hangin",
+   "smoke": "Usok ng wildfire o kalidad ng hangin",
    "flood": "Baha",
-   "storm": "Bagyo o hangin",
-   "cold": "Lamig o winter",
-   "other": "Ibang panganib"
+   "cold": "Frost o freeze",
+   "other": "Ibang panganib",
+   "coastal": "Baha sa baybayin o alon",
+   "tropical": "Hurricane o tropical na panahon",
+   "tornado": "Tornado watch",
+   "thunderstorm": "Severe thunderstorm watch",
+   "winter": "Panahon ng taglamig",
+   "fire": "Panahon ng sunog",
+   "dust": "Alikabok",
+   "fog": "Hamog",
+   "wind": "Hangin"
   },
   "errors": {
    "mic_denied": "Hindi pinayagan ang mikropono. Payagan ito sa mga setting ng iyong browser, o i-type ang iyong tanong.",
@@ -663,7 +696,24 @@
    "moderate": "Katamtamang panganib",
    "high": "Mataas na panganib",
    "extreme": "Matinding panganib"
-  }
+  },
+  "coverageTitle": "Ano ang sakop ng ClimateGuard",
+  "coverageIntro": "Ang mga opisyal na warning at advisory ng National Weather Service para sa mga panganib na ito ay ipinapasa sa wika mo. Maaari ring ipadala ang mga watch.",
+  "coverage": {
+   "heat": "Mga heat warning at advisory, at mga araw na 95°F o higit pa.",
+   "smoke": "Mga alerto sa usok ng wildfire at kalidad ng hangin.",
+   "flood": "Mga flood warning at advisory, at malakas na ulan na may panganib ng baha.",
+   "fog": "Mga fog advisory, tulad ng makapal na hamog.",
+   "wind": "Mga high wind warning at wind advisory.",
+   "winter": "Mga warning at advisory sa snow, yelo at taglamig.",
+   "cold": "Mga warning at advisory sa frost, freeze at wind chill.",
+   "dust": "Mga blowing dust advisory at dust warning.",
+   "fire": "Mga red flag warning at alerto sa fire weather.",
+   "coastal": "Mga alerto sa baha sa baybayin, surge, malalaking alon at rip current.",
+   "tropical": "Mga alerto sa hurricane at tropical na panahon."
+  },
+  "coverageOwnData": "Nagpapadala rin kami ng sarili naming mga alerto kapag ang datos namin ay nagpapakita ng napakainit na araw (95°F o higit pa), hindi malusog na hangin o malakas na ulan na may panganib ng baha.",
+  "notCoveredShort": "Hindi kasama: mga tornado, flash flood, severe thunderstorm at extreme wind warning. Ilang minuto lang ang abiso nila, kaya sundin ang mga opisyal na source tulad ng Wireless Emergency Alerts at NOAA Weather Radio."
  },
  "ko": {
   "howWorksTitle": "작동 방식",
@@ -733,7 +783,7 @@
   "howNoAlerts": "지난 7일 동안 표시할 결정이 없습니다.",
   "howLoadError": "최근 알림 결정을 불러오지 못했습니다. 연결을 확인하고 다시 시도하세요.",
   "retry": "다시 시도",
-  "tagline": "더위, 연기, 홍수와 폭풍 알림을 당신의 언어로 받아보세요.",
+  "tagline": "날씨와 공기질 위험 알림을 원하는 언어로 받으세요.",
   "alerts": "알림 받기",
   "ask": "질문하기",
   "recovery": "집 피해 신고하기",
@@ -752,7 +802,7 @@
   "autoTranslationNote": "이 언어로 된 알림은 영어에서 자동으로 번역되며 그렇게 표시됩니다.",
   "email": "이메일 주소",
   "emailPlaceholder": "name@example.com",
-  "signupIntro": "당신 지역에 위험이 있을 때만 이메일로 알려드립니다: 심한 더위, 연기, 홍수, 폭풍.",
+  "signupIntro": "심한 더위, 연기, 홍수, 바람, 안개, 추위 같은 위험이 내 지역에 있을 때만 이메일을 보냅니다.",
   "signupButton": "알림 받기",
   "sending": "보내는 중…",
   "checkEmailTitle": "거의 다 됐습니다! 이메일을 확인하세요.",
@@ -765,7 +815,7 @@
   "recentAlerts": "최근 알림",
   "noAlerts": "지난 2일 동안 알림이 없습니다.",
   "loadError": "알림을 불러오지 못했습니다. 인터넷 연결을 확인하세요.",
-  "askIntro": "사시는 곳의 더위, 연기, 홍수, 폭풍에 대해 물어보세요. 오늘의 공식 자료로 답합니다.",
+  "askIntro": "사는 곳의 더위, 연기, 홍수, 바람, 추위에 대해 물어보세요. 오늘의 공식 자료로 답합니다.",
   "askLabel": "질문",
   "askPlaceholder": "오늘 오후에 밖에서 일해도 안전할까요?",
   "askButton": "묻기",
@@ -878,7 +928,7 @@
    "other": "기타"
   },
   "demoTry": "데모 해보기",
-  "demoAbout1": "ClimateGuard는 당신의 언어로 더위, 연기, 홍수와 폭풍을 알려줍니다.",
+  "demoAbout1": "ClimateGuard는 더위, 연기, 홍수 같은 날씨 위험을 원하는 언어로 알려줍니다.",
   "demoAbout2": "농장일과 야외일 하는 분, 영어 알림을 놓치기 쉬운 이민자 가정을 위해 만들었습니다.",
   "demoAbout3": "재해 후에는 보험이나 FEMA용으로 집 피해 기록을 돕습니다.",
   "demoTitle": "데모",
@@ -947,11 +997,19 @@
   "cardHistory": "알림 도우미가 내린 모든 결정과 이유입니다.",
   "hazardNames": {
    "heat": "더위",
-   "smoke": "연기 또는 공기질",
+   "smoke": "산불 연기 또는 공기질",
    "flood": "홍수",
-   "storm": "폭풍 또는 바람",
-   "cold": "추위 또는 겨울",
-   "other": "기타 위험"
+   "cold": "서리 또는 결빙",
+   "other": "기타 위험",
+   "coastal": "바닷가 홍수 또는 파도",
+   "tropical": "허리케인 또는 열대 날씨",
+   "tornado": "토네이도 주의",
+   "thunderstorm": "심한 뇌우 주의",
+   "winter": "겨울 날씨",
+   "fire": "화재 날씨",
+   "dust": "먼지",
+   "fog": "안개",
+   "wind": "바람"
   },
   "errors": {
    "mic_denied": "마이크 사용이 안 됩니다. 브라우저 설정에서 허용하거나 질문을 쓰세요.",
@@ -996,7 +1054,24 @@
    "moderate": "중간 위험",
    "high": "높은 위험",
    "extreme": "아주 심한 위험"
-  }
+  },
+  "coverageTitle": "ClimateGuard가 다루는 것",
+  "coverageIntro": "이런 위험에 대한 공식 National Weather Service 경보와 주의사항을 원하는 언어로 전합니다. 주의 상황도 보낼 수 있습니다.",
+  "coverage": {
+   "heat": "더위 경보와 주의사항, 그리고 95°F 이상인 날.",
+   "smoke": "산불 연기 및 공기질 알림.",
+   "flood": "홍수 경보와 주의사항, 그리고 홍수 위험이 있는 많은 비.",
+   "fog": "짙은 안개 같은 안개 주의사항.",
+   "wind": "강풍 경보와 바람 주의사항.",
+   "winter": "눈, 얼음, 겨울 날씨 경보와 주의사항.",
+   "cold": "서리, 결빙, 체감온도 경보와 주의사항.",
+   "dust": "날리는 먼지 주의사항과 먼지 경보.",
+   "fire": "적색기 경보와 화재 날씨 알림.",
+   "coastal": "바닷가 홍수, 해일, 높은 파도, 이안류 알림.",
+   "tropical": "허리케인과 열대 날씨 알림."
+  },
+  "coverageOwnData": "자료에서 매우 더운 날(95°F 이상), 나쁜 공기, 홍수 위험이 있는 많은 비가 보이면 자체 알림도 보냅니다.",
+  "notCoveredShort": "보내지 않음: 토네이도, 돌발홍수, 심한 뇌우, 강풍 경보. 알림 시간이 몇 분밖에 없어서 무선 긴급 알림과 NOAA 기상 라디오 같은 공식 출처를 따르세요."
  },
  "ar": {
   "howWorksTitle": "كيف يعمل",
@@ -1066,7 +1141,7 @@
   "howNoAlerts": "لا توجد قرارات متاحة خلال الأيام السبعة الماضية.",
   "howLoadError": "تعذّر تحميل قرارات التنبيه الأخيرة. تحقق من اتصالك وحاول مرة أخرى.",
   "retry": "حاول مرة أخرى",
-  "tagline": "تنبيهات الحرارة والدخان والفيضانات والعواصف بلغتك.",
+  "tagline": "تنبيهات الطقس وجودة الهواء بلغتك.",
   "alerts": "احصل على التنبيهات",
   "ask": "اسأل سؤالاً",
   "recovery": "الإبلاغ عن ضرر في البيت",
@@ -1085,7 +1160,7 @@
   "autoTranslationNote": "التنبيهات بهذه اللغة مترجمة تلقائياً من الإنجليزية ومكتوب عليها ذلك.",
   "email": "بريدك الإلكتروني",
   "emailPlaceholder": "name@example.com",
-  "signupIntro": "نرسل لك بريداً فقط عند وجود خطر في منطقتك: حر شديد، دخان، فيضانات، عواصف.",
+  "signupIntro": "نرسل لك بريداً إلكترونياً فقط عند وجود خطر في منطقتك، مثل الحر الشديد أو الدخان أو الفيضان أو الرياح أو الضباب أو الصقيع.",
   "signupButton": "أرسلوا لي التنبيهات",
   "sending": "جارٍ الإرسال…",
   "checkEmailTitle": "بقي خطوة واحدة! تحقق من بريدك.",
@@ -1098,7 +1173,7 @@
   "recentAlerts": "التنبيهات الأخيرة",
   "noAlerts": "لا توجد تنبيهات في آخر يومين.",
   "loadError": "تعذّر تحميل التنبيهات. تحقق من الاتصال.",
-  "askIntro": "اسأل عن الحر أو الدخان أو الفيضانات أو العواصف حيث تعيش. الإجابات تستخدم بيانات اليوم الرسمية.",
+  "askIntro": "اسأل عن الحر أو الدخان أو الفيضان أو الرياح أو البرد حيث تعيش. الإجابات تستخدم بيانات اليوم الرسمية.",
   "askLabel": "سؤالك",
   "askPlaceholder": "هل العمل في الخارج آمن بعد الظهر؟",
   "askButton": "اسأل",
@@ -1211,7 +1286,7 @@
    "other": "أخرى"
   },
   "demoTry": "جرّب العرض",
-  "demoAbout1": "ClimateGuard يحذّرك من الحر والدخان والفيضانات والعواصف بلغتك.",
+  "demoAbout1": "يحذرك ClimateGuard من الحر والدخان والفيضانات ومخاطر الطقس الأخرى بلغتك.",
   "demoAbout2": "مصمم لعمال المزارع والعمال في الخارج والعائلات المهاجرة الذين تفوتهم التحذيرات بالإنجليزية فقط.",
   "demoAbout3": "بعد الكارثة، يساعدك على تسجيل ضرر بيتك للتأمين أو FEMA.",
   "demoTitle": "عرض توضيحي",
@@ -1280,11 +1355,19 @@
   "cardHistory": "كل قرار اتخذه مساعد التنبيهات، والسبب.",
   "hazardNames": {
    "heat": "حر",
-   "smoke": "دخان أو جودة الهواء",
+   "smoke": "دخان حرائق الغابات أو جودة الهواء",
    "flood": "فيضان",
-   "storm": "عاصفة أو رياح",
-   "cold": "برد أو شتاء",
-   "other": "خطر آخر"
+   "cold": "صقيع أو تجمد",
+   "other": "خطر آخر",
+   "coastal": "فيضان ساحلي أو أمواج",
+   "tropical": "إعصار أو طقس استوائي",
+   "tornado": "مراقبة تورنادو",
+   "thunderstorm": "مراقبة عاصفة رعدية شديدة",
+   "winter": "طقس شتوي",
+   "fire": "طقس الحرائق",
+   "dust": "غبار",
+   "fog": "ضباب",
+   "wind": "رياح"
   },
   "errors": {
    "mic_denied": "الميكروفون غير مسموح. اسمح به في إعدادات المتصفح، أو اكتب سؤالك.",
@@ -1329,6 +1412,23 @@
    "moderate": "خطر متوسط",
    "high": "خطر عالٍ",
    "extreme": "خطر شديد"
-  }
+  },
+  "coverageTitle": "ماذا يغطي ClimateGuard",
+  "coverageIntro": "تحذيرات وتنبيهات National Weather Service الرسمية لهذه المخاطر تُرسل بلغتك. قد تُرسل المراقبات أيضاً.",
+  "coverage": {
+   "heat": "تحذيرات وتنبيهات الحر، وأيام 95°F أو أكثر.",
+   "smoke": "تنبيهات دخان حرائق الغابات وجودة الهواء.",
+   "flood": "تحذيرات وتنبيهات الفيضان، والمطر الغزير مع خطر الفيضان.",
+   "fog": "تنبيهات الضباب، مثل الضباب الكثيف.",
+   "wind": "تحذيرات الرياح القوية وتنبيهات الرياح.",
+   "winter": "تحذيرات وتنبيهات الثلج والجليد والطقس الشتوي.",
+   "cold": "تحذيرات وتنبيهات الصقيع والتجمد وبرودة الرياح.",
+   "dust": "تنبيهات الغبار المتطاير وتحذيرات الغبار.",
+   "fire": "تحذيرات العلم الأحمر وتنبيهات طقس الحرائق.",
+   "coastal": "تنبيهات الفيضان الساحلي والأمواج والتيارات القوية.",
+   "tropical": "تنبيهات الأعاصير والطقس الاستوائي."
+  },
+  "coverageOwnData": "نرسل أيضاً تنبيهاتنا الخاصة عندما تظهر بياناتنا أياماً حارة جداً (95°F أو أكثر) أو هواءً غير صحي أو مطراً غزيراً مع خطر الفيضان.",
+  "notCoveredShort": "لا نغطي: تحذيرات التورنادو والفيضان المفاجئ والعواصف الرعدية الشديدة والرياح الشديدة. تعطي دقائق فقط للتصرف، لذلك تابع المصادر الرسمية مثل تنبيهات الطوارئ اللاسلكية وراديو NOAA للطقس."
  }
 }

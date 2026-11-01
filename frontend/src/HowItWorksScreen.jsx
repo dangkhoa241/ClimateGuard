@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { getDecisions } from './api.js'
+import { CoverageList } from './Coverage.jsx'
 import { HOW_LANES, HOW_NODES } from './howItWorksData.js'
 import DEMO_SAMPLE from './demoSample.json'
 
@@ -376,6 +377,7 @@ export default function HowItWorksScreen({ lang, t, demo = false }) {
           {(demo || state.data) && <DecisionPanel decision={decision} lang={lang} t={t} demo={demo} />}
         </section>
       </div>
+      <CoverageList t={t} />
     </div>
   )
 }
