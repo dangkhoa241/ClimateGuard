@@ -15,7 +15,7 @@ from ..subscriptions import SignupError
 from .api import ZONE_RE, _json_body, _resp, _source_ip
 
 log = logging.getLogger()
-ASK_PER_IP_PER_HOUR = 20
+ASK_PER_IP_PER_HOUR = 40
 PRETALK_PER_IP_PER_HOUR = 10
 DEMO_REPLAYS_PER_IP_PER_HOUR = 15  # a fresh run is about $0.015; repeats within an hour are cached
 TRANSCRIBE_PER_IP_PER_HOUR = 30  # at most 60 s each: under $0.10/hour per IP

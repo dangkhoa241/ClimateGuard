@@ -27,7 +27,7 @@ Parameters:
     Description: Maximum distinct zone and language subscriptions per email in one year.
   DailyModelBudgetUsd:
     Type: Number
-    Default: 3
+    Default: 10
     Description: Maximum estimated model spend per UTC day.
   NwsUserAgent:
     Type: String

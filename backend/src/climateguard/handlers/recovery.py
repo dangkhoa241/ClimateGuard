@@ -16,7 +16,7 @@ from ..subscriptions import SignupError
 from .api import _json_body, _resp, _source_ip
 
 log = logging.getLogger()
-JOBS_PER_IP_PER_HOUR = 6
+JOBS_PER_IP_PER_HOUR = 12
 MAX_PHOTO_BODY_CHARS = 2_100_000  # 1.5 MB JPEG as base64
 
 
