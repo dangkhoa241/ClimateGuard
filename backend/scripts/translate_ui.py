@@ -53,14 +53,25 @@ def problems(src: dict, dst: dict, path: str = "") -> list[str]:
             out.append(f"missing key {where}")
         elif isinstance(v, dict):
             out += problems(v, dst[k] if isinstance(dst[k], dict) else {}, where + ".")
-        elif not isinstance(dst[k], str) or not dst[k].strip():
-            out.append(f"{where} is empty")
+        elif isinstance(v, list):  # lists of strings (howSteps, howNodeDescriptions, ...): same length, each checked
+            if not isinstance(dst[k], list) or len(dst[k]) != len(v):
+                out.append(f"{where} must be a list of {len(v)} strings")
+            else:
+                for i, (a, b) in enumerate(zip(v, dst[k])):
+                    out += text_problems(f"{where}[{i}]", a, b)
         else:
-            if sorted(PLACEHOLDER.findall(v)) != sorted(PLACEHOLDER.findall(dst[k])):
-                out.append(f"{where}: placeholders changed ({PLACEHOLDER.findall(v)})")
-            out += [f"{where}: '{w}' missing" for w in KEEP if w in v and w not in dst[k]]
+            out += text_problems(where, v, dst[k])
     out += [f"extra key {path}{k}" for k in dst if k not in src]
     return out
+
+
+def text_problems(where: str, src: str, dst) -> list[str]:
+    if not isinstance(dst, str) or not dst.strip():
+        return [f"{where} is empty"]
+    out = []
+    if sorted(PLACEHOLDER.findall(src)) != sorted(PLACEHOLDER.findall(dst)):
+        out.append(f"{where}: placeholders changed ({PLACEHOLDER.findall(src)})")
+    return out + [f"{where}: '{w}' missing" for w in KEEP if w in src and w not in dst]
 
 
 def translate(src: dict, lang: str) -> dict:
