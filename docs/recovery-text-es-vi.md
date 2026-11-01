@@ -7,7 +7,7 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 ### Screen text
 - recIntro: Tome fotos de los daños. ClimateGuard marca los daños que ve, le hace unas preguntas y prepara un reporte para su aseguradora o para quien le ayude.
 - recPrivacy: Sus fotos se guardan 24 horas para preparar su reporte y luego se borran. Antes de subir cada foto se quitan la ubicación (GPS) y otros datos ocultos.
-- recNotEstimate: No es una estimación oficial de daños.
+- recNotEstimate: No es una estimación oficial de daños ni un reclamo de seguro.
 - recDisasterLabel: ¿Qué pasó?
 - recAuto: No estoy seguro: decidir según mis fotos
 - recPhotosLabel: Fotos (de 1 a 6)
@@ -113,7 +113,7 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 - danger.power_line: un cable eléctrico caído
 
 ### Checklist
-- document: Documente los daños: tome fotos y video de cada cuarto y de cada cosa dañada antes de limpiar o tirar algo. Guarde este reporte con ellos.
+- document: Documente los daños: tome fotos y video de cada cuarto y de cada cosa dañada antes de limpiar o tirar algo. Guarde este reporte con ellos. Conserve las fotos y videos originales en su teléfono, con su fecha y hora.
 - insurer: Llame a su compañía de seguros lo antes posible y pregunte cómo hacer un reclamo. Anote el número de reclamo y el nombre de cada persona con quien hable.
 - flood_policy: El seguro de vivienda regular normalmente no cubre inundaciones; el seguro contra inundaciones (NFIP o privado) sí. Con NFIP, envíe su prueba de pérdida (proof of loss) dentro de 60 días.
 - landlord: Avise a su arrendador de los daños por escrito (mensaje de texto o correo) y guarde una copia. El seguro de inquilino puede cubrir sus pertenencias.
@@ -142,7 +142,7 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 ### Screen text
 - recIntro: Hãy chụp ảnh chỗ bị thiệt hại. ClimateGuard sẽ khoanh vùng thiệt hại nhìn thấy được, hỏi bạn vài câu và làm một bản báo cáo để bạn gửi cho công ty bảo hiểm hoặc người giúp đỡ.
 - recPrivacy: Ảnh của bạn được giữ 24 giờ để làm báo cáo, sau đó sẽ bị xóa. Vị trí (GPS) và các dữ liệu ẩn khác được xóa khỏi từng ảnh trước khi tải lên.
-- recNotEstimate: Không phải bản ước tính thiệt hại chính thức.
+- recNotEstimate: Không phải bản ước tính thiệt hại chính thức hay yêu cầu bồi thường bảo hiểm.
 - recDisasterLabel: Chuyện gì đã xảy ra?
 - recAuto: Không chắc: hãy dựa vào ảnh của tôi
 - recPhotosLabel: Ảnh (từ 1 đến 6)
@@ -248,7 +248,7 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 - danger.power_line: dây điện bị đứt rơi xuống
 
 ### Checklist
-- document: Ghi lại thiệt hại: hãy chụp ảnh và quay video từng phòng và từng món đồ bị hư trước khi dọn dẹp hay vứt bỏ bất cứ thứ gì. Giữ bản báo cáo này cùng với chúng.
+- document: Ghi lại thiệt hại: hãy chụp ảnh và quay video từng phòng và từng món đồ bị hư trước khi dọn dẹp hay vứt bỏ bất cứ thứ gì. Giữ bản báo cáo này cùng với chúng. Hãy giữ ảnh và video gốc trong điện thoại, kèm ngày và giờ.
 - insurer: Hãy gọi cho công ty bảo hiểm càng sớm càng tốt và hỏi cách nộp yêu cầu bồi thường. Ghi lại số hồ sơ yêu cầu bồi thường và tên của mọi người bạn đã nói chuyện.
 - flood_policy: Bảo hiểm nhà thông thường thường không chi trả thiệt hại do lũ lụt; bảo hiểm lũ lụt (NFIP hoặc tư nhân) thì có. Với NFIP, hãy gửi giấy chứng minh thiệt hại (proof of loss) trong vòng 60 ngày.
 - landlord: Hãy báo cho chủ nhà về thiệt hại bằng văn bản (tin nhắn hoặc email) và giữ một bản. Bảo hiểm cho người thuê nhà có thể chi trả đồ đạc của bạn.

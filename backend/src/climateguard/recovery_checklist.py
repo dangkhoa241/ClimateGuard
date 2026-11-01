@@ -9,9 +9,9 @@ REVIEWED = ("en", "es", "vi")
 
 ITEMS = {
     "document": {"detail": True,
-        "en": "Document the damage: take photos and video of every room and damaged item before you clean up or throw anything away. Keep this report with them.",
-        "es": "Documente los daños: tome fotos y video de cada cuarto y de cada cosa dañada antes de limpiar o tirar algo. Guarde este reporte con ellos.",
-        "vi": "Ghi lại thiệt hại: hãy chụp ảnh và quay video từng phòng và từng món đồ bị hư trước khi dọn dẹp hay vứt bỏ bất cứ thứ gì. Giữ bản báo cáo này cùng với chúng."},
+        "en": "Document the damage: take photos and video of every room and damaged item before you clean up or throw anything away. Keep this report with them. Keep the original photos and videos on your phone, with their date and time.",
+        "es": "Documente los daños: tome fotos y video de cada cuarto y de cada cosa dañada antes de limpiar o tirar algo. Guarde este reporte con ellos. Conserve las fotos y videos originales en su teléfono, con su fecha y hora.",
+        "vi": "Ghi lại thiệt hại: hãy chụp ảnh và quay video từng phòng và từng món đồ bị hư trước khi dọn dẹp hay vứt bỏ bất cứ thứ gì. Giữ bản báo cáo này cùng với chúng. Hãy giữ ảnh và video gốc trong điện thoại, kèm ngày và giờ."},
     "insurer": {"detail": True,
         "en": "Call your insurance company as soon as you can and ask how to file a claim. Write down the claim number and the name of everyone you talk to.",
         "es": "Llame a su compañía de seguros lo antes posible y pregunte cómo hacer un reclamo. Anote el número de reclamo y el nombre de cada persona con quien hable.",

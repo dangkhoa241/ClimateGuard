@@ -657,3 +657,12 @@ def test_owned_home_lines_dropped_but_landlord_detail_kept(monkeypatch):
     assert out["guard_removed"] == ["ownership"] and out["attempts"] == 2
     assert out["en"]["summary"] == "A water line shows on the living room wall."
     assert out["en"]["details"]["landlord"].startswith("Since you rent") and "fema" not in out["en"]["details"]
+
+def test_document_item_says_to_keep_the_original_photos_with_date_and_time():
+    keep_originals = {"en": "Keep the original photos and videos on your phone, with their date and time.",
+                      "es": "Conserve las fotos y videos originales en su teléfono, con su fecha y hora.",
+                      "vi": "Hãy giữ ảnh và video gốc trong điện thoại, kèm ngày và giờ."}
+    for lang, sentence in keep_originals.items():
+        assert sentence in checklist.ITEMS["document"][lang], lang
+        assert sentence in checklist.render(["document"], lang)[0]["text"], lang
+
