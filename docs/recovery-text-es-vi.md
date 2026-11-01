@@ -85,6 +85,7 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 - burned: Zona quemada
 - soot: Hollín
 - ash: Ceniza
+- scorched_tree: Árbol quemado
 - crack: Grieta
 - window: Ventana rota
 - tree: Árbol caído
@@ -220,6 +221,7 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 - burned: Chỗ bị cháy
 - soot: Muội than
 - ash: Tro
+- scorched_tree: Cây bị cháy
 - crack: Vết nứt
 - window: Cửa sổ vỡ
 - tree: Cây đổ

@@ -48,6 +48,10 @@ CONCEPTS = {
              "ar": "سخام"},
     "ash": {"sam": "ash", "en": "Ash", "es": "Ceniza", "vi": "Tro", "zh": "灰烬", "tl": "Abo", "ko": "재",
             "ar": "رماد"},
+    # Tested on the demo fire photo (1 mask, 0.83%); "burned building", "concrete foundation", "charred debris" and
+    # "rubble" came back with 0 masks there and were not added.
+    "scorched_tree": {"sam": "burned tree", "en": "Burned tree", "es": "Árbol quemado", "vi": "Cây bị cháy",
+                      "zh": "烧焦的树", "tl": "Nasunog na puno", "ko": "불탄 나무", "ar": "شجرة محترقة"},
     "crack": {"sam": "crack", "en": "Crack", "es": "Grieta", "vi": "Vết nứt", "zh": "裂缝", "tl": "Bitak", "ko": "균열",
               "ar": "شق"},
     "window": {"sam": "broken window", "en": "Broken window", "es": "Ventana rota", "vi": "Cửa sổ vỡ",
@@ -64,7 +68,7 @@ CONCEPTS = {
 # Which concepts the model may ask SAM for, per disaster. "other" may use any.
 CONCEPTS_BY_DISASTER = {
     "flood": ["water_line", "standing_water", "mud", "mold", "drywall", "crack", "debris", "furniture"],
-    "wildfire": ["burned", "soot", "ash", "window", "roof", "debris"],
+    "wildfire": ["burned", "soot", "ash", "scorched_tree", "window", "roof", "debris"],
     "earthquake": ["crack", "collapsed", "debris", "window", "drywall", "furniture"],
     "storm": ["tree", "roof", "window", "debris", "collapsed", "water_line"],
     "heat_outage": ["water_line", "mold", "furniture", "debris"],

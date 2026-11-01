@@ -137,6 +137,37 @@ def test_flood_photos_can_ask_sam_for_cracks_and_the_water_line_prompt():
     assert data.CONCEPTS["water_line"]["sam"] == "water stain line on wall"  # plain "water stain" found nothing
 
 
+FIRE_CONCEPTS = ["burned", "soot", "ash", "scorched_tree", "window", "roof", "debris"]
+
+
+def test_concept_lists_per_disaster():
+    # fire: "burned tree" was tested live on the demo fire photo (1 mask, 0.83%, over the 0.3% minimum) and added;
+    # "burned building", "concrete foundation", "charred debris" and "rubble" came back with 0 masks there and were not
+    assert data.CONCEPTS_BY_DISASTER["wildfire"] == FIRE_CONCEPTS
+    assert data.CONCEPTS["scorched_tree"]["sam"] == "burned tree"
+    for phrase in ("burned building", "concrete foundation", "charred debris", "rubble"):
+        assert phrase not in [c["sam"] for c in data.CONCEPTS.values()], phrase
+    # the other disasters are unchanged, and no threshold was lowered to make outlines appear
+    assert data.CONCEPTS_BY_DISASTER["storm"] == ["tree", "roof", "window", "debris", "collapsed", "water_line"]
+    assert data.CONCEPTS_BY_DISASTER["flood"] == ["water_line", "standing_water", "mud", "mold", "drywall", "crack",
+                                                  "debris", "furniture"]
+    assert data.CONCEPTS_BY_DISASTER["earthquake"] == ["crack", "collapsed", "debris", "window", "drywall", "furniture"]
+    assert data.min_area("scorched_tree") == data.MIN_AREA_DEFAULT == 0.003
+    assert data.min_area("debris") == 0.015 and data.MIN_AREA["water_line"] == 0.0005
+    assert data.MAX_CONCEPTS_PER_PHOTO == 3
+
+
+def test_every_fire_phrase_is_offered_to_the_model_and_sent_to_sam(monkeypatch):
+    prompt = recovery._prompt("wildfire", 1)
+    for c in data.CONCEPTS_BY_DISASTER["wildfire"]:
+        assert f"{c} ({data.CONCEPTS[c]['en'].lower()})" in prompt, c
+    sent = []
+    monkeypatch.setattr(sam, "segment", lambda jpeg, phrase, purpose="": sent.append(phrase) or [])
+    recovery._segment_all([b"jpeg"], [{"index": 0, "concepts": list(data.CONCEPTS_BY_DISASTER["wildfire"])}])
+    assert sorted(sent) == sorted(data.CONCEPTS[c]["sam"] for c in data.CONCEPTS_BY_DISASTER["wildfire"])
+    assert "burned tree" in sent
+
+
 def test_small_crack_kept_small_debris_dropped(monkeypatch):
     # the same 0.47% mask: a crack (0.3% minimum) is outlined and listed, debris (1.5%) is not
     small = "<0f>" + _record(0, (100, 100, 739, 499), 64, 40, 51)
