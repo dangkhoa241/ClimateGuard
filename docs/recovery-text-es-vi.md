@@ -25,7 +25,7 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 - recPhotoN: Foto {n}
 - recShowOutlines: Mostrar marcas
 - recHideOutlines: Ocultar marcas
-- recNothingOutlined: No se marcaron daños en esta foto.
+- recNothingOutlined: No se dibujaron contornos en esta foto. Esto no significa que no haya daños; el reporte se basa en toda la foto.
 - recQuestionsTitle: Unas preguntas
 - recQuestionsIntro: Sus respuestas se incluyen en el reporte.
 - recDeleteNow: Borrar mis fotos ahora
@@ -160,7 +160,7 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 - recPhotoN: Ảnh {n}
 - recShowOutlines: Hiện vùng khoanh
 - recHideOutlines: Ẩn vùng khoanh
-- recNothingOutlined: Không khoanh được thiệt hại nào trong ảnh này.
+- recNothingOutlined: Không có đường khoanh nào được vẽ trên ảnh này. Điều này không có nghĩa là không có thiệt hại; báo cáo dựa trên toàn bộ ảnh.
 - recQuestionsTitle: Vài câu hỏi
 - recQuestionsIntro: Câu trả lời của bạn sẽ được đưa vào báo cáo.
 - recDeleteNow: Xóa ảnh của tôi ngay

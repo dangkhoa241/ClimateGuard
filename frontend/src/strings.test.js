@@ -37,3 +37,25 @@ for (const [lang, phrase] of Object.entries(NOT_A_CLAIM)) {
     assert.ok(s.includes(phrase), `${lang}: "${s}" lacks "${phrase}"`)
   })
 }
+
+// A photo with no outlines must not read as "no damage": the caption says no outlines were drawn, that this is not
+// the same as no damage, and that the report uses the whole photo (raw strings per language, no English fallback).
+const OLD_CAPTION = {
+  en: 'No damage was outlined in this photo.', es: 'No se marcaron daños en esta foto.',
+  vi: 'Không khoanh được thiệt hại nào trong ảnh này.', zh: '这张照片没有标出损坏。',
+  tl: 'Walang binilugang pinsala sa litratong ito.', ko: '이 사진에는 표시된 피해가 없습니다.',
+  ar: 'لم يتم تحديد ضرر في هذه الصورة.',
+}
+const MEANING = {
+  en: 'does not mean there is no damage', es: 'no significa que no haya daños', vi: 'không có nghĩa là không có thiệt hại',
+}
+for (const lang of Object.keys(OLD_CAPTION)) {
+  test(`the no-outlines caption does not say there is no damage in ${lang}`, () => {
+    const s = (REVIEWED_STRINGS[lang] ?? AUTO[lang])?.recNothingOutlined
+    assert.equal(typeof s, 'string', `${lang} has no recNothingOutlined`)
+    assert.notEqual(s, OLD_CAPTION[lang], `${lang} still has the old caption`)
+    if (MEANING[lang]) assert.ok(s.includes(MEANING[lang]), `${lang}: "${s}"`)
+    assert.ok(s.length > OLD_CAPTION[lang].length, `${lang}: caption lost its second sentence`)
+  })
+}
+
