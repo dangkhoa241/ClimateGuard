@@ -6,11 +6,10 @@ import { formatReportDate, reportDateLine } from './reportDate.js'
 // Print layout (iPhone Safari test, Oct 28): position:fixed footers don't repeat in Safari and covered the last
 // question on page 1. Now:
 //   - the printed content sits in a <table>; its <thead> holds the disclaimer line, and browsers repeat a
-//     table header at the top of every printed page;
-//   - as a backup, each section (report, English copy, checklist, photos) starts with the same line, so no page
-//     can be without "Not an official damage estimate", even where <thead> doesn't repeat;
+//     table header at the top of every printed page. That is the ONLY copy of the line: inline copies at the
+//     start of each section printed a second and third time on the same page (Nov 1);
 //   - headings are kept with the first item after them, and each question stays with its answer.
-// On screen the table, header and backup lines are invisible (display: block / none in index.css).
+// On screen the table and header are invisible (display: block / none in index.css).
 
 export const fill = (s, vars) => Object.entries(vars).reduce((out, [k, v]) => out.replaceAll(`{${k}}`, v), s)
 
@@ -82,7 +81,6 @@ function ReportSide({ t, side, created, place, headingRef }) {
   return (
     <article className="answer rec-report" lang={side.lang} dir={side.lang === 'ar' ? 'rtl' : 'ltr'}>
       <div className="keep">
-        <Disclaimer t={t} lang={side.lang} created={created} place={place} />
         <h2 ref={headingRef}>{t.recReportTitle}</h2>
         <p className="muted small">{reportDateLine(t.recReportDate, side.lang, created)} · {side.disaster_label}</p>
         <p className="rec-not-estimate no-print">{t.recNotEstimate}</p>
@@ -112,7 +110,6 @@ function ReportSide({ t, side, created, place, headingRef }) {
         </>
       )}
       <div className="keep">
-        <Disclaimer t={t} lang={side.lang} created={created} place={place} />
         <h3>{t.recNextSteps}</h3>
         {side.checklist_lang !== side.lang && <p className="muted small">{t.checklistEnglishNote}</p>}
         {firstItem && <ol className="checklist list-head" lang={side.checklist_lang}>{item(firstItem)}</ol>}
@@ -169,7 +166,6 @@ export function ResultsView({ t, lang, view, showReport, photoUrls, place, outli
             )}
             <section className={report ? 'rec-photos page-break' : 'rec-photos'}>
               <div className="keep">
-                <Disclaimer t={t} lang={lang} created={created} place={place} />
                 <p className="rec-disaster">
                   <strong>{fill(t.recDisasterSeen, { label: view.disaster_label })}</strong>
                   {view.inferred_label && <span className="muted small"> · {fill(t.recInferredNote, { label: view.inferred_label })}</span>}

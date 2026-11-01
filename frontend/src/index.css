@@ -286,7 +286,7 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
   :root, :root.large-text { font-size: 11pt; background: #fff; }
   body, .app { background: #fff; max-width: none; padding: 0; margin: 0; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } /* outlines, swatches, danger box */
-  .no-print, button, .lang-picker, .back, .call911, input, details, .app > h1, .app > .muted.small { display: none !important; }
+  .no-print, button, .lang-picker, .lang-select, .topbar, .app-footer, .back, .call911, input, details, .app > h1, .app > .muted.small { display: none !important; }
   .print-only { display: block; }
   /* a real table: its <thead> (the disclaimer) repeats at the top of every printed page in Safari and Chrome */
   .print-table { display: table; width: 100%; }

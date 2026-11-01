@@ -314,7 +314,7 @@ export default function RecoveryScreen({ lang, t, zone, demo }) {
               </button>
             </>
           )}
-          <p className="muted small">{t.recNotEstimate}</p>
+          <p className="muted small no-print">{t.recNotEstimate}</p>{/* on paper the table header carries this line */}
           <p className="muted small">{deletesAtLine(t.recDeletesAt, lang, view.expires_at)}</p>
           <button className="secondary" type="button" onClick={removeAll}>{t.recDeleteNow}</button>
         </ResultsView>
