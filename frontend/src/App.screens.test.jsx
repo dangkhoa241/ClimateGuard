@@ -248,6 +248,19 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
       expect(strip()).toBeNull()
     })
 
+    it('Get alerts says the sign-up is real in demo mode, and says nothing outside it', async () => {
+      const note = () => container.querySelector('.demo-signup-note')
+      await mount('/?demo=1#/alerts')
+      expect(heading()).toBe(t.alerts)
+      expect(note().textContent).toBe(t.demoSignupNote)
+      await remount('/?demo=1&lang=es#/alerts')
+      expect(note().textContent).toBe(STRINGS.es.demoSignupNote)
+      localStorage.clear() // the Spanish visit saved its language
+      await remount('/#/alerts')
+      expect(heading()).toBe(t.alerts)
+      expect(note()).toBeNull()
+    })
+
     it('the strip is in the chosen language', async () => {
       await mount('/?demo=1&lang=vi#/recovery')
       expect(strip().textContent).toContain(STRINGS.vi.demoStrip.replace('{place}', 'Stockton, CA'))

@@ -200,6 +200,7 @@ export const REVIEWED_STRINGS = {
     demoSupervisorButton: 'Crew checklist for Stockton',
     demoSampleArea: 'Demo: sample area Stockton, CA. You can pick another area.',
     demoStrip: 'Demo mode · Area: {place}',
+    demoSignupNote: 'Demo mode: this is a real sign-up. We will send a confirmation email to the address you enter.',
     demoTryOne: 'Try one:',
     demoAskSamples: {
       work: 'Is it safe to work outside this afternoon?',
@@ -572,6 +573,7 @@ export const REVIEWED_STRINGS = {
     demoSupervisorButton: 'Lista para la cuadrilla en Stockton',
     demoSampleArea: 'Demostración: zona de muestra Stockton, CA. Puede elegir otra zona.',
     demoStrip: 'Modo de demostración · Zona: {place}',
+    demoSignupNote: 'Modo de demostración: esta es una suscripción real. Le enviaremos un correo de confirmación a la dirección que escriba.',
     demoTryOne: 'Pruebe una:',
     demoAskSamples: {
       work: '¿Es seguro trabajar afuera esta tarde?',
@@ -943,6 +945,7 @@ export const REVIEWED_STRINGS = {
     demoSupervisorButton: 'Danh sách cho nhóm ở Stockton',
     demoSampleArea: 'Bản demo: khu vực mẫu Stockton, CA. Bạn có thể chọn khu vực khác.',
     demoStrip: 'Chế độ demo · Khu vực: {place}',
+    demoSignupNote: 'Chế độ demo: đây là đăng ký thật. Chúng tôi sẽ gửi email xác nhận đến địa chỉ bạn nhập.',
     demoTryOne: 'Thử một câu:',
     demoAskSamples: {
       work: 'Chiều nay làm việc ngoài trời có an toàn không?',

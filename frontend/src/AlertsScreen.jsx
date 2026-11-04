@@ -86,7 +86,7 @@ function RecentAlerts({ zone, lang, t }) {
   )
 }
 
-export default function AlertsScreen({ lang, t, zone, setZone }) {
+export default function AlertsScreen({ lang, t, zone, setZone, demo = false }) {
   // zone.location ({zip} or {lat, lon}) is set when picked here; a zone from an email link has none,
   // so it shows alerts but asks for a location before signing up.
   const location = zone?.location
@@ -119,6 +119,8 @@ export default function AlertsScreen({ lang, t, zone, setZone }) {
 
   return (
     <>
+      {/* Sign-up is never simulated: in demo mode say so before anyone types an email */}
+      {demo && <p className="notice demo-note small demo-signup-note">{t.demoSignupNote}</p>}
       <p>{t.signupIntro}</p>
       <LocationPicker t={t} zone={zone} onLocated={(z, loc) => setZone({ ...z, location: loc })} />
 

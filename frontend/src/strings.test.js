@@ -69,3 +69,12 @@ for (const lang of ['en', 'es', 'vi', 'zh', 'tl', 'ko', 'ar']) {
     assert.equal(holes(s), '{place}', `${lang}: "${s}"`)
   })
 }
+
+// The Get alerts note in demo mode (sign-up is real, a confirmation email is sent): all 7 languages, raw.
+for (const lang of ['en', 'es', 'vi', 'zh', 'tl', 'ko', 'ar']) {
+  test(`demoSignupNote exists in ${lang}`, () => {
+    const s = (REVIEWED_STRINGS[lang] ?? AUTO[lang])?.demoSignupNote
+    assert.equal(typeof s, 'string', `${lang} has no demoSignupNote`)
+    assert.ok(s.trim().length > 20, `${lang}: "${s}"`)
+  })
+}

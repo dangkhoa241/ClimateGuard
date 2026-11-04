@@ -263,6 +263,7 @@
   "demoSupervisorButton": "Stockton 工人检查表",
   "demoSampleArea": "演示：示例地区 Stockton, CA。您可以选别的地区。",
   "demoStrip": "演示模式 · 地区：{place}",
+  "demoSignupNote": "演示模式：这是真实的注册。我们会向您输入的电子邮件地址发送一封确认邮件。",
   "demoTryOne": "试一个：",
   "demoAskSamples": {
    "work": "今天下午在户外工作安全吗？",
@@ -629,6 +630,7 @@
   "demoSupervisorButton": "Checklist ng crew para sa Stockton",
   "demoSampleArea": "Demo: sample na lugar ang Stockton, CA. Puwede kang pumili ng ibang lugar.",
   "demoStrip": "Naka-demo · Lugar: {place}",
+  "demoSignupNote": "Demo mode: totoong sign-up ito. Magpapadala kami ng confirmation email sa address na ilalagay mo.",
   "demoTryOne": "Subukan ang isa:",
   "demoAskSamples": {
    "work": "Ligtas ba magtrabaho sa labas ngayong hapon?",
@@ -995,6 +997,7 @@
   "demoSupervisorButton": "Stockton 팀 확인 목록",
   "demoSampleArea": "데모: 예시 지역 Stockton, CA. 다른 지역을 고를 수 있습니다.",
   "demoStrip": "데모 모드 · 지역: {place}",
+  "demoSignupNote": "데모 모드: 실제 가입 신청입니다. 입력하신 이메일 주소로 확인 이메일을 보내드립니다.",
   "demoTryOne": "하나 해보기:",
   "demoAskSamples": {
    "work": "오늘 오후에 밖에서 일해도 안전할까요?",
@@ -1361,6 +1364,7 @@
   "demoSupervisorButton": "قائمة العمال لستوكتون",
   "demoSampleArea": "عرض توضيحي: منطقة المثال ستوكتون، CA. يمكنك اختيار منطقة أخرى.",
   "demoStrip": "وضع تجريبي · المنطقة: {place}",
+  "demoSignupNote": "الوضع التجريبي: هذا تسجيل حقيقي. سنرسل رسالة تأكيد إلى البريد الإلكتروني الذي تدخله.",
   "demoTryOne": "جرّب واحدة:",
   "demoAskSamples": {
    "work": "هل العمل في الخارج آمن بعد الظهر؟",

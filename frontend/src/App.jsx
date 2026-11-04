@@ -218,7 +218,7 @@ export default function App() {
           {screen === 'demo' && <DemoScreen lang={lang} t={t} go={(next) => go(next)} />}
           {screen === 'how-it-works' && <HowItWorksScreen lang={lang} t={t} demo={demo} />}
           {screen === 'ask' && <AskScreen lang={lang} t={t} zone={area} setZone={setArea} demo={demo} />}
-          {screen === 'alerts' && <AlertsScreen lang={lang} t={t} zone={zone} setZone={setZone} />}
+          {screen === 'alerts' && <AlertsScreen lang={lang} t={t} zone={zone} setZone={setZone} demo={demo} />}
           {screen === 'supervisor' && <SupervisorScreen lang={lang} t={t} zone={area} setZone={setArea} />}
           {screen === 'recovery' && <RecoveryScreen lang={lang} t={t} zone={area} demo={demo} />}
           {screen === 'history' && <HistoryScreen lang={lang} t={t} zone={demo ? null : zone} />}
