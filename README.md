@@ -7,6 +7,7 @@
 - **Live app:** https://climate-guard-khaki.vercel.app
 - **Demo (no sign-up, no email, no photos of your own needed):** https://climate-guard-khaki.vercel.app/?demo=1
 - **Code:** https://github.com/dangkhoa241/ClimateGuard
+- **Demo video (about 2 minutes):** https://youtu.be/W8-jUB-ZP6A
 
 Built for the Meta Global AI Developer Hackathon (Indie Developer track).
 
@@ -15,6 +16,8 @@ Built solo during the hackathon (Oct 26 to Nov 4, 2026) with AI coding assistant
 ## 60-second judge path
 
 Open the [demo](https://climate-guard-khaki.vercel.app/?demo=1) on your phone. Pick a language at the top if you like.
+
+Prefer to watch first? The demo video shows all of this: https://youtu.be/W8-jUB-ZP6A
 
 1. **Replay a real flood.** Tap **Flood · Planada · January 2023**. The real alert agent reads that night's weather data, decides, and writes the alert in your language. It is labeled "REPLAY of a real event", shows the agent's reason and its cost, and sends no email.
 2. **Report damage.** Tap **Try with sample photos**, tap a photo, then **Check my photos**. SAM 3.1 outlines the damage. Answer the questions, tap **Make my report**, then **Print or save as PDF**. This step takes about a minute.
@@ -204,7 +207,7 @@ The same system diagram is in [docs/architecture.mmd](docs/architecture.mmd). Th
     - **Oct 30 rerun (fresh model samples): 35 of 37 steps passed** (real 11/11, edge 17/17, hard 7/9). Both `edge_dense_fog` cases sent a fog alert. The failures were `hard_warning_plus_other_watch` (sent the heat alert but omitted the concurrent Fire Weather Watch) and `hard_neighbor_zone_alert` (see Known limitations). Safety checks passed: no medical wording in 39/39 sent messages, Vietnamese accents in 39/39, and no mask advice without smoke in 29/29. The back-translation check matched 55/66 messages (review flags, not a pass/fail gate). The run used local storage and no AWS resources; monitoring model cost was $0.299, plus $0.1112 for the back-translation checker ($0.4102 total). [Full report](backend/eval/results/20261030-1531.md).
     - **Oct 28 full eval (standard models, fresh samples): alert agent 35 of 36 steps passed** (real 11/11, edge 16/16, hard 8/9), re-run after the active-warning rule (see Safety and trust). No medical wording in 38/38 sent messages, Vietnamese written with accents 38/38, no mask advice without smoke 28/28, zero model calls on the 5 pre-filter cases. $0.0127 per alert, median 7.2 s per run. The first run of this eval failed `hard_warning_vs_mild_data` (the warning says 110°F, our data shows 82°F, the agent skipped the alert). That was a real bug and is fixed: the agent now sends it and leaves the numbers out. The Oct 28 run's one failure was `hard_neighbor_zone_alert`: a Flood Warning for Fresno County sits in a Stockton feed, and the new rule sends it.
   - Earlier development runs and the bugs they found are in [docs/TECHNICAL.md](docs/TECHNICAL.md).
-- **Tests.** 544 backend tests and 113 frontend tests (43 unit tests and 70 screen tests, including ones that open every main screen in a browser-like page and fail on any thrown error, and ones for refresh and the Back button), all offline.
+- **Tests.** 547 backend tests and 142 frontend tests (67 unit tests and 75 screen tests, including ones that open every main screen in a browser-like page and fail on any thrown error, and ones for refresh and the Back button), all offline.
 - **Cost logging.** Every model call goes through one wrapper that requires a token limit, caches repeats for an hour, and logs tokens and cost. A separate atomic DynamoDB counter enforces the **$10/day hard cap** across chat, vision, image outlining, speech and web-search calls.
 - **Measured cost** (Oct 2026): about **$0.013 per alert** (4 to 6 model calls); about **$0.003 per Ask answer** ($0.02 to $0.03 when it searches the web for shelters); about **$0.004 per pre-shift talk**; about **$0.0002 per voice question**; about **$0.01 per recovery report with 1 photo and $0.07 with 6**. Total model spend as of Nov 1, 2026: about **$7.04 of the $150 Meta credit** ($2.61 from our usage logs, which cover development, evals and the live site, plus $4.43 for all Muse Wonder review runs: five full evals, one of them with a deleted report, and one smoke test; Meta bills Muse Wonder but it is not in the usage log) and about **$6.77 of the $100 Baseten credit**, about $13.81 together. AWS is $0 on the Free plan. The demo's "How it works" strip shows the live total.
 - **AWS.** One SAM template in **us-east-2**: Lambda, DynamoDB, EventBridge Scheduler, SNS, S3, API Gateway, SSM. It stays inside the AWS Free plan, so AWS costs about $0. `deploy.ps1` checks permissions and free-tier capacity before every deploy.
