@@ -78,15 +78,21 @@ The demo replay translation back-check matched 23 of 24 messages. It flagged the
 | Tool | What it does here | Why |
 |---|---|---|
 | **Muse Spark Open** (`muse-spark-open-1026`) on **Baseten** | The monitoring agent: tool calling over alerts, forecast, air quality, past alerts and safety guidance, then decides and writes EN/ES/VI alerts | Open weights, real tool calling, about $0.002 per call at low reasoning effort |
-| **Muse Spark 1.3** (Meta Model API) | Ask answers; reading the damage photos (vision); recovery reports; pre-shift talks; translation of alerts and screen text into zh/tl/ko/ar | Multilingual and accepts photos |
+| **Muse Spark 1.3** (`muse-spark-1.3`, Meta Model API) | Ask answers; reading the damage photos (vision); recovery reports; pre-shift talks; translation of alerts and screen text into zh/tl/ko/ar | Multilingual and accepts photos |
 | **Muse Spark 1.3 web search** (Responses API `web_search`) | Finds cooling centers and shelters near the person, with sources | Live, cited answers instead of guesses. Without a cited source the answer is refused |
-| **SAM 3.1** (Meta Model API) | Outlines the damage in each photo, so people see what the agent found | Shows its work, so people can check it |
-| **Muse Voice Transcribe** | Turns a spoken question into text in the person's language | People can ask without typing. The text is checked by the person before it is sent |
-| **Muse Wonder 1.0** | Independent reviewer in the evaluation only: back-translates alerts and checks our safety rules | Not in the product or the live alert path |
+| **SAM 3.1** (`sam-3.1`, Meta Model API) | Outlines the damage in each photo, so people see what the agent found | Shows its work, so people can check it |
+| **Muse Voice Transcribe 1.0** (`muse-voice-transcribe-1.0`) | Turns a spoken question into text in the person's language | People can ask without typing. The text is checked by the person before it is sent |
+| **Muse Wonder 1.0** (`muse-wonder-1.0`) | Independent reviewer in the evaluation only: back-translates alerts and checks our safety rules | Not in the product or the live alert path |
 
 Muse Image is not used.
 
 ## Architecture
+
+![ClimateGuard workflow. Alerts: NWS data every 15 minutes, then the alert decision by Muse Spark Open on Baseten, safety rules in Python, translation by Muse Spark 1.3, and the alert card with read-aloud. Ask: speech to text by Muse Voice Transcribe 1.0, then an answer by Muse Spark 1.3. Recovery: damage photos, SAM 3.1 outlines, Muse Spark 1.3 image analysis, and a report by Muse Spark 1.3. Evaluation only, not connected to the live product: Muse Wonder 1.0 review.](docs/architecture.svg)
+
+Orange boxes use a Meta model; white boxes do not. The same diagram, with step details and costs, is on the app's How it works page, and both are generated from the same data (`frontend/scripts/generate-how-diagram.mjs`). Full model IDs are in the table above.
+
+<details><summary>Detailed system diagram (Mermaid)</summary>
 
 ```mermaid
 flowchart LR
@@ -161,9 +167,9 @@ flowchart LR
   L3 --> DB
 ```
 
-The same system diagram is in [docs/architecture.mmd](docs/architecture.mmd). The interactive How it works page uses a separate, mobile-friendly workflow diagram; its static SVG is shown below and generated from the same model-label source as the app.
+The same system diagram is in [docs/architecture.mmd](docs/architecture.mmd).
 
-![ClimateGuard alerts, Ask, and recovery workflow](docs/architecture.svg)
+</details>
 
 ## Safety and trust
 
