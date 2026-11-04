@@ -1192,7 +1192,7 @@
   "howDecisionSafety": "فحوص السلامة",
   "howSafetyPassed": "ناجح",
   "howSafetyNotPassed": "غير ناجح",
-  "howDecisionCalls": "مكالمات النموذج",
+  "howDecisionCalls": "استدعاءات النموذج",
   "howNoHazard": "لا يوجد خطر مسجل",
   "howWhyTitle": "لماذا أُرسل هذا التنبيه؟",
   "howDemoSample": "عينة من إعادة العرض التوضيحي",
