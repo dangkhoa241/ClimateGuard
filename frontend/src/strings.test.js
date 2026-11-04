@@ -78,3 +78,15 @@ for (const lang of ['en', 'es', 'vi', 'zh', 'tl', 'ko', 'ar']) {
     assert.ok(s.trim().length > 20, `${lang}: "${s}"`)
   })
 }
+
+// Six How it works labels (details card, decision panel) exist in all 7 languages, raw (no English fallback).
+const HOW_SIX = ['howDetails', 'howMoveDetails', 'howDecisionSafety', 'howSafetyPassed', 'howSafetyNotPassed', 'howDecisionCalls']
+for (const lang of ['en', 'es', 'vi', 'zh', 'tl', 'ko', 'ar']) {
+  test(`the six How it works labels exist in ${lang}`, () => {
+    for (const key of HOW_SIX) {
+      const s = (REVIEWED_STRINGS[lang] ?? AUTO[lang])?.[key]
+      assert.equal(typeof s, 'string', `${lang} has no ${key}`)
+      assert.ok(s.trim().length > 0, `${lang} ${key} is empty`)
+    }
+  })
+}
