@@ -79,6 +79,12 @@ EXCLUSION_LINE = {
            "extremo: use las Alertas de Emergencia Inalámbricas de su teléfono y la radio meteorológica NOAA."),
     "vi": ("ClimateGuard không gửi cảnh báo lốc xoáy, lũ quét, dông bão nghiêm trọng hoặc gió cực mạnh: hãy dựa vào "
            "Cảnh báo Khẩn cấp Không dây trên điện thoại và Đài Thời tiết NOAA."),
+    # zh/tl/ko/ar: the in-app notCoveredShort text (frontend/src/i18n.auto.json, machine-translated; a test keeps the two
+    # in step). The footer around it is already labeled automatic translation.
+    "zh": "不包括：龙卷风、突发洪水、强雷暴和强风警报。它们只有几分钟预警，请看官方来源，比如 无线紧急警报 和 NOAA 天气收音机。",
+    "tl": "Hindi kasama: mga tornado, flash flood, severe thunderstorm at extreme wind warning. Ilang minuto lang ang abiso nila, kaya sundin ang mga opisyal na source tulad ng Wireless Emergency Alerts at NOAA Weather Radio.",
+    "ko": "보내지 않음: 토네이도, 돌발홍수, 심한 뇌우, 강풍 경보. 알림 시간이 몇 분밖에 없어서 무선 긴급 알림과 NOAA 기상 라디오 같은 공식 출처를 따르세요.",
+    "ar": "لا نغطي: تحذيرات التورنادو والفيضان المفاجئ والعواصف الرعدية الشديدة والرياح الشديدة. تعطي دقائق فقط للتصرف، لذلك تابع المصادر الرسمية مثل تنبيهات الطوارئ اللاسلكية وراديو NOAA للطقس.",
 }
 
 

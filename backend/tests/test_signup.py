@@ -193,6 +193,25 @@ def test_every_email_states_what_climateguard_does_not_cover():
         assert "911" in body and ("Wireless Emergency Alerts" in body or "NOAA" in body)
 
 
+def test_every_language_has_a_localized_exclusion_line():
+    english = notify.EXCLUSION_LINE["en"]
+    assert set(notify.EXCLUSION_LINE) >= set(LANGS)
+    for lang in LANGS:
+        assert notify.EXCLUSION_LINE[lang].strip()
+        if lang != "en":
+            assert notify.EXCLUSION_LINE[lang] != english
+    for lang in ("zh", "tl", "ko", "ar"):  # these used to fall back to the English line
+        _, body = notify.compose(ZONE, lang, "heat", "high", "M", translated=True)
+        assert notify.EXCLUSION_LINE[lang] in body and english not in body
+        assert notify.AUTO_LABEL[lang] in body  # the footer stays labeled as machine translation
+
+
+def test_auto_language_exclusion_lines_match_the_in_app_text():
+    auto = json.loads((Path(__file__).resolve().parents[2] / "frontend" / "src" / "i18n.auto.json").read_text("utf-8"))
+    for lang in ("zh", "tl", "ko", "ar"):
+        assert notify.EXCLUSION_LINE[lang] == auto[lang]["notCoveredShort"]
+
+
 def test_deliver_reviewed_text_and_labeled_translations(monkeypatch):
     seen = []
     monkeypatch.setattr(notify, "translate_alert", lambda text, lang: seen.append(lang) or (f"[{lang}] {text}", True))

@@ -18,8 +18,10 @@ BASETEN_BASE_URL = "https://inference.baseten.co/v1"
 META_BASE_URL = "https://api.meta.ai/v1"
 
 # Single switch: contributor = cheap, FAKE/dev data only (Meta may train on it).
-# Set USE_CONTRIBUTOR=false for real user photos and the live demo.
-USE_CONTRIBUTOR = os.getenv("USE_CONTRIBUTOR", "true").strip().lower() in ("1", "true", "yes")
+# The default is false (standard mode) so real user photos and questions can never reach contributor mode by
+# accident; the deployed template also sets "false" on every model-calling function. For cheap local development
+# with fake data, set USE_CONTRIBUTOR=true in .env.
+USE_CONTRIBUTOR = os.getenv("USE_CONTRIBUTOR", "false").strip().lower() in ("1", "true", "yes")
 
 # Model IDs (from https://dev.meta.ai/docs and the Baseten key's model list)
 MONITOR_MODEL = "meta-models/muse-spark-open-1026"  # Baseten — exact ID required
@@ -73,6 +75,8 @@ MAX_SUBSCRIPTIONS_PER_EMAIL = int(os.getenv("MAX_SUBSCRIPTIONS_PER_EMAIL", "3"))
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
 # --- Cost and scale controls ---
+# The default of 3 is for local runs only. The deployed value is 10 (template.yaml DailyModelBudgetUsd, passed by
+# deploy.ps1 on every deploy).
 DAILY_MODEL_BUDGET_USD = float(os.getenv("DAILY_MODEL_BUDGET_USD", "3"))
 COLLECT_WORKERS = int(os.getenv("COLLECT_WORKERS", "8"))   # zones collected in parallel (I/O bound)
 AGENT_WORKERS = int(os.getenv("AGENT_WORKERS", "4"))       # agent runs in parallel
