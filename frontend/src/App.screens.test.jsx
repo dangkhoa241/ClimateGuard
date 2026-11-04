@@ -200,6 +200,61 @@ describe('the URL follows the screen (refresh, Back and Forward)', () => {
     expect(window.location.search).toBe('')
   })
 
+  describe('demo mode: the logo leaves the demo, and a strip shows it on every other page', () => {
+    const strip = () => container.querySelector('.demo-strip')
+    const stripText = STRINGS.en.demoStrip.replace('{place}', 'Stockton, CA')
+
+    it('the logo on the demo page goes to the real home page, without ?demo=1 and without the strip', async () => {
+      await mount('/?demo=1')
+      expect(heading()).toBe(t.demoTitle)
+      await click(button('ClimateGuard'))
+      expect(heading()).toBe('ClimateGuard')
+      expect(window.location.search).toBe('')
+      expect(window.location.hash).toBe('#/')
+      expect(strip()).toBeNull()
+      await click(button(t.recovery)) // features opened from there are the real ones
+      expect(window.location.search).toBe('')
+      expect(strip()).toBeNull()
+    })
+
+    it('the logo on a demo feature page leaves the demo too; the Back link still returns to the demo page', async () => {
+      await mount('/?demo=1')
+      await click(button(t.demoRecoveryButton))
+      await click(button(t.back))
+      await waitForHeading(t.demoTitle)
+      expect(window.location.search).toBe('?demo=1')
+      await click(button(t.demoAskButton))
+      await click(button('ClimateGuard'))
+      expect(heading()).toBe('ClimateGuard')
+      expect(window.location.search).toBe('')
+    })
+
+    it.each([['recovery', t.recovery], ['ask', t.ask], ['supervisor', t.supervisor], ['how-it-works', t.howWorksTitle], ['', 'ClimateGuard']])(
+      'a demo page opened directly (#/%s) shows the strip, and its link leaves the demo', async (name, title) => {
+        await mount(`/?demo=1#/${name}`)
+        expect(heading()).toBe(title)
+        expect(strip().textContent).toContain(stripText)
+        await click([...strip().querySelectorAll('button')].find((b) => b.textContent === t.demoExit))
+        expect(heading()).toBe('ClimateGuard')
+        expect(window.location.search).toBe('')
+        expect(strip()).toBeNull()
+      })
+
+    it('the demo page keeps its own banner and shows no strip; outside the demo there is no strip', async () => {
+      await mount('/?demo=1')
+      expect(container.querySelector('.demo-note')).not.toBeNull()
+      expect(strip()).toBeNull()
+      await remount('/#/recovery')
+      expect(strip()).toBeNull()
+    })
+
+    it('the strip is in the chosen language', async () => {
+      await mount('/?demo=1&lang=vi#/recovery')
+      expect(strip().textContent).toContain(STRINGS.vi.demoStrip.replace('{place}', 'Stockton, CA'))
+      expect(strip().textContent).toContain(STRINGS.vi.demoExit)
+    })
+  })
+
   it('the language survives a refresh', async () => {
     await mount('/#/ask')
     const select = container.querySelector('.lang-select select')

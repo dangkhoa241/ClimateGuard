@@ -5,6 +5,7 @@ import { CoverageList, NotCoveredLine } from './Coverage.jsx'
 import AskScreen from './AskScreen.jsx'
 import DemoScreen from './DemoScreen.jsx'
 import { FEATURE_ICONS, Globe, Logo } from './icons.jsx'
+import { fill } from './RecoveryReport.jsx'
 import HistoryScreen from './HistoryScreen.jsx'
 import HowItWorksScreen from './HowItWorksScreen.jsx'
 import RecoveryScreen from './RecoveryScreen.jsx'
@@ -154,7 +155,8 @@ export default function App() {
   return (
     <main className={WIDE.has(screen) ? `app wide${screen === 'how-it-works' ? ' how-app' : ''}` : 'app'}>
       <header className="topbar">
-        {screen !== 'home' && <button className="brand" type="button" onClick={() => go('home')}><Logo size={28} />ClimateGuard</button>}
+        {/* the logo always opens the real home page: in demo mode it leaves the demo, like "Leave the demo" */}
+        {screen !== 'home' && <button className="brand" type="button" onClick={leaveDemo}><Logo size={28} />ClimateGuard</button>}
         <div className="header-actions">
           <button type="button" className="text-size-toggle secondary" aria-label={t.textSizeToggle}
             aria-pressed={textSize === 'large'} onClick={() => setTextSize((size) => size === 'large' ? 'normal' : 'large')}>
@@ -164,6 +166,13 @@ export default function App() {
         </div>
       </header>
       {meta.auto && <p className="muted small">{t.autoUiNote}</p>}
+      {/* On every page of the demo except the demo page itself (it has its own banner and Leave the demo button) */}
+      {demo && screen !== 'demo' && (
+        <aside className="demo-strip small" aria-label={t.demoTitle}>
+          <span>{area?.place || area?.name ? fill(t.demoStrip, { place: area.place || area.name }) : t.demoTitle}</span>
+          <button type="button" className="demo-strip-leave" onClick={leaveDemo}>{t.demoExit}</button>
+        </aside>
+      )}
       {screen === 'home' ? (
         <>
           <section className="hero">

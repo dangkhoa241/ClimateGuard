@@ -286,7 +286,7 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
   :root, :root.large-text { font-size: 11pt; background: #fff; }
   body, .app { background: #fff; max-width: none; padding: 0; margin: 0; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } /* outlines, swatches, danger box */
-  .no-print, button, .lang-picker, .lang-select, .topbar, .app-footer, .back, .call911, input, details, .app > h1, .app > .muted.small { display: none !important; }
+  .no-print, button, .demo-strip, .lang-picker, .lang-select, .topbar, .app-footer, .back, .call911, input, details, .app > h1, .app > .muted.small { display: none !important; }
   .print-only { display: block; }
   /* a real table: its <thead> (the disclaimer) repeats at the top of every printed page in Safari and Chrome */
   .print-table { display: table; width: 100%; }
@@ -315,6 +315,16 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 .demo-note { background: #fff7e6; border: 2px solid #b45309; margin: 0 0 8px; }
 .demo-note p { margin: 0 0 6px; }
 .demo-note a { color: var(--accent); font-weight: 600; }
+/* Demo mode on every page except the demo page: what you see is the demo, and the way out */
+.demo-strip {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 12px;
+  margin: 8px 0 0; padding: 2px 4px 2px 12px; border: 1px solid #b45309; border-radius: 8px; background: #fff7e6;
+}
+.demo-strip > span { padding: 6px 0; font-weight: 600; overflow-wrap: anywhere; }
+.demo-strip-leave {
+  min-height: 40px; padding: 0 8px; border: 0; background: none; color: var(--accent);
+  font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer;
+}
 .demo-section { margin-top: 24px; }
 .demo-section h2 { font-size: 1.2rem; margin: 0 0 6px; }
 .demo-section .actions { gap: 8px; }

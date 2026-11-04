@@ -59,3 +59,13 @@ for (const lang of Object.keys(OLD_CAPTION)) {
   })
 }
 
+
+// The demo-mode strip (every page of the demo except the demo page): its text exists in all 7 languages, raw
+// (no English fallback), with the {place} placeholder.
+for (const lang of ['en', 'es', 'vi', 'zh', 'tl', 'ko', 'ar']) {
+  test(`demoStrip exists with {place} in ${lang}`, () => {
+    const s = (REVIEWED_STRINGS[lang] ?? AUTO[lang])?.demoStrip
+    assert.equal(typeof s, 'string', `${lang} has no demoStrip`)
+    assert.equal(holes(s), '{place}', `${lang}: "${s}"`)
+  })
+}

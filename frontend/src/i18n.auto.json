@@ -262,6 +262,7 @@
   "demoAskButton": "问问 Stockton 的情况",
   "demoSupervisorButton": "Stockton 工人检查表",
   "demoSampleArea": "演示：示例地区 Stockton, CA。您可以选别的地区。",
+  "demoStrip": "演示模式 · 地区：{place}",
   "demoTryOne": "试一个：",
   "demoAskSamples": {
    "work": "今天下午在户外工作安全吗？",
@@ -627,6 +628,7 @@
   "demoAskButton": "Magtanong tungkol sa Stockton",
   "demoSupervisorButton": "Checklist ng crew para sa Stockton",
   "demoSampleArea": "Demo: sample na lugar ang Stockton, CA. Puwede kang pumili ng ibang lugar.",
+  "demoStrip": "Naka-demo · Lugar: {place}",
   "demoTryOne": "Subukan ang isa:",
   "demoAskSamples": {
    "work": "Ligtas ba magtrabaho sa labas ngayong hapon?",
@@ -992,6 +994,7 @@
   "demoAskButton": "Stockton에 대해 묻기",
   "demoSupervisorButton": "Stockton 팀 확인 목록",
   "demoSampleArea": "데모: 예시 지역 Stockton, CA. 다른 지역을 고를 수 있습니다.",
+  "demoStrip": "데모 모드 · 지역: {place}",
   "demoTryOne": "하나 해보기:",
   "demoAskSamples": {
    "work": "오늘 오후에 밖에서 일해도 안전할까요?",
@@ -1357,6 +1360,7 @@
   "demoAskButton": "اسأل عن ستوكتون",
   "demoSupervisorButton": "قائمة العمال لستوكتون",
   "demoSampleArea": "عرض توضيحي: منطقة المثال ستوكتون، CA. يمكنك اختيار منطقة أخرى.",
+  "demoStrip": "وضع تجريبي · المنطقة: {place}",
   "demoTryOne": "جرّب واحدة:",
   "demoAskSamples": {
    "work": "هل العمل في الخارج آمن بعد الظهر؟",
