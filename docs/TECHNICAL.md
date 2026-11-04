@@ -4,7 +4,7 @@ The full engineering record behind the [README](../README.md): data layer, agent
 
 A multilingual climate-disaster agent for the United States, with California's Central Valley (Stockton first) as the demo focus. It is built for farmworkers, outdoor workers and immigrant families who often miss English-only warnings.
 
-- **Alerts (before and during a disaster):** people sign up with a ZIP code or their phone's location. A monitoring agent watches NWS alerts, the forecast and air quality for their NWS forecast zone. It decides when risk is high and writes short alerts in English, Spanish and Vietnamese (human-reviewed), and in Chinese, Tagalog, Korean and Arabic (automatic translation, always labeled). It skips duplicates and emails subscribers.
+- **Alerts (before and during a disaster):** people sign up with a ZIP code or their phone's location. A monitoring agent watches NWS alerts, the forecast and air quality for their NWS forecast zone. It decides when risk is high and writes short alerts directly in English, Spanish and Vietnamese (not machine-translated afterwards; Vietnamese was reviewed for style by a native speaker, Spanish has not been reviewed by a native speaker yet), and in Chinese, Tagalog, Korean and Arabic (machine translation, always labeled). It skips duplicates and emails subscribers.
 - **Ask:** people ask by text or voice in their own language and get answers based on live data for their area.
 - **Recovery (after a disaster):** people photograph home damage. A recovery agent highlights the damage with SAM 3.1, asks follow-up questions, and produces a damage report and document checklist for insurance or FEMA. The report is in English plus the user's language and states "Not an official damage estimate."
 
@@ -23,7 +23,8 @@ Built for the Meta Global AI Developer Hackathon (Indie Developer track).
 | Chat, recovery agent, reports | `muse-spark-1.3` (`-contributor` in dev) | Meta Model API |
 | Damage segmentation | `sam-3.1` | Meta Model API |
 | Speech to text | `muse-voice-transcribe-1.0` | Meta Model API |
-| Safety cards (stretch) | `muse-image-1.0` | Meta Model API |
+| Independent alert review (evaluation only, not in the product) | `muse-wonder-1.0` | Meta Model API |
+| Image cards | `muse-image-1.0` | **Not used** (only a constant in `config.py`) |
 
 ## Repo layout
 
@@ -33,7 +34,8 @@ template.yaml          AWS SAM: DynamoDB tables, collector + agent Lambda (every
 backend/src/           Lambda code (packaged by `sam build`)
   climateguard/
     sources/           nws.py (incl. one national alerts call), openmeteo.py, airnow.py
-    handlers/          collect.py (EventBridge), api.py (HTTP API)
+    handlers/          collect.py (EventBridge), api.py (HTTP API), ask.py (Ask, voice, translate, pre-shift talk, demo replay),
+                       recovery.py (recovery jobs)
     geo.py             ZIP -> coordinates (bundled Census file), coordinate rounding
     zones.py           NWS forecast zones: lookup, registry, which zones are monitored
     hazards.py         NWS events -> hazard groups; short-fuse warnings excluded
@@ -53,8 +55,16 @@ backend/src/           Lambda code (packaged by `sam build`)
     ratelimit.py       per-IP / per-email counters, subscriber cap
     ssm.py             read API keys from SSM Parameter Store (Lambda)
     llm.py, cache.py, usage.py   model calls, response cache, usage and cost log
+    guardrails.py      shared wording guardrails (medical wording, N95 only for smoke, NWS level names, accents)
+    ask.py, places.py, transcribe.py   Ask answers, cited cooling-center search, speech to text
+    pretalk.py         supervisor checklist and AI pre-shift talk
+    recovery.py, recovery_data.py, recovery_checklist.py, recovery_report.py, recovery_guard.py, recovery_store.py
+                       recovery agent: job flow, fixed lists, checklist, report, guard, 24 h photo store
+    sam.py, sam_mask.py, photos.py   SAM 3.1 calls and mask decoding (SAM License), photo metadata stripping
+    budget.py, timeref.py, units.py, store.py   spend cap, time helpers, temperature units, storage helpers
 backend/scripts/       smoke tests, collect_local.py, run_monitor.py, local_api.py, spend.py, compare_effort.py,
-                       build_replays.py, replay.py, save_demo_replays.py, run_eval.py + eval_cases.py
+                       build_replays.py, replay.py, save_demo_replays.py, build_demo_translations.py, translate_ui.py,
+                       run_eval.py + eval_cases.py, run_ask_eval.py, run_recovery_eval.py, wonder_review.py
 backend/eval/results/  evaluation reports (.md + .json)
 backend/tests/         offline tests (pytest)
 frontend/              React + Vite, mobile-first, deployed on Vercel (root directory `frontend`, env `VITE_API_URL`)
@@ -329,24 +339,7 @@ python scripts/build_replays.py                # rebuild from the archives (abou
 
 ## Evaluation
 
-`scripts/run_eval.py` runs **34 cases (36 steps)** through the live agent. Each case uses its own `EVAL-<case>` log: nothing is emailed and nothing touches live data.
-
-- **11 real archived moments:** heat warning issued; record day; no repeated alert later the same day; quiet day after; flood watch; flood warning; watch → warning escalation; freeze after the flood; smoke orange-sky day; smoke peak; smoke clearing.
-- **9 hard, ambiguous cases**, written after the agent's rules and **not** to match them. Each expectation is what a careful human duty forecaster would want, fixed before any run:
-  - a Heat Advisory with highs of 94°F and AQI 148
-  - a warning whose text says 110°F while our forecast data shows 82°F
-  - a Flood Warning that already expired but is still in the feed
-  - a heat warning and a fire-weather watch at once
-  - a flood warning that's clearly for a neighboring county
-  - a heat warning ending in 2 hours with mild weather ahead
-  - added with the fix for that case: a warning ending in 2 hours while **104°F** is forecast after it (should still alert), and an air-quality alert ending with the air already clean (should skip)
-  - smoke forecast to reach AQI 165 tomorrow with no NWS alert yet
-- **14 edge cases:**
-  - calm day; a lone Tornado Warning (excluded); 94°F dry; ozone AQI 150 without smoke
-  - smoke at AQI 155; a **prompt injection inside NWS alert text**; a re-issued warning already alerted
-  - Heat Advisory → Extreme Heat Warning escalation; daily cap reached, then an extreme alert
-  - heat and smoke together; air-quality source down; dense tule fog
-  - a Minneapolis winter storm; a Miami hurricane watch
+`scripts/run_eval.py` runs the alert agent through the live model, one `EVAL-<case>` log per case: nothing is emailed and nothing touches live data. The case list (real archived moments, hard ambiguous cases written without looking at the agent's rules, and edge cases such as a prompt injection hidden in NWS text), the latest numbers and the known failures are kept in one place: see the README section "Engineering depth" and the reports in `backend/eval/results/` (`run_eval.py`, `run_ask_eval.py`, `run_recovery_eval.py` and `wonder_review.py` write them). The run history below is from the first day (Oct 27, 2026, with 25 to 36 cases) and is kept for the bugs it found.
 
 **What it measures:** decision accuracy (send vs. skip), right hazard, severity range, deduplication, escalation, zero model calls on the pre-filter cases, medical wording in every sent message, Vietnamese written with diacritics, guardrail rejections, cost per alert, and latency.
 
@@ -396,7 +389,7 @@ python scripts/run_eval.py edge_prompt_injection real_flood_warning
   - **Side effect:** with the extra context, the "warning text says 110°F, data shows 82°F" case now gets a *moderate* heat alert instead of *extreme*. It still passes, and arguably matches the data better.
 - **Expired and neighbor-zone alerts are handled by the agent's judgment, not by code.** It correctly skipped both hard cases, but nothing in code drops an expired alert. Alerts are matched to zones by NWS zone or county code, so a county-wide product in a large county (for example, San Bernardino) reaches every zone in that county.
 - **The hard cases are judgment calls.** Example: trusting an official warning over our milder forecast data. A reviewer could reasonably expect different outcomes for some of them.
-- **Small sample, non-deterministic model.** 32 cases, one sample per case per run. Results can vary between runs; three full runs so far have been 25/25, 25/25 and 31/32.
+- **Small sample, non-deterministic model.** One sample per case per run, so results vary between runs. The README lists the latest run and the cases that fail; the full history is in `backend/eval/results/`.
 - **Replays use observed weather in place of the forecast**, because archived NWS hourly forecasts aren't available. The agent sees "perfect forecasts" in replays.
 - **Temperatures:** English shows °F; every other language shows both, like "114°F (46°C)". The conversion is done in code, never by the model, including for automatic translations.
 - **Vietnamese still needs human review.** A native speaker reviewed the style, and the prompt now carries their rules. In run 4 one Vietnamese sentence reversed the meaning of the English ("limit outdoor work *to* early morning or evening" came out as "limit outdoor work *in* early morning or evening"). The eval now back-translates every Spanish and Vietnamese message into English with a second model and flags meaning differences (run 5: 8 real errors in 62 messages, listed above). It's a flag for human review, not a pass/fail gate: the checker is a model too and was wrong 5 times out of 13.
@@ -422,7 +415,7 @@ python scripts/run_eval.py edge_prompt_injection real_flood_warning
 
   | Language | How it's written |
   |---|---|
-  | English, Spanish, Vietnamese | **Human-reviewed**; written by the agent and checked by the medical-wording guardrail |
+  | English, Spanish, Vietnamese | **Written directly by the alert agent** (not machine-translated afterwards) and checked by the medical-wording guardrail. Vietnamese was reviewed for style by a native speaker; Spanish has not been reviewed by a native speaker yet |
   | Chinese (Simplified), Tagalog, Korean, Arabic | **Automatic translation** of the checked English with Muse Spark 1.3 (about $0.001 per alert per language) |
 
   - **Only languages with sign-ups:** translations run only for languages that have sign-ups in that zone.
@@ -442,7 +435,7 @@ python scripts/run_eval.py edge_prompt_injection real_flood_warning
   | Location lookups (`/locate`) per IP | 30 per hour | `429` |
   | Request body | 2 KB | `413` |
 
-  The API also has a hidden honeypot field for bots and a throttle of 10 requests per second (burst 20) across the whole API. Re-confirming the same email, zone and language doesn't count toward the subscriber cap.
+  The API also has a hidden honeypot field for bots and a default throttle of 5 requests per second (burst 10) across the whole API, with stricter limits on the model and sign-up routes (`template.yaml`). Re-confirming the same email, zone and language doesn't count toward the subscriber cap.
 - **Privacy:** IPs and emails are stored only as hashes in the rate-limit table. SNS holds the email addresses themselves. Locations are never stored, only zones.
 - **Local development:** `NOTIFY_MODE=dryrun` writes sign-ups and alert emails to `backend/.local/outbox.jsonl` (dry-run sign-ups count as confirmed). Run `python backend/scripts/local_api.py` to serve the API on `:8787` for the frontend.
 - **Endpoints:**
@@ -464,13 +457,6 @@ python scripts/run_eval.py edge_prompt_injection real_flood_warning
 Commands are for **PowerShell** from the repo root.
 
 **Region: `us-east-2` (Ohio) only.** This account's Organizations SCP explicitly denies other regions; us-west-2 and us-east-1 were checked and are denied. `deploy.ps1` checks this before every deploy.
-
-**Switching from the 6-city test deploy to zones (once, Wednesday).** The snapshot and alert tables changed their key from `city` to `zone`, and CloudFormation can't change the key of a named table in place. So delete the test stack first; this also gives the live decision history a clean start:
-```powershell
-sam delete --stack-name climateguard --region us-east-2 --no-prompts      # all tables, functions, API
-aws sns delete-topic --region us-east-2 --topic-arn (aws sns list-topics --region us-east-2 --query "Topics[?ends_with(TopicArn, ':climateguard-stockton-es')].TopicArn" --output text)
-```
-Then follow steps 3 to 7 below. The API URL changes, and you sign up again under your zone.
 
 **1. Install the tools (once).**
 ```powershell
@@ -502,9 +488,9 @@ Remove-Variable baseten, airnow, meta
 aws ssm get-parameter --region us-east-2 --name /climateguard/baseten-api-key --with-decryption --query "[Parameter.Type, length(Parameter.Value)]" --output text
 aws ssm get-parameter --region us-east-2 --name /climateguard/airnow-api-key  --with-decryption --query "[Parameter.Type, length(Parameter.Value)]" --output text
 ```
-- **Expected:** `SecureString 45` for Baseten and `SecureString 36` for AirNow, matching the key lengths in `.env`.
+- **Expected:** each command prints `SecureString` and the value's length, which should match the length of that key in `.env`.
 - **Rotating a key later:** rerun its `put-parameter` command (it already has `--overwrite`). The Lambda reads the new value on its next cold start.
-- **AirNow and Meta are optional:** without AirNow, air quality comes from Open-Meteo. Without the Meta key, zh/tl/ko/ar alerts go out in English with a note. The Meta key's length check should show 48.
+- **AirNow and Meta are optional:** without AirNow, air quality comes from Open-Meteo. Without the Meta key, zh/tl/ko/ar alerts go out in English with a note.
 
 **4. Build is part of deploy.** `deploy.ps1` runs `sam build` with Python 3.12 after the preflight. This packages `backend/src` and its dependencies as Linux arm64 wheels, about 28 MB. `-SkipBuild` deploys the existing `.aws-sam` build as is.
 
@@ -555,7 +541,7 @@ sam delete --stack-name climateguard
 - **The two SSM parameters.** Delete them with `aws ssm delete-parameter --name ...`.
 
 **Expected AWS cost:** $0 on the Free plan. All of it stays inside the free allowances:
-- Lambda, DynamoDB (16 of 25 RCU/WCU in total), EventBridge Scheduler and CloudWatch Logs (7-day retention)
+- Lambda, DynamoDB (15 RCU and 18 WCU provisioned by the template, of the free 25 and 25), EventBridge Scheduler and CloudWatch Logs (7-day retention)
 - SSM standard parameters, which are free
 - SNS email, with 1,000 free notifications a month
 
@@ -610,21 +596,18 @@ Assumptions: $0.010 per agent run (measured $0.0065–0.011); 0.2 runs per zone 
 
 ## Known concerns
 
-### Timeouts for slow reasoning calls (handle in Phase 4)
+### Timeouts for slow reasoning calls
 
 | Limit | Value |
 |---|---|
-| Lambda | 15 min max (900 s). The default is 3 s, so always set `Timeout` in the SAM template. |
-| API Gateway HTTP API | 30 s hard limit |
-| API Gateway REST API | 29 s by default. Regional APIs can request a higher quota. |
-| Lambda Function URL | Up to the Lambda timeout (15 min), and supports response streaming |
+| API Gateway HTTP API | 30 s hard limit per request |
+| Lambda (this stack) | API 10 s, Ask 28 s, Recovery 150 s (the async worker), Collect 600 s (`template.yaml`) |
+| One model call | 60 s wall-clock limit with one retry (`LLM_CALL_DEADLINE_S`); one monitoring run 150 s (`AGENT_RUN_DEADLINE_S`) |
 
-**Why it matters:** single chat answers at `low` effort take about 2–5 s, which is fine. The recovery agent is different: it runs several model calls (SAM 3.1, vision descriptions, report writing, PDF export) and can easily pass 30 s, and higher reasoning effort adds 2–5× latency.
-
-**Plan:**
-- Serve chat through API Gateway with a 25 s client timeout and a friendly "try again" message.
-- Run the recovery agent as an async job: `POST` starts it and returns a job ID, the work runs in a Lambda, and the frontend polls `GET /jobs/{id}` (or uses a Function URL with streaming).
-- Voice transcription of short clips is fast enough to call synchronously.
+**How it is handled today:**
+- **Ask** is one model call with a 20 s deadline inside the Ask Lambda's 28 s, so it answers within API Gateway's limit; a demo replay waits at most 23 s for the agent, then shows a saved real run.
+- **Recovery** runs as an async job: `POST /recovery/{job}/analyze` and `POST /recovery/{job}/answers` start the worker (the function re-invokes itself with no retries) and return at once; the app polls `GET /recovery/{job}` every 2 s.
+- **Voice transcription** of clips up to 60 s is fast enough to call synchronously.
 
 ## Future work
 

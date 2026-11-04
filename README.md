@@ -9,7 +9,7 @@
 - **Code:** https://github.com/dangkhoa241/ClimateGuard
 - **Demo video (2 min 46 s):** https://youtu.be/W8-jUB-ZP6A
 
-Built for the Meta Global AI Developer Hackathon (Indie Developer track).
+Built for the Meta Global AI Developer Hackathon (Indie Developer track). Theme: Build for Your World.
 
 Built solo during the hackathon (Oct 26 to Nov 4, 2026) with AI coding assistants (GitHub Copilot, Claude Code).
 
@@ -71,7 +71,7 @@ We also send our own alerts when our data shows very hot days (95°F or more), u
 - **Languages.** The screens and alerts come in 7 languages. A native Vietnamese speaker reviewed the Vietnamese for style (not every sentence). Spanish has no human review yet. Native-speaker review of both is pending for the newest text. Chinese, Tagalog, Korean and Arabic are **machine-translated and labeled as such** everywhere. Arabic switches the page to right-to-left.
 - Saved demo replay alerts use pre-generated translations so changing the screen language also changes the alert text. Live alert cards translate on demand and offer a retry if translation is unavailable; read-aloud requires a matching device voice.
 
-The demo replay translation back-check matched 23 of 24 messages. It flagged the saved, human-reviewed Vietnamese flood wording for making the instruction to move to higher ground conditional; that wording was retained as requested and should be re-reviewed by a native speaker.
+A development check of the saved demo replay translations (a second model translated them back to English) matched 23 of 24 messages; its output was not saved, so this figure cannot be re-checked. It flagged the saved Vietnamese flood wording (reviewed for style by a native speaker) for making the instruction to move to higher ground conditional; that wording was retained as requested and should be re-reviewed by a native speaker.
 
 ## Meta tooling
 
@@ -135,6 +135,10 @@ flowchart LR
 
   S3[("S3 private bucket<br/>photos kept 24 h, GPS removed")]
 
+  subgraph EVAL["Evaluation only (not in the live product)"]
+    WONDER["Muse Wonder 1.0 review<br/>offline, in testing only<br/>back-translates every non-English alert<br/>and checks the six safety rules<br/>nothing it says reaches a user;<br/>flagged messages need a person"]
+  end
+
   NWS --> COL
   AIR --> COL
   OM -.-> COL
@@ -165,6 +169,9 @@ flowchart LR
   L3 --> MS
   L3 --> SAM
   L3 --> DB
+
+  style EVAL stroke-dasharray: 8 6,stroke:#78716c,fill:#ffffff
+  style WONDER stroke-dasharray: 8 6
 ```
 
 The same system diagram is in [docs/architecture.mmd](docs/architecture.mmd).
@@ -195,7 +202,7 @@ The same system diagram is in [docs/architecture.mmd](docs/architecture.mmd).
 ## Engineering depth
 
 - **Evaluation.** The alert agent is tested on 44 cases: 11 real archived moments, 16 hard judgment cases written without looking at the agent's rules (7 of them added Oct 31 and Nov 1 to probe official advisories, including controls for an expired advisory and for a type we do not cover), and 17 edge cases (including a prompt injection hidden in NWS text). Ask has its own check on real questions, recovery has 6 trick cases, and a **back-translation check** has a second model translate every Spanish and Vietnamese alert back to English to flag changes in meaning.
-  - **Latest full alert-agent eval (Nov 1, fresh model samples, clean run): 42 of 44 cases passed.** Across the three full runs on Oct 31 and Nov 1 the alert agent passed 41 to 42 cases (43 cases in the first two runs, 44 in the last).
+  - **Latest full alert-agent eval (Nov 1, fresh model samples, clean run): 42 of 44 cases passed.** Across the three full runs on Oct 31 and Nov 1 the alert agent passed 41 to 42 cases (43 cases in the first two runs, 44 in the last). A fourth report from the same window, run `20261031-2324` (40 of 43), is from before the advisory fix below.
     | Group | Passed |
     |---|---|
     | Real archived moments | 11/11 |
@@ -208,14 +215,14 @@ The same system diagram is in [docs/architecture.mmd](docs/architecture.mmd).
   - **Advisory fix (Nov 1).** Six advisory cases added on Oct 31 showed the agent sometimes skipped an official advisory when our own data looked calmer (a Heat Advisory with an 82°F forecast and a Wind Advisory with 8 mph hourly winds; the agent cited the "severity must match the data" rule). The agent now must alert any active, unexpired official advisory for a hazard we cover, and a skipped one is sent back to write the alert, up to twice, as warnings already were. Advisories for things we do not cover (for example a Small Craft Advisory) are still skipped. After the fix both former failures, plus the Frost, Dust and Flood Advisory cases, the expired-advisory control and the Small Craft control, passed 5 of 5 repeat runs and the full eval. A separate ozone-and-smoke mask case that failed once in a full run passed 9 of 10 on the new code and 8 of 10 on the old code, so it is model noise, not caused by the fix.
   - **Ask: 8 of 8 passed**, median 2.4 s.
   - **Recovery: 6 of 6 trick cases passed** (injected instructions, cost and medicine bait, a renter question), $0.046 for all six.
-  - **Back-translation: 54 of 62 Spanish and Vietnamese alerts kept the English meaning.** The 8 flagged: 4 are Vietnamese "chỉ" ("only") wording, 3 are small real changes (a dropped "immediately", "above" became "at", "stay off roads" softened to "limit going out"), and 1 is an end-time wording difference. They are flagged for a human, not scored.
+  - **Back-translation (Oct 28 run): 54 of 62 Spanish and Vietnamese alerts kept the English meaning.** The Nov 1 run's check is in the Muse Wonder bullet above (66 of 76). The 8 flagged: 4 are Vietnamese "chỉ" ("only") wording, 3 are small real changes (a dropped "immediately", "above" became "at", "stay off roads" softened to "limit going out"), and 1 is an end-time wording difference. They are flagged for a human, not scored.
   - **Earlier runs.**
     - **Oct 30 rerun (fresh model samples): 35 of 37 steps passed** (real 11/11, edge 17/17, hard 7/9). Both `edge_dense_fog` cases sent a fog alert. The failures were `hard_warning_plus_other_watch` (sent the heat alert but omitted the concurrent Fire Weather Watch) and `hard_neighbor_zone_alert` (see Known limitations). Safety checks passed: no medical wording in 39/39 sent messages, Vietnamese accents in 39/39, and no mask advice without smoke in 29/29. The back-translation check matched 55/66 messages (review flags, not a pass/fail gate). The run used local storage and no AWS resources; monitoring model cost was $0.299, plus $0.1112 for the back-translation checker ($0.4102 total). [Full report](backend/eval/results/20261030-1531.md).
     - **Oct 28 full eval (standard models, fresh samples): alert agent 35 of 36 steps passed** (real 11/11, edge 16/16, hard 8/9), re-run after the active-warning rule (see Safety and trust). No medical wording in 38/38 sent messages, Vietnamese written with accents 38/38, no mask advice without smoke 28/28, zero model calls on the 5 pre-filter cases. $0.0127 per alert, median 7.2 s per run. The first run of this eval failed `hard_warning_vs_mild_data` (the warning says 110°F, our data shows 82°F, the agent skipped the alert). That was a real bug and is fixed: the agent now sends it and leaves the numbers out. The Oct 28 run's one failure was `hard_neighbor_zone_alert`: a Flood Warning for Fresno County sits in a Stockton feed, and the new rule sends it.
   - Earlier development runs and the bugs they found are in [docs/TECHNICAL.md](docs/TECHNICAL.md).
-- **Tests.** 547 backend tests and 142 frontend tests (67 unit tests and 75 screen tests, including ones that open every main screen in a browser-like page and fail on any thrown error, and ones for refresh and the Back button), all offline.
+- **Tests.** 549 backend tests and 173 frontend tests (88 unit tests and 85 screen tests, including ones that open every main screen in a browser-like page and fail on any thrown error, and ones for refresh and the Back button), all offline.
 - **Cost logging.** Every model call goes through one wrapper that requires a token limit, caches repeats for an hour, and logs tokens and cost. A separate atomic DynamoDB counter enforces the **$10/day hard cap** across chat, vision, image outlining, speech and web-search calls.
-- **Measured cost** (Oct 2026): about **$0.013 per alert** (4 to 6 model calls); about **$0.003 per Ask answer** ($0.02 to $0.03 when it searches the web for shelters); about **$0.004 per pre-shift talk**; about **$0.0002 per voice question**; about **$0.01 per recovery report with 1 photo and $0.07 with 6**. Total model spend as of Nov 1, 2026: about **$7.04 of the $150 Meta credit** ($2.61 from our usage logs, which cover development, evals and the live site, plus $4.43 for all Muse Wonder review runs: five full evals, one of them with a deleted report, and one smoke test; Meta bills Muse Wonder but it is not in the usage log) and about **$6.77 of the $100 Baseten credit**, about $13.81 together. AWS is $0 on the Free plan. The demo's "How it works" strip shows the live total.
+- **Measured cost** (Oct 2026): about **$0.013 per alert** (4 to 6 model calls); about **$0.003 per Ask answer** ($0.02 to $0.03 when it searches the web for shelters); about **$0.004 per pre-shift talk**; about **$0.0002 per voice question**; about **$0.01 per recovery report with 1 photo and $0.07 with 6**. Total model spend as of Nov 3, 2026: about **$7.22 of the $150 Meta credit** ($2.79 from our usage logs, which cover development, evals and the live site, plus $4.43 for all Muse Wonder review runs: five full evals, one of them with a deleted report, and one smoke test; Meta bills Muse Wonder but it is not in the usage log) and about **$6.77 of the $100 Baseten credit**, about $13.99 together. AWS is $0 on the Free plan. The demo's "How it works" strip shows the live total.
 - **AWS.** One SAM template in **us-east-2**: Lambda, DynamoDB, EventBridge Scheduler, SNS, S3, API Gateway, SSM. It stays inside the AWS Free plan, so AWS costs about $0. `deploy.ps1` checks permissions and free-tier capacity before every deploy.
 - **Bugs the tests found, now fixed:** missing accents in Spanish and Vietnamese, an ozone alert that told people to wear an N95, a model request that hung for 19 minutes (now a hard 60 s limit), and a collector permission that left the history counters at zero.
 
@@ -224,6 +231,7 @@ The same system diagram is in [docs/architecture.mmd](docs/architecture.mmd).
 - **Not for minutes-long warnings.** See above. Alerts are email only (no SMS), so they depend on someone checking email. The first confirmation email comes from AWS, in English.
 - **Spanish has no human review yet, and Vietnamese was reviewed for style by a native speaker, not every sentence.** Native-speaker review of both is pending for the newest text (recovery, demo, the coverage list and hazard names), which was drafted with AI (`docs/recovery-text-es-vi.md`).
 - **Chinese, Tagalog, Korean and Arabic are machine-translated and not yet reviewed by a native speaker.** The app shows this note near the language selector. The text was checked in code (same keys, same placeholders, 911/211/N95 unchanged), but no native speaker has read it.
+- **The fixed checklists (recovery and supervisor) exist in English, Spanish and Vietnamese only, and show in English for Chinese, Tagalog, Korean and Arabic.**
 - **The agent is not deterministic.** The same data can give a different judgment on another run. In development, a few hard cases flipped between runs. The back-translation check is a flag for review, not proof of meaning, and was itself wrong on 5 of 13 flags in one run.
 - **Replays use observed weather,** because archived NWS forecasts do not exist. The agent sees "perfect forecasts" in a replay.
 - **Recovery is approximate.** The AI can misread a photo. SAM outlines cover a box, not exact pixels, and small items are dropped. It is one home, up to 6 photos, no video. It is not an estimate and not an inspection.

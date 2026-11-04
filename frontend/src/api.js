@@ -1,8 +1,10 @@
 // Thin client for the ClimateGuard API. Local dev: `python backend/scripts/local_api.py`.
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8787').replace(/\/$/, '')
 
-// Alert languages (mirrors backend/src/climateguard/languages.py). EN/ES/VI are human-reviewed;
-// the others are machine-translated and labeled as such everywhere.
+// Alert languages (mirrors backend/src/climateguard/languages.py). EN/ES/VI alerts are written directly by the
+// alert agent (the `reviewed` flag means "not machine-translated afterwards"). Vietnamese was reviewed for style by
+// a native speaker; Spanish has not been reviewed by a native speaker yet. The others are machine-translated and
+// labeled as such everywhere.
 export const ALERT_LANGS = [
   { code: 'en', native: 'English', reviewed: true },
   { code: 'es', native: 'Español', reviewed: true },

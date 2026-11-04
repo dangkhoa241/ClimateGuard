@@ -1,4 +1,5 @@
-// Human-reviewed UI strings (EN/ES/VI). Add keys here; never hard-code English in components.
+// Hand-written UI strings (EN/ES/VI): Vietnamese reviewed for style by a native speaker, Spanish not yet reviewed
+// by a native speaker. Add keys here; never hard-code English in components.
 // zh/tl/ko/ar screen text is translated from `en` by backend/scripts/translate_ui.py (i18n.auto.json)
 // and labeled automatic in the app. Rerun that script after changing English strings.
 export const REVIEWED_LANGS = [

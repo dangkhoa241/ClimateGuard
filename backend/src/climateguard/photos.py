@@ -1,6 +1,6 @@
 """Uploaded damage photos: check they are JPEGs and strip every metadata segment (EXIF, GPS, XMP, comments).
 
-The app already re-draws each photo on a canvas before upload (upright, at most 1600 px, no EXIF); this is
+The app already re-draws each photo on a canvas before upload (upright, at most 1280 px, no EXIF); this is
 the server-side guarantee for anything else that reaches the API. Pure Python: no image library in Lambda.
 """
 import struct

@@ -1,6 +1,6 @@
 # Recovery text for review: Spanish and Vietnamese
 
-Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_checklist.py) on 2026-10-28.
+Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_checklist.py) on 2026-11-03.
 
 ## Spanish
 
@@ -60,7 +60,7 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 - errors.too_many_photos: Puede agregar hasta 6 fotos.
 - errors.no_photos: Agregue al menos una foto.
 - errors.analyze_failed: No pudimos revisar sus fotos. Intente de nuevo.
-- errors.over_budget: ClimateGuard está muy ocupado hoy. Intente mañana.
+- errors.over_budget: El servicio está ocupado. Inténtelo de nuevo más tarde.
 - errors.job_not_found: Este reporte ya venció. Empiece de nuevo.
 - errors.report_failed: No pudimos escribir su reporte. Intente de nuevo.
 - errors.invalid_answers: Revise sus respuestas e intente de nuevo.
@@ -196,7 +196,7 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 - errors.too_many_photos: Bạn có thể thêm tối đa 6 ảnh.
 - errors.no_photos: Hãy thêm ít nhất một ảnh.
 - errors.analyze_failed: Chưa kiểm tra được ảnh của bạn. Hãy thử lại.
-- errors.over_budget: Hôm nay ClimateGuard đang rất bận. Hãy thử lại vào ngày mai.
+- errors.over_budget: Dịch vụ đang bận. Vui lòng thử lại sau.
 - errors.job_not_found: Báo cáo này đã hết hạn. Hãy làm lại từ đầu.
 - errors.report_failed: Chưa viết được báo cáo. Hãy thử lại.
 - errors.invalid_answers: Hãy kiểm tra lại câu trả lời rồi thử lại.
@@ -273,4 +273,3 @@ Generated from the code (frontend/src/strings.js, recovery_data.py, recovery_che
 - generator: Chỉ dùng máy phát điện và bếp nướng ở ngoài trời, cách cửa ra vào và cửa sổ ít nhất 20 feet (6 mét): khí thải của chúng có thể gây chết người.
 - cool_place: Nếu nhà quá nóng, hãy đến trung tâm làm mát hoặc nơi công cộng mát mẻ: gọi 211 để tìm.
 - general_gear: Dọn dẹp cơ bản: hãy mang giày chắc chắn, găng tay và mặc áo dài tay, và chụp ảnh trước khi vứt bỏ bất cứ thứ gì.
-

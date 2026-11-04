@@ -1,5 +1,7 @@
-"""Alert languages. EN/ES/VI are written by the agent and human-reviewed; the others are
-machine-translated from the validated English message and always labeled as such."""
+"""Alert languages. EN/ES/VI are written directly by the alert agent (not machine-translated afterwards).
+Vietnamese was reviewed for style by a native speaker; Spanish has not been reviewed by a native speaker yet.
+The `reviewed` flag below means "written by the agent, not machine-translated afterwards", not "checked by a
+native speaker". zh/tl/ko/ar are machine-translated from the validated English message and always labeled."""
 
 LANGS = {
     "en": {"name": "English", "native": "English", "reviewed": True},

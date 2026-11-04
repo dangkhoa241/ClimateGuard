@@ -1,4 +1,5 @@
-// UI strings: EN/ES/VI are human-reviewed (strings.js); zh/tl/ko/ar are translated automatically from
+// UI strings: EN/ES/VI are written by hand in strings.js (Vietnamese reviewed for style by a native speaker,
+// Spanish not yet reviewed by a native speaker); zh/tl/ko/ar are translated automatically from
 // English by backend/scripts/translate_ui.py into i18n.auto.json and labeled in the app. Any key the
 // automatic file lacks falls back to English.
 import { REVIEWED_LANGS, REVIEWED_STRINGS } from './strings.js'
