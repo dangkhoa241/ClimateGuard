@@ -7,7 +7,7 @@
 - **Live app:** https://climate-guard-khaki.vercel.app
 - **Demo (no sign-up, no email, no photos of your own needed):** https://climate-guard-khaki.vercel.app/?demo=1
 - **Code:** https://github.com/dangkhoa241/ClimateGuard
-- **Demo video (about 2 minutes):** https://youtu.be/W8-jUB-ZP6A
+- **Demo video (2 min 46 s):** https://youtu.be/W8-jUB-ZP6A
 
 Built for the Meta Global AI Developer Hackathon (Indie Developer track).
 
