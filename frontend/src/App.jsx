@@ -10,8 +10,9 @@ import HistoryScreen from './HistoryScreen.jsx'
 import HowItWorksScreen from './HowItWorksScreen.jsx'
 import RecoveryScreen from './RecoveryScreen.jsx'
 import SupervisorScreen from './SupervisorScreen.jsx'
+import InstallScreen from './InstallScreen.jsx'
 
-const SCREENS = { alerts: 'alerts', ask: 'ask', recovery: 'recovery', supervisor: 'supervisor', history: 'history', demo: 'demoTitle', 'how-it-works': 'howWorksTitle' } // screen -> title key
+const SCREENS = { alerts: 'alerts', ask: 'ask', recovery: 'recovery', supervisor: 'supervisor', history: 'history', install: 'installLink', demo: 'demoTitle', 'how-it-works': 'howWorksTitle' } // screen -> title key
 // Demo mode's sample area (a demo zone: always monitored). Kept apart from the person's own saved area.
 const STOCKTON = { zone: 'CAZ159', name: 'Central San Joaquin County Including Stockton Metro', place: 'Stockton, CA',
   state: 'CA', tz: 'America/Los_Angeles', demo: true, monitored: true, calosha_applies: true }
@@ -221,11 +222,13 @@ export default function App() {
           {screen === 'alerts' && <AlertsScreen lang={lang} t={t} zone={zone} setZone={setZone} demo={demo} />}
           {screen === 'supervisor' && <SupervisorScreen lang={lang} t={t} zone={area} setZone={setArea} />}
           {screen === 'recovery' && <RecoveryScreen lang={lang} t={t} zone={area} demo={demo} />}
+          {screen === 'install' && <InstallScreen t={t} />}
           {screen === 'history' && <HistoryScreen lang={lang} t={t} zone={demo ? null : zone} />}
         </>
       )}
       <footer className="app-footer">
         {screen !== 'how-it-works' && <a href="#/how-it-works">{t.howWorksTitle}</a>}
+        {screen !== 'install' && screen !== 'how-it-works' && <> {' · '} <a href="#/install">{t.installLink}</a></>}
       </footer>
     </main>
   )

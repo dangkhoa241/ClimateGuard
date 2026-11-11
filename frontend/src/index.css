@@ -600,3 +600,9 @@ h1 { margin: 24px 0 4px; font-size: 2rem; }
 .not-covered-line { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: #fff7e6; border: 1px solid #b45309; line-height: 1.4; font-size: 0.95rem; overflow-wrap: anywhere; }
 @media (min-width: 640px) { .coverage-list { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 900px) { .coverage-list { grid-template-columns: repeat(3, 1fr); } }
+
+/* PWA: install screen, offline banner, last-viewed alert */
+.install ol { padding-inline-start: 1.4rem; margin: 8px 0; }
+.install .notice { margin-top: 14px; background: #fff7ed; border: 1px solid var(--line); }
+.offline-banner { background: #fef3c7; border: 1px solid #d97706; border-radius: 10px; padding: 10px 14px; margin: 12px 0; }
+.last-viewed .alert-card { opacity: 0.95; }
