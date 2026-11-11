@@ -541,12 +541,13 @@ aws ssm get-parameter --region us-east-2 --name /climateguard/airnow-api-key  --
 - **Expected:** each command prints `SecureString` and the value's length, which should match the length of that key in `.env`.
 - **Rotating a key later:** rerun its `put-parameter` command (it already has `--overwrite`). The Lambda reads the new value on its next cold start.
 
+- **AirNow and Meta are optional:** without AirNow, air quality comes from Open-Meteo. Without the Meta key, zh/tl/ko/ar alerts go out in English with a note.
+
 **3b. Web push key (optional, once; push stays off without it).** From the repo root, with the same AWS sign-in:
 ```powershell
 python backend/scripts/make_vapid_keys.py     # stores /climateguard/vapid-private-key, prints ONLY the public key
 ```
 Put the printed public key in Vercel as `VITE_VAPID_PUBLIC_KEY` (Production) and redeploy the frontend. The preflight reports the key as `SecureString, N characters`.
-- **AirNow and Meta are optional:** without AirNow, air quality comes from Open-Meteo. Without the Meta key, zh/tl/ko/ar alerts go out in English with a note.
 
 **4. Build is part of deploy.** `deploy.ps1` runs `sam build` with Python 3.12 after the preflight. This packages `backend/src` and its dependencies as Linux arm64 wheels, about 28 MB. `-SkipBuild` deploys the existing `.aws-sam` build as is.
 
