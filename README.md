@@ -226,6 +226,10 @@ The same system diagram is in [docs/architecture.mmd](docs/architecture.mmd).
 - **AWS.** One SAM template in **us-east-2**: Lambda, DynamoDB, EventBridge Scheduler, SNS, S3, API Gateway, SSM. It stays inside the AWS Free plan, so AWS costs about $0. `deploy.ps1` checks permissions and free-tier capacity before every deploy.
 - **Bugs the tests found, now fixed:** missing accents in Spanish and Vietnamese, an ozone alert that told people to wear an N95, a model request that hung for 19 minutes (now a hard 60 s limit), and a collector permission that left the history counters at zero.
 
+## Install and phone notifications (preview)
+
+ClimateGuard can be installed on a phone (Add to Home Screen) and the last alert you viewed stays readable offline, labeled with its time and "may be out of date". **Phone notifications** (web push, no email address needed) are built but hidden: add `?push=1` to the address to see the "Turn on phone notifications" section on the Get alerts page. Demo mode never creates a push subscription. Details: [docs/TECHNICAL.md](docs/TECHNICAL.md#installable-app-and-phone-notifications-web-push).
+
 ## Known limitations
 
 - **Not for minutes-long warnings.** See above. Alerts are email only (no SMS), so they depend on someone checking email. The first confirmation email comes from AWS, in English.
@@ -241,6 +245,7 @@ The same system diagram is in [docs/architecture.mmd](docs/architecture.mmd).
 - **Cooling-center search** falls back to the 211 links in about 1 run in 8, when the model writes an uncited answer. That is the rule working, not a bug.
 - **US only,** by NWS forecast zone. In a large county, a county-wide alert reaches every zone in it.
 - **Read aloud depends on the phone.** If the phone has no voice for a language, the button is hidden. Desktop browsers often have no Vietnamese or Tagalog voice.
+- **Phone notifications (preview) on iPhone need the app installed.** Web push works on iPhone and iPad (iOS 16.4 or later) only after ClimateGuard is added to the Home Screen and opened from there. A notification may not make a sound when the phone is in silent mode, and Focus modes or battery settings can delay or hide it. Delivery is best-effort: email stays the reliable channel, and short-fuse warnings are still not sent in any channel.
 - **Tested on** Chrome on Windows (including phone-width windows) and an iPhone. Not tested on every device.
 
 ## Run, test, deploy

@@ -38,6 +38,9 @@ backend/src/           Lambda code (packaged by `sam build`)
                        recovery.py (recovery jobs)
     geo.py             ZIP -> coordinates (bundled Census file), coordinate rounding
     zones.py           NWS forecast zones: lookup, registry, which zones are monitored
+    push_store.py      web push subscriptions: endpoint allow-list, validation, storage
+    push_signup.py     web push sign-up and sign-out, limits and the 500 cap
+    webpush.py         web push delivery after email: payload, VAPID, time budget, pruning
     hazards.py         NWS events -> hazard groups; short-fuse warnings excluded
     snapshot.py        one normalized risk snapshot per zone, plus a change fingerprint
     risk.py            heat index, AQI categories, Cal/OSHA thresholds
@@ -447,10 +450,57 @@ python scripts/run_eval.py edge_prompt_injection real_flood_warning
   | `GET /zones/{zone}/alerts` | Alerts sent in the last 48 h |
   | `GET /languages` | Supported alert languages |
   | `POST /subscribe {email, lang, zip or lat+lon}` | Sign-up (double opt-in) |
+| `POST /push/subscribe {subscription, lang, zip or lat+lon}` | Phone notifications (web push, no email); see the web push section |
+| `POST /push/unsubscribe {endpoint}` | Turn them off (needs the subscription's own endpoint) |
   | `GET /decisions?zone=&days=&limit=` | The live agent's real decisions + daily counters (public) |
 | `POST /ask {question, lang, zone}` | Answer a question from live data (Ask Lambda) |
 | `POST /transcribe?lang=` (body: WAV) | Spoken question → text (Ask Lambda) |
 | `POST /pretalk {zone, lang}` | Supervisor view: today's crew checklist + AI pre-shift talk (Ask Lambda) |
+
+## Installable app and phone notifications (web push)
+
+**Status: built, hidden behind `?push=1`** until it has been tested on a real phone. Install and offline work are on for everyone; the push section appears only with `?push=1` (remembered for the tab session), and demo mode never subscribes (the screen shows a note, and `api.js` and `push.js` refuse to run when the URL has `demo=1`).
+
+- **Install:** `manifest.webmanifest` (standalone, theme color, 192 and 512 icons plus maskable icons), iOS meta tags, and an "Install the app" screen (`#/install`, linked in the footer). It uses the browser's install prompt on Android and Chrome, and spells out Add to Home Screen on iPhone.
+- **Service worker (`frontend/public/sw.js`):** caches **only the app shell and static files** (the page, hashed `/assets/*`, icons, manifest). It never sees API traffic: the API is on another origin, and the worker ignores every non-GET request and every same-origin path that is not on its allow-list, so sign-ups, photo uploads, damage reports and API responses are never cached. Navigations are network first with the cached shell as the offline fallback. It also shows push notifications and opens the matching alert page on tap (same-origin URLs only).
+- **Offline:** the app shell loads offline. The Alerts screen keeps the newest alert it loaded (public alert text only, in `localStorage`; no email, ZIP or location) and, when the API cannot be reached, shows it labeled with its time and "May be out of date".
+- **Turn on phone notifications:** the person picks the area (ZIP or location) and language, taps the button (the permission prompt needs a tap, especially on iPhone), and the browser subscribes with the **public** VAPID key (`VITE_VAPID_PUBLIC_KEY`). No email address is involved. "Turn off notifications" removes the subscription on the server (it needs the subscription's own endpoint) and in the browser.
+- **One place and language per device.** Subscribing again from the same phone replaces the earlier one.
+
+### Backend
+
+| Route | What it does |
+|---|---|
+| `POST /push/subscribe {subscription, lang, zip or lat+lon}` | Stores the device for one zone and language (201) |
+| `POST /push/unsubscribe {endpoint}` | Removes it; needs the endpoint itself and always answers the same way |
+
+- **Storage:** a new table, `climateguard-push` (1 RCU, 1 WCU, TTL on). `zone` is the partition key and `<lang>#<endpoint hash>` the sort key, plus an `EP#<hash>` pointer item per device so unsubscribe can find a subscriber from the endpoint alone. No index. Subscriptions expire after 365 days. DynamoDB provisioned capacity is now 16 RCU and 19 WCU of the free 25 and 25.
+- **Validation:** HTTPS only; no port, credentials or fragment; at most 600 characters; the host must equal an allowed push service or be a proper subdomain of one (`fcm.googleapis.com`, `updates.push.services.mozilla.com`, `push.apple.com`, `notify.windows.com`). The backend later POSTs to this URL, so look-alikes (`fcm.googleapis.com.evil.com`, `evilfcm.googleapis.com`, user-info tricks, IP addresses) are rejected, and a test lists them. Keys must decode to a 65-byte P-256 point and a 16-byte secret.
+- **Limits** (same style as email sign-up, checked before any NWS lookup): 5 per IP per hour, 10 per endpoint per day, 300 per day across the app, 500 subscriptions in total (`MaxPushSubscribers`; `503 subscriber_cap`). Request bodies are capped at 2 KB and there is a honeypot field. Route throttles in `template.yaml` match `/subscribe`.
+- **Monitoring:** a push-only zone counts as having subscribers (the zone is marked confirmed on sign-up, and the hourly recount adds the push count to the SNS count). It can therefore trigger agent runs, which spend model budget under the existing `DailyModelBudgetUsd` cap ($10 per day) like any other zone. Push itself adds no model calls; for zh/tl/ko/ar the translation made for the email is reused.
+- **Sending:** after `notify.deliver()` has published every email, `webpush.send_for_zone()` sends to the zone's subscribers in their language with `pywebpush` (VAPID-signed, encrypted), **TTL 6 hours and urgency high**.
+  - **Title:** the email's subject line for that alert and language, with the **official NWS level name** (Warning, Watch or Advisory; Aviso, Vigilancia, Advertencia; Cảnh báo, Cảnh giác, Khuyến cáo) in front whenever the validated English message names one (the highest wins). The email subject alone does not always carry it (English uses ClimateGuard's own level, Spanish and Vietnamese have none), so the level is added.
+  - **Body:** the first one or two sentences of the already-validated message (about 160 characters), temperatures as in email, and the "automatic translation" label for zh/tl/ko/ar. No advice text is written for push, so the medical-wording and level-name guardrails apply exactly as for email.
+  - **URL:** `<FrontendUrl>/?zone=<ZONE>&lang=<lang>`, the same link the email carries, so a tap opens the alert page in the person's language.
+  - **Time budget:** at most 20 seconds per alert in total (`PUSH_BUDGET_S`), 8 parallel sends, 5 seconds per request; no new request starts after the budget, and the wait ends at the budget. Collect's Lambda timeout is 600 seconds. Every error in this step is caught: a push failure cannot block or delay an email, and emails are always published first (tests assert the order and a hanging push service).
+  - **Pruning:** a 404 or 410 deletes that subscription and frees its slot. Other failures keep it.
+  - **Logs:** counts only (`sent`, `gone`, `failed`, `skipped`), never endpoints, keys or the private key.
+
+### VAPID keys
+
+- The **private key** is an SSM SecureString, `/climateguard/vapid-private-key`, read at runtime **only by the collector** (the API function cannot read it). It is never in the repo, `.env.example`, logs or chat. A test scans the tracked files, and another checks the IAM policies.
+- The **public key** is not secret and goes in the frontend (`VITE_VAPID_PUBLIC_KEY`, a Vercel environment variable).
+- `backend/scripts/make_vapid_keys.py` creates the pair, stores the private key straight into SSM and prints only the public key. It refuses to overwrite an existing key unless `--force` (replacing the key signs every phone out), and `--show-public` prints the public key again.
+- `deploy.ps1` never creates or reads the value: its preflight checks that the parameter exists (type and length only) and warns if it is missing (push off, email unaffected). It also passes `MaxPushSubscribers` like the other parameters.
+- If the parameter is missing or unreadable, push is silently off and emails are unaffected.
+
+### Known limitations
+
+- **iPhone and iPad:** push works only for an installed app (Add to Home Screen, iOS 16.4 or later), opened from the Home Screen icon. Notifications may make no sound when the phone is in silent mode, and Focus modes and battery settings can delay or hide them.
+- Delivery is best-effort (the push services can delay or drop messages, and people can disable notifications). Email stays the reliable channel. Short-fuse warnings (tornado, flash flood, severe thunderstorm, extreme wind) are still never sent.
+- Replacing the VAPID key invalidates every subscription.
+- The 500-subscription counter is released on unsubscribe and when a device is pruned; a subscription that simply expires after 365 days frees its slot only after the next full recount of that zone.
+- Preview URLs on Vercel are a different origin from production (subscriptions do not carry over), and the API's CORS allows one frontend origin, so test push on the production URL with `?push=1`.
 
 ## Deploy (AWS SAM), step by step
 
@@ -490,6 +540,12 @@ aws ssm get-parameter --region us-east-2 --name /climateguard/airnow-api-key  --
 ```
 - **Expected:** each command prints `SecureString` and the value's length, which should match the length of that key in `.env`.
 - **Rotating a key later:** rerun its `put-parameter` command (it already has `--overwrite`). The Lambda reads the new value on its next cold start.
+
+**3b. Web push key (optional, once; push stays off without it).** From the repo root, with the same AWS sign-in:
+```powershell
+python backend/scripts/make_vapid_keys.py     # stores /climateguard/vapid-private-key, prints ONLY the public key
+```
+Put the printed public key in Vercel as `VITE_VAPID_PUBLIC_KEY` (Production) and redeploy the frontend. The preflight reports the key as `SecureString, N characters`.
 - **AirNow and Meta are optional:** without AirNow, air quality comes from Open-Meteo. Without the Meta key, zh/tl/ko/ar alerts go out in English with a note.
 
 **4. Build is part of deploy.** `deploy.ps1` runs `sam build` with Python 3.12 after the preflight. This packages `backend/src` and its dependencies as Linux arm64 wheels, about 28 MB. `-SkipBuild` deploys the existing `.aws-sam` build as is.
@@ -538,10 +594,10 @@ sam delete --stack-name climateguard
 ```
 `sam delete` removes the stack, including its log groups. Two things stay:
 - **SNS topics**, which the app creates at runtime. Delete them with `aws sns list-topics`, then `aws sns delete-topic --topic-arn ...`.
-- **The two SSM parameters.** Delete them with `aws ssm delete-parameter --name ...`.
+- **The SSM parameters** (the API keys, and `/climateguard/vapid-private-key` if you created it). Delete them with `aws ssm delete-parameter --name ...`.
 
 **Expected AWS cost:** $0 on the Free plan. All of it stays inside the free allowances:
-- Lambda, DynamoDB (15 RCU and 18 WCU provisioned by the template, of the free 25 and 25), EventBridge Scheduler and CloudWatch Logs (7-day retention)
+- Lambda, DynamoDB (16 RCU and 19 WCU provisioned by the template, of the free 25 and 25), EventBridge Scheduler and CloudWatch Logs (7-day retention)
 - SSM standard parameters, which are free
 - SNS email, with 1,000 free notifications a month
 
