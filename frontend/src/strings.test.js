@@ -107,6 +107,16 @@ for (const lang of ['es', 'vi']) {
   })
 }
 
+for (const lang of ['zh', 'tl', 'ko', 'ar']) {
+  test(`PWA and push strings translated in ${lang} keep their placeholders`, () => {
+    const auto = Object.fromEntries(flat(AUTO[lang]))
+    for (const [k, en] of flat(REVIEWED_STRINGS.en).filter(([key]) => PWA_KEY.test(key))) {
+      assert.equal(typeof auto[k], 'string', `${lang} is missing ${k}`)
+      assert.equal(holes(auto[k]), holes(en), `${lang} ${k} placeholders differ`)
+    }
+  })
+}
+
 test('the push and install text never gives medical advice or names the official alert levels as ours', () => {
   const text = flat(REVIEWED_STRINGS.en).filter(([k]) => PWA_KEY.test(k)).map(([, v]) => v).join(' ').toLowerCase()
   for (const word of ['medicine', 'doctor', 'hospital', 'treat', 'symptom', 'warning', 'watch ', 'advisory']) {

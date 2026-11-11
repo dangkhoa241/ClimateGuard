@@ -7,7 +7,9 @@ problems listed. About $0.02 per language.
 
 Usage:  python scripts/translate_ui.py            # all four
         python scripts/translate_ui.py ko ar      # some
-Rerun after changing English strings; EN/ES/VI stay human-written in strings.js.
+        python scripts/translate_ui.py --new-only # translate only keys missing from i18n.auto.json and merge them
+Rerun after changing English strings; EN/ES/VI stay human-written in strings.js. --new-only never touches an
+existing translation (use it when you only ADDED keys, so every earlier string, safety text included, stays as is).
 """
 import json
 import re
@@ -97,9 +99,19 @@ def translate(src: dict, lang: str) -> dict:
 
 def main(argv: list[str]) -> None:
     langs = [a for a in argv if a in TARGETS] or list(TARGETS)
+    new_only = "--new-only" in argv
     src = english()
     current = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}
     for lang in langs:
+        if new_only:
+            missing = {k: v for k, v in src.items() if k not in current.get(lang, {})}
+            if not missing:
+                print(f"{LANGS[lang]['name']}: nothing new to translate")
+                continue
+            print(f"Translating {len(missing)} new keys into {LANGS[lang]['name']}...")
+            current[lang] = {**current.get(lang, {}), **translate(missing, lang)}
+            OUT.write_text(json.dumps(current, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+            continue
         print(f"Translating {len(src)} keys into {LANGS[lang]['name']}...")
         current[lang] = translate(src, lang)
         OUT.write_text(json.dumps(current, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
