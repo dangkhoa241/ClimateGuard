@@ -1,7 +1,21 @@
 # PWA and web push: implementation plan
 
-Branch: `feature/pwa-push` (from `main`). Status: **plan only, no code written yet.**
+Branch: `feature/pwa-push` (from `main`). Status: **approved with the revisions below; implementation in progress.**
 Baseline before any change: backend **549 passed** (pytest), frontend **88 passed** (node --test) and **85 passed** (vitest).
+
+## Approved revisions (these override anything below that conflicts)
+
+1. **Storage**: new `climateguard-push` table, 1 RCU / 1 WCU. Approved.
+2. **Library**: `pywebpush`, pinned, with an offline arm64 wheel check. Approved.
+3. **Push title = the email's validated subject line for that alert and language** (`notify.compose()`), not ClimateGuard's risk label alone. **Finding while implementing:** the email subject does *not* by itself carry the official NWS level name. English has our own level (`HIGH heat alert`), Spanish and Vietnamese have no level word (Vietnamese deliberately says "thong bao"), and zh/ko/ar use the English subject. So the title is the subject **plus the official level name** (Warning, Watch or Advisory, in the subscriber's language: Aviso/Vigilancia/Advertencia, Cảnh báo/Cảnh giác/Khuyến cáo, the English NWS word for zh/tl/ko/ar) whenever the alert's validated English message names one (highest wins: Warning, then Watch, then Advisory). A test asserts the title contains the level name for every language whenever the alert has one. Body: first one or two sentences of the validated message.
+4. **One place and language per device.** Approved.
+5. **Caps and limits**: total push subscriptions capped at 500 (`MaxPushSubscribers`), and the same style of rate limits as email sign-up (per IP per hour, per endpoint per day, whole app per day).
+6. **Time budget**: push runs only after every email is published, with a total budget (default 20 s, `PUSH_BUDGET_S`) that also stops starting new sends. Collect's 600 s Lambda timeout therefore cannot be reached because of push. Tested with a fake clock and slow senders.
+7. **Cost note**: a push-only zone becomes a monitored zone, so it can trigger agent runs (about $0.013 per alert, plus translation for zh/tl/ko/ar). That spend counts under the existing `DailyModelBudgetUsd` ($10/day) cap like email-driven zones; push itself adds no model calls and no new cost line.
+8. **Delivery options**: every push is sent with `TTL = 6 hours` (21600 s) and `Urgency: high`.
+9. **Endpoint allow-list**: HTTPS only, no port or credentials, hostname must equal an allowed host or end with `.` + an allowed suffix (so `evilfcm.googleapis.com`, `fcm.googleapis.com.evil.com`, `push.apple.com.evil.com` fail). Tested with look-alike domains.
+10. **Unsubscribe requires the subscription endpoint itself** (the endpoint URL is the secret; there is no other identifier, no listing by zone).
+11. **Vercel previews and the CORS change are out of scope.** The push UI sits behind a flag: it is **hidden unless the URL has `?push=1`** (remembered for the session in `sessionStorage`), and demo mode never subscribes. Service worker registration and the offline shell are not behind the flag. The flag is removed after your phone test, in a separate change.
 
 ## 0. What I found in the repo (it shapes the design)
 
@@ -54,7 +68,7 @@ New `PushSignup.jsx` section, separate from the email form (no email field). Ste
 3. Button **Turn on phone notifications**. On click (a user gesture, required on iOS) it requests permission, then `serviceWorker.ready` then `pushManager.subscribe({userVisibleOnly: true, applicationServerKey: VITE_VAPID_PUBLIC_KEY})`, then `POST /push/subscribe`. The browser subscription is rolled back if the server call fails.
 4. When on: shows "On for {place}, in {language}" and a **Turn off notifications** button (`pushManager` unsubscribe plus `POST /push/unsubscribe`; if the server call fails the local unsubscribe still happens and the server record is cleaned on the first 404/410).
 - States with specific messages: unsupported browser, iPhone not installed (links to the install screen), permission denied (how to re-enable in browser settings), no VAPID key configured, network or rate-limit errors (same `t.errors` style).
-- **Demo mode (`?demo=1`)**: the section renders an explanation instead of the button, and `api.js` push functions plus the subscribe helper refuse to run when the URL has `demo=1`. A test asserts `pushManager.subscribe` and `fetch('/push/...')` are never called in demo.
+- **Flag**: the whole section and the Install entry's push mention render only with `?push=1`. **Demo mode (`?demo=1`)**: the section renders an explanation instead of the button, and `api.js` push functions plus the subscribe helper refuse to run when the URL has `demo=1`. A test asserts `pushManager.subscribe` and `fetch('/push/...')` are never called in demo.
 - API client: `subscribePush`, `unsubscribePush` in `api.js`. Config: `VITE_VAPID_PUBLIC_KEY` in `frontend/.env.example` (public key only) and as a Vercel env var.
 
 ### 2.6 i18n (7 languages, new keys only)
