@@ -5,6 +5,45 @@ import { HazardIcon, hazardKind } from './icons.jsx'
 import LocationPicker from './LocationPicker.jsx'
 import ReadAloud from './ReadAloud.jsx'
 import ShareWhatsApp from './ShareWhatsApp.jsx'
+import { loadLastAlert, saveLastAlert } from './pwa.js'
+
+// Offline (or the API is down): the last alert this device saw, clearly labeled with its time and "may be out of date".
+function LastViewed({ zone, lang, t }) {
+  const last = loadLastAlert(zone)
+  if (!last) return null
+  const a = last.alert
+  const text = a.messages[lang] || a.messages.en
+  const when = new Date(last.viewedAt).toLocaleString(lang, { weekday: 'short', hour: 'numeric', minute: '2-digit' })
+  return (
+    <section className="last-viewed" aria-label={t.lastViewed.replace('{time}', when)}>
+      <p className="notice small" role="status">{t.lastViewed.replace('{time}', when)}</p>
+      <article className={`alert-card sev-${a.severity} hz-${hazardKind(a.hazard)}`}>
+        <div className="alert-meta">
+          <span className="alert-kind"><HazardIcon hazard={a.hazard} t={t} /><strong>{t.severity[a.severity] || a.severity}</strong></span>
+          <time dateTime={a.sent_at}>
+            {new Date(a.sent_at).toLocaleString(lang, { weekday: 'short', hour: 'numeric', minute: '2-digit' })}
+          </time>
+        </div>
+        <p lang={a.messages[lang] ? lang : 'en'}>{text}</p>
+      </article>
+    </section>
+  )
+}
+
+function useOnline() {
+  const [online, setOnline] = useState(typeof navigator === 'undefined' || navigator.onLine !== false)
+  useEffect(() => {
+    const up = () => setOnline(true)
+    const down = () => setOnline(false)
+    window.addEventListener('online', up)
+    window.addEventListener('offline', down)
+    return () => {
+      window.removeEventListener('online', up)
+      window.removeEventListener('offline', down)
+    }
+  }, [])
+  return online
+}
 
 function RecentAlerts({ zone, lang, t }) {
   const [state, setState] = useState({ loading: true, alerts: [], error: false })
@@ -17,7 +56,11 @@ function RecentAlerts({ zone, lang, t }) {
     setState({ loading: true, alerts: [], error: false })
     setTranslations({})
     getZoneAlerts(zone)
-      .then((alerts) => !cancelled && setState({ loading: false, alerts, error: false }))
+      .then((alerts) => {
+        if (cancelled) return
+        saveLastAlert(zone, lang, alerts[0]) // the newest alert, kept for offline use
+        setState({ loading: false, alerts, error: false })
+      })
       .catch(() => !cancelled && setState({ loading: false, alerts: [], error: true }))
     return () => {
       cancelled = true
@@ -55,6 +98,7 @@ function RecentAlerts({ zone, lang, t }) {
           <button type="button" className="secondary" onClick={() => setAttempt((n) => n + 1)}>{t.retry}</button>
         </div>
       )}
+      {state.error && <LastViewed zone={zone} lang={lang} t={t} />}
       {!state.error && state.alerts.length === 0 && <p className="muted">{t.noAlerts}</p>}
       {state.alerts.map((a) => {
         const key = `${a.sent_at}-${a.hazard}-${lang}`
@@ -96,6 +140,8 @@ export default function AlertsScreen({ lang, t, zone, setZone, demo = false }) {
   const [status, setStatus] = useState('idle') // idle | sending | done | error
   const [error, setError] = useState(null)
 
+  const online = useOnline()
+
   useEffect(() => setAlertLang(lang), [lang])
 
   async function submitSubscription() {
@@ -120,6 +166,7 @@ export default function AlertsScreen({ lang, t, zone, setZone, demo = false }) {
   return (
     <>
       {/* Sign-up is never simulated: in demo mode say so before anyone types an email */}
+      {!online && <p className="offline-banner small" role="status">{t.offlineBanner}</p>}
       {demo && <p className="notice demo-note small demo-signup-note">{t.demoSignupNote}</p>}
       <p>{t.signupIntro}</p>
       <LocationPicker t={t} zone={zone} onLocated={(z, loc) => setZone({ ...z, location: loc })} />
