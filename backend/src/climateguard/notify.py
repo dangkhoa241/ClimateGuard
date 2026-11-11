@@ -113,13 +113,14 @@ def deliver(zone: dict, hazard: str, severity: str, messages: dict) -> dict:
     """`messages` holds the agent's EN/ES/VI text. Publishes to every language with sign-ups
     in the zone (the reviewed three when there are none yet, e.g. demo zones)."""
     langs = zone.get("langs") or list(REVIEWED)
-    published, translations = [], {}
+    published, translations, texts = [], {}, {}
     for lang in langs:
         if lang in messages:
             text, translated = messages[lang], None
         else:
             text, translated = translate_alert(messages["en"], lang)
             translations[lang] = "translated" if translated else "english_fallback"
+        texts[lang] = (text, translated)
         subject, body = compose(zone, lang, hazard, severity, text, translated)
         if config.NOTIFY_MODE == "sns":
             import boto3
@@ -130,5 +131,19 @@ def deliver(zone: dict, hazard: str, severity: str, messages: dict) -> dict:
         published.append(lang)
     log.info("delivered %s %s alert for %s via %s: %s", severity, hazard, zone["zone"], config.NOTIFY_MODE,
              published)
+    push = _push(zone, hazard, severity, texts, messages["en"])  # only after every email is published
     return {"channel": config.NOTIFY_MODE, "languages": published, **({"translations": translations}
-                                                                      if translations else {})}
+                                                                      if translations else {}),
+            **({"push": push} if push.get("enabled") else {})}
+
+
+def _push(zone: dict, hazard: str, severity: str, texts: dict, english_text: str) -> dict:
+    """Web push to the zone's phone subscribers. Whatever happens here, the emails are already out: it has its
+    own time budget and swallows every error."""
+    try:
+        from . import webpush
+
+        return webpush.send_for_zone(zone, hazard, severity, texts, english_text)
+    except Exception as e:  # never let push break an alert delivery
+        log.warning("web push failed for %s: %s", zone.get("zone"), type(e).__name__)
+        return {"enabled": False, "error": type(e).__name__}
