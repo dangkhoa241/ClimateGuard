@@ -59,3 +59,17 @@ def test_script_defaults_match_template_defaults_for_numeric_parameters():
 def test_preflight_prints_the_budget_being_deployed():
     assert 'Report "DailyModelBudgetUsd" "OK"' in DEPLOY
     assert "deploying" in DEPLOY and "live stack" in DEPLOY
+
+
+def test_push_cap_is_passed_and_matches_the_template_default():
+    assert passed_overrides()["MaxPushSubscribers"] == "$MaxPushSubscribers"
+    assert float(script_defaults()["MaxPushSubscribers"]) == float(template_parameters()["MaxPushSubscribers"]) == 500
+
+
+def test_preflight_checks_the_vapid_key_by_length_only_and_never_creates_it():
+    assert '$VapidParam = "/climateguard/vapid-private-key"' in DEPLOY
+    assert "@{ Name = $VapidParam; Required = $false;" in DEPLOY  # missing = warning: push off, emails unaffected
+    assert "put-parameter" not in DEPLOY and "PutParameter" not in DEPLOY
+    # the same check loop prints lengths only: the query never selects the value itself
+    assert '"[Parameter.Type, length(Parameter.Value)]"' in DEPLOY
+    assert "VapidParam" not in DEPLOY.split("$overrides = @(", 1)[1]  # the key is never passed to SAM

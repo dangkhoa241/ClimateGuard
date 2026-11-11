@@ -25,6 +25,10 @@ Parameters:
     Type: Number
     Default: 3
     Description: Maximum distinct zone and language subscriptions per email in one year.
+  MaxPushSubscribers:
+    Type: Number
+    Default: 500
+    Description: Maximum phone-notification (web push) subscriptions in total; one place and language per device.
   DailyModelBudgetUsd:
     Type: Number
     Default: 10
@@ -56,6 +60,8 @@ Globals:
         FRONTEND_URL: !Ref FrontendUrl
         MAX_SUBSCRIBERS: !Ref MaxSubscribers
         MAX_SUBSCRIPTIONS_PER_EMAIL: !Ref MaxSubscriptionsPerEmail
+        PUSH_TABLE: !Ref PushTable
+        MAX_PUSH_SUBSCRIBERS: !Ref MaxPushSubscribers
         DAILY_MODEL_BUDGET_USD: !Ref DailyModelBudgetUsd
         CG_LOCAL_DIR: /tmp/climateguard
         NWS_USER_AGENT: !Ref NwsUserAgent
@@ -142,6 +148,22 @@ Resources:
         - { AttributeName: k, KeyType: HASH }
       TimeToLiveSpecification: { AttributeName: ttl, Enabled: true }
 
+  # Phone-notification (web push) subscriptions: pk zone, sk "<lang>#<endpoint hash>", plus "EP#<hash>" pointer items
+  # so a device can unsubscribe with only its endpoint. 1 RCU / 1 WCU keeps the account inside the free 25/25.
+  PushTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: climateguard-push
+      BillingMode: PROVISIONED
+      ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 }
+      AttributeDefinitions:
+        - { AttributeName: zone, AttributeType: S }
+        - { AttributeName: sk, AttributeType: S }
+      KeySchema:
+        - { AttributeName: zone, KeyType: HASH }
+        - { AttributeName: sk, KeyType: RANGE }
+      TimeToLiveSpecification: { AttributeName: ttl, Enabled: true }
+
   # Recovery photos + job records. Private, deleted after 24 hours by the collector (recovery_store.py);
   # the lifecycle rule is a backstop (S3 runs it once a day).
   RecoveryBucket:
@@ -193,6 +215,9 @@ Resources:
           # Muse Spark 1.3 translates alerts for zh/tl/ko/ar sign-ups; if missing: English with a note
           MODEL_API_KEY_PARAM: /climateguard/meta-model-api-key
           USE_CONTRIBUTOR: "false"
+          # Web push signing key: an SSM SecureString created by scripts/make_vapid_keys.py (never in this repo).
+          # If missing, phone notifications are off and emails are unaffected.
+          VAPID_PRIVATE_KEY_PARAM: /climateguard/vapid-private-key
       Policies:
         - DynamoDBCrudPolicy: { TableName: !Ref SnapshotsTable }
         - DynamoDBCrudPolicy: { TableName: !Ref UsageTable }
@@ -202,6 +227,12 @@ Resources:
         - SSMParameterReadPolicy: { ParameterName: climateguard/baseten-api-key }
         - SSMParameterReadPolicy: { ParameterName: climateguard/airnow-api-key }
         - SSMParameterReadPolicy: { ParameterName: climateguard/meta-model-api-key }
+        - SSMParameterReadPolicy: { ParameterName: climateguard/vapid-private-key }  # only the collector signs pushes
+        - DynamoDBCrudPolicy: { TableName: !Ref PushTable }
+        - Statement:  # removing a gone device deletes its subscriber and pointer items together
+            - Effect: Allow
+              Action: dynamodb:TransactWriteItems
+              Resource: !GetAtt PushTable.Arn
         - DynamoDBCrudPolicy: { TableName: !Ref ZonesTable }
         # daily counters for the public decision history (stats.py: k="stats#<day>"); without it every
         # run logged AccessDenied and the history showed zero checks
@@ -238,6 +269,12 @@ Resources:
         "POST /subscribe":
           ThrottlingBurstLimit: 1
           ThrottlingRateLimit: 0.2
+        "POST /push/subscribe":
+          ThrottlingBurstLimit: 1
+          ThrottlingRateLimit: 0.2
+        "POST /push/unsubscribe":
+          ThrottlingBurstLimit: 2
+          ThrottlingRateLimit: 0.5
         "POST /ask":
           ThrottlingBurstLimit: 2
           ThrottlingRateLimit: 0.5
@@ -279,7 +316,8 @@ Resources:
         - Statement:
             - Effect: Allow
               Action: dynamodb:TransactWriteItems
-              Resource: !GetAtt RateLimitTable.Arn
+              Resource: [!GetAtt RateLimitTable.Arn, !GetAtt PushTable.Arn]
+        - DynamoDBCrudPolicy: { TableName: !Ref PushTable }  # POST /push/subscribe and /push/unsubscribe
         - DynamoDBCrudPolicy: { TableName: !Ref ZonesTable }  # /locate registers new zones
         - DynamoDBReadPolicy: { TableName: !Ref UsageTable }  # GET /demo: real model cost so far + budget state
         - Statement:
@@ -308,6 +346,12 @@ Resources:
         Subscribe:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /subscribe }
+        PushSubscribe:  # phone notifications: stores a device's subscription for one zone and language
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /push/subscribe }
+        PushUnsubscribe:  # needs the subscription's own endpoint
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /push/unsubscribe }
         Decisions:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /decisions }

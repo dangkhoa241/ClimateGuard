@@ -34,6 +34,7 @@ param(
     [string]$Region = "us-east-2",            # this account's SCP denies us-west-2 and us-east-1
     [int]$MaxSubscribers = 500,
     [int]$MaxSubscriptionsPerEmail = 3,       # distinct zone+language subscriptions per email per year
+    [int]$MaxPushSubscribers = 500,           # total phone-notification (web push) subscriptions
     [double]$DailyModelBudgetUsd = 10,        # max estimated model spend per UTC day (the live cap)
     [switch]$PreflightOnly,
     [switch]$SkipBuild
@@ -43,6 +44,7 @@ $FreeRcu = 25; $FreeWcu = 25
 $BasetenParam = "/climateguard/baseten-api-key"
 $AirNowParam = "/climateguard/airnow-api-key"
 $MetaParam = "/climateguard/meta-model-api-key"
+$VapidParam = "/climateguard/vapid-private-key"   # web push signing key; made by backend/scripts/make_vapid_keys.py
 $PythonVersion = "3.12"   # must match Runtime: python3.12 in template.yaml
 
 # Folder of a Python $PythonVersion python.exe, or $null. The py launcher knows every registered install.
@@ -163,12 +165,16 @@ if ($lp.Ok) {
     }
 }
 $tplDefaults = @{}
-foreach ($m in [regex]::Matches($tpl, "(?m)^  (\w+):\s*?
-\s+Type: (?:String|Number)\s*?
+foreach ($m in [regex]::Matches($tpl, "(?m)^  (\w+):\s*
+?
+\s+Type: (?:String|Number)\s*
+?
 (?:\s+Description:[^
-]*?
+]*
+?
 (?:\s{6}[^
-]*?
+]*
+?
 )*)?\s+Default:\s*(\S+)")) {
     $tplDefaults[$m.Groups[1].Value] = $m.Groups[2].Value.Trim('"')
 }
@@ -208,7 +214,8 @@ Test-Permission "ssm:DescribeParameters" @("ssm", "describe-parameters", "--regi
 Write-Host "`n[3/4] API keys in SSM Parameter Store (lengths only, never values)"
 foreach ($p in @(@{ Name = $BasetenParam; Required = $true },
                  @{ Name = $AirNowParam; Required = $false; IfMissing = "AQI will use Open-Meteo instead of AirNow" },
-                 @{ Name = $MetaParam; Required = $false; IfMissing = "zh/tl/ko/ar alerts go out in English with a note" })) {
+                 @{ Name = $MetaParam; Required = $false; IfMissing = "zh/tl/ko/ar alerts go out in English with a note" },
+                 @{ Name = $VapidParam; Required = $false; IfMissing = "phone notifications (web push) are off; email alerts are unaffected (run backend/scripts/make_vapid_keys.py)" })) {
     $r = Invoke-Aws @("ssm", "get-parameter", "--region", $Region, "--name", $p.Name, "--with-decryption",
         "--query", "[Parameter.Type, length(Parameter.Value)]", "--output", "text")
     if ($r.Ok) {
@@ -300,6 +307,7 @@ $overrides = @(
     "FrontendUrl=$FrontendUrl",
     "MaxSubscribers=$MaxSubscribers",
     "MaxSubscriptionsPerEmail=$MaxSubscriptionsPerEmail",
+    "MaxPushSubscribers=$MaxPushSubscribers",
     "DailyModelBudgetUsd=$DailyModelBudgetUsd",   # always passed: an unpassed parameter keeps its OLD live value
     "NwsUserAgent=ClimateGuard/0.1(+mailto:$Contact)"   # no spaces: survives argument parsing
 )

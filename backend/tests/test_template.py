@@ -95,3 +95,63 @@ def test_recovery_photos_private_and_cleaned_up(transformed):
     assert fn["FunctionName"] == "climateguard-recovery" and fn["Environment"]["Variables"]["USE_CONTRIBUTOR"] == "false"
     retry = next(r for r in transformed["Resources"].values() if r["Type"] == "AWS::Lambda::EventInvokeConfig")
     assert retry["Properties"]["MaximumRetryAttempts"] == 0
+
+
+# --- web push -----------------------------------------------------------------------------------------------------
+
+def _policies(transformed, role):
+    import json
+    return json.dumps(transformed["Resources"][role]["Properties"]["Policies"])
+
+
+def test_push_table_is_tiny_and_expires_items(transformed):
+    table = transformed["Resources"]["PushTable"]["Properties"]
+    assert table["TableName"] == "climateguard-push" and table["BillingMode"] == "PROVISIONED"
+    assert table["ProvisionedThroughput"] == {"ReadCapacityUnits": 1, "WriteCapacityUnits": 1}
+    assert [k["AttributeName"] for k in table["KeySchema"]] == ["zone", "sk"]
+    assert table["TimeToLiveSpecification"] == {"AttributeName": "ttl", "Enabled": True}
+    assert "GlobalSecondaryIndexes" not in table  # an index would spend more of the free capacity
+
+
+def test_dynamodb_stays_inside_the_free_tier(transformed):
+    tables = [r["Properties"] for r in transformed["Resources"].values() if r["Type"] == "AWS::DynamoDB::Table"]
+    assert sum(t["ProvisionedThroughput"]["ReadCapacityUnits"] for t in tables) <= 25
+    assert sum(t["ProvisionedThroughput"]["WriteCapacityUnits"] for t in tables) <= 25
+    assert len(tables) == 7
+
+
+def test_only_the_collector_can_read_the_vapid_private_key(transformed):
+    for name, res in transformed["Resources"].items():
+        if res["Type"] != "AWS::IAM::Role" or "Policies" not in res["Properties"]:
+            continue
+        assert ("vapid-private-key" in _policies(transformed, name)) == (name == "CollectFunctionRole"), name
+    env = transformed["Resources"]["CollectFunction"]["Properties"]["Environment"]["Variables"]
+    assert env["VAPID_PRIVATE_KEY_PARAM"] == "/climateguard/vapid-private-key"
+    for fn in transformed["Resources"].values():  # only the parameter NAME is ever an environment variable
+        if fn["Type"] == "AWS::Lambda::Function":
+            assert "VAPID_PRIVATE_KEY" not in fn["Properties"]["Environment"]["Variables"]
+
+
+def test_push_permissions_for_api_and_collector(transformed):
+    api, collect = _policies(transformed, "ApiFunctionRole"), _policies(transformed, "CollectFunctionRole")
+    assert "PushTable" in api and "dynamodb:TransactWriteItems" in api  # subscribe/unsubscribe write two items
+    assert "PushTable" in collect and "dynamodb:TransactWriteItems" in collect  # prune a gone device
+    for other in ("AskFunctionRole", "RecoveryFunctionRole"):
+        assert "PushTable" not in _policies(transformed, other)
+
+
+def test_push_routes_and_throttles(transformed):
+    import json
+    api = next(r for r in transformed["Resources"].values() if r["Type"] == "AWS::ApiGatewayV2::Api")
+    paths = json.dumps(api["Properties"]["Body"]["paths"])
+    assert "/push/subscribe" in paths and "/push/unsubscribe" in paths
+    stage = next(r for r in transformed["Resources"].values() if r["Type"] == "AWS::ApiGatewayV2::Stage")
+    routes = stage["Properties"]["RouteSettings"]
+    assert routes["POST /push/subscribe"] == {"ThrottlingBurstLimit": 1, "ThrottlingRateLimit": 0.2}
+    assert routes["POST /push/unsubscribe"]["ThrottlingBurstLimit"] == 2
+
+
+def test_push_cap_is_a_parameter_passed_to_the_functions(transformed):
+    assert transformed["Parameters"]["MaxPushSubscribers"]["Default"] == 500
+    env = transformed["Resources"]["ApiFunction"]["Properties"]["Environment"]["Variables"]
+    assert env["MAX_PUSH_SUBSCRIBERS"] == {"Ref": "MaxPushSubscribers"} and "PUSH_TABLE" in env
