@@ -4,6 +4,8 @@ GET  /locate?zip=95202 | ?lat=..&lon=..  -> the NWS forecast zone for a location
 GET  /zones/{zone}                       -> latest snapshot (summary + alerts + hourly forecast + AQI)
 GET  /zones/{zone}/alerts                -> alerts ClimateGuard sent to this zone in the last 48 h
 POST /subscribe                          -> {email, lang, zip | lat+lon} sign-up (SNS double opt-in)
+POST /push/subscribe                     -> {subscription, lang, zip | lat+lon} phone notifications (web push)
+POST /push/unsubscribe                   -> {endpoint} turn them off (needs the subscription's own endpoint)
 GET  /decisions?zone=&days=7&limit=50    -> the live agent's real decisions + daily counters (public)
 GET  /demo                               -> demo mode: replay buttons, real model cost so far, budget state
 """
@@ -12,7 +14,7 @@ import json
 import logging
 import re
 
-from .. import alerts_store, budget, demo, hazards, ratelimit, stats, zones
+from .. import alerts_store, budget, demo, hazards, push_signup, ratelimit, stats, zones
 from ..geo import GeoError
 from ..languages import LANGS
 from ..store import get_store
@@ -93,6 +95,37 @@ def post_subscribe(event) -> dict:
         return _resp(503, {"error": "busy"}, headers={"Retry-After": "60"})
 
 
+def _error_response(e: SignupError) -> dict:
+    headers = {"Retry-After": "3600"} if e.status == 429 else None
+    return _resp(e.status, {"error": e.code}, headers=headers)
+
+
+def post_push_subscribe(event) -> dict:
+    try:
+        body = _json_body(event)
+        if body.get("website"):  # honeypot
+            return _resp(202, {"status": "subscribed"})
+        result = push_signup.subscribe(body.get("subscription"), str(body.get("lang", "")), ip=_source_ip(event),
+                                       zip_code=body.get("zip"), lat=body.get("lat"), lon=body.get("lon"))
+        return _resp(201, {**result, "not_covered": hazards.EXCLUSION_NOTE})
+    except SignupError as e:
+        return _error_response(e)
+    except Exception:  # keep details in the log (never the endpoint or keys), tell the person it is busy
+        log.exception("push sign-up failed")
+        return _resp(503, {"error": "busy"}, headers={"Retry-After": "60"})
+
+
+def post_push_unsubscribe(event) -> dict:
+    try:
+        body = _json_body(event)
+        return _resp(200, push_signup.unsubscribe(body.get("endpoint"), ip=_source_ip(event)))
+    except SignupError as e:
+        return _error_response(e)
+    except Exception:
+        log.exception("push unsubscribe failed")
+        return _resp(503, {"error": "busy"}, headers={"Retry-After": "60"})
+
+
 def get_zone_alerts(zone: str) -> dict:
     rows = alerts_store.recent_sent(zone, hours=48)
     rows.sort(key=lambda r: r["ts"], reverse=True)
@@ -161,6 +194,10 @@ def handler(event, context):
         return _resp(200, LANGS, cache_s=86400)
     if route == "POST /subscribe":
         return post_subscribe(event)
+    if route == "POST /push/subscribe":
+        return post_push_subscribe(event)
+    if route == "POST /push/unsubscribe":
+        return post_push_unsubscribe(event)
     if route in ("GET /zones/{zone}", "GET /zones/{zone}/alerts") and not ZONE_RE.match(zone):
         return _resp(404, {"error": "unknown_zone"})
     if route == "GET /zones/{zone}":

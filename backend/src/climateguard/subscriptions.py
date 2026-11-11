@@ -15,7 +15,7 @@ import re
 import time
 from functools import lru_cache
 
-from . import config, ratelimit, zones
+from . import config, push_store, ratelimit, zones
 from .geo import GeoError
 from .languages import is_supported
 
@@ -146,6 +146,8 @@ def refresh_confirmed(max_age_minutes: int | None = None) -> list[str]:
             n = sum(_confirmed_in_topic(rec["zone"], lang) for lang in rec["langs"])
         else:
             n = _confirmed_local(rec["zone"])
+        pushed = push_store.count_zone(rec["zone"])  # phone notification subscribers count like confirmed emails
+        n += pushed
         if n != rec.get("confirmed"):
             changed.append(rec["zone"])
         zones.put({**rec, "confirmed": n, "confirmed_checked_at": int(time.time())})

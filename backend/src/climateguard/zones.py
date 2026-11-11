@@ -124,6 +124,16 @@ def all_zones() -> list[dict]:
     return list(recs.values())
 
 
+def ensure_confirmed(zone: str, minimum: int) -> dict:
+    """Make sure a zone counts as having subscribers (push-only zones have no SNS confirmation to count)."""
+    rec = get(zone)
+    if rec is None:
+        raise ZoneError("unknown_zone")
+    if (rec.get("confirmed") or 0) < minimum:
+        rec = put({**rec, "confirmed": minimum})
+    return rec
+
+
 def monitored() -> list[dict]:
     """Zones to collect and run the agent for: confirmed subscribers, plus the demo zones."""
     return [z for z in all_zones() if z.get("demo") or (z.get("confirmed") or 0) > 0]

@@ -266,3 +266,49 @@ def adjust_spend(day: str, amount: float) -> None:
     with _local_lock:
         used, expires = _local.get(key, (0.0, time.time() + 3 * 86400))
         _local[key] = (max(0.0, used + amount), expires)
+
+
+PUSH_COUNTER = "count#push-subscribers"
+
+
+def claim_push_slot(max_total: int) -> bool:
+    """Reserve one slot under the total web push subscriber cap. False when the cap is reached."""
+    if config.STORAGE == "dynamodb":
+        from botocore.exceptions import ClientError
+
+        try:
+            _table().update_item(
+                Key={"k": PUSH_COUNTER}, UpdateExpression="SET #n = if_not_exists(#n, :zero) + :one",
+                ConditionExpression="attribute_not_exists(#n) OR #n < :maximum",
+                ExpressionAttributeNames={"#n": "n"},
+                ExpressionAttributeValues={":zero": 0, ":one": 1, ":maximum": max_total})
+            return True
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+                return False
+            raise
+    with _local_lock:
+        n, exp = _local.get(PUSH_COUNTER, (0, float("inf")))
+        if n >= max_total:
+            return False
+        _local[PUSH_COUNTER] = (n + 1, exp)
+        return True
+
+
+def release_push_slot() -> None:
+    """Give a slot back (unsubscribe, expired or removed subscription, failed sign-up)."""
+    if config.STORAGE == "dynamodb":
+        from botocore.exceptions import ClientError
+
+        try:
+            _table().update_item(Key={"k": PUSH_COUNTER}, UpdateExpression="ADD #n :minus",
+                                 ConditionExpression="#n >= :one", ExpressionAttributeNames={"#n": "n"},
+                                 ExpressionAttributeValues={":minus": -1, ":one": 1})
+        except ClientError as e:
+            if e.response["Error"]["Code"] != "ConditionalCheckFailedException":
+                raise
+        return
+    with _local_lock:
+        n, exp = _local.get(PUSH_COUNTER, (0, float("inf")))
+        if n > 0:
+            _local[PUSH_COUNTER] = (n - 1, exp)

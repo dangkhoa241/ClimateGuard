@@ -21,6 +21,8 @@ ROUTES = [  # (method, regex, routeKey)
     ("GET", r"^/zones/(?P<zone>[A-Za-z]{2}[Zz]\d{3})$", "GET /zones/{zone}"),
     ("GET", r"^/zones/(?P<zone>[A-Za-z]{2}[Zz]\d{3})/alerts$", "GET /zones/{zone}/alerts"),
     ("POST", r"^/subscribe$", "POST /subscribe"),
+    ("POST", r"^/push/subscribe$", "POST /push/subscribe"),
+    ("POST", r"^/push/unsubscribe$", "POST /push/unsubscribe"),
     ("GET", r"^/decisions$", "GET /decisions"),
     ("GET", r"^/demo$", "GET /demo"),
     ("POST", r"^/demo/replay$", "POST /demo/replay"),  # Ask Lambda in AWS

@@ -74,6 +74,18 @@ MAX_SUBSCRIBERS = int(os.getenv("MAX_SUBSCRIBERS", "500"))
 MAX_SUBSCRIPTIONS_PER_EMAIL = int(os.getenv("MAX_SUBSCRIPTIONS_PER_EMAIL", "3"))
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
+# --- Web push (installed-app notifications; see push_signup.py and webpush.py) ---
+PUSH_TABLE = os.getenv("PUSH_TABLE", "climateguard-push")  # subscriptions by zone + language
+MAX_PUSH_SUBSCRIBERS = int(os.getenv("MAX_PUSH_SUBSCRIBERS", "500"))
+# VAPID private key: an SSM SecureString in Lambda (the name is in the env var, never the key). VAPID_PRIVATE_KEY is
+# only for local development with fake data; with neither set, web push is off and emails are unaffected.
+VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")
+VAPID_PRIVATE_KEY_PARAM = os.getenv("VAPID_PRIVATE_KEY_PARAM", "")
+PUSH_BUDGET_S = float(os.getenv("PUSH_BUDGET_S", "20"))  # total time one alert may spend sending pushes
+PUSH_TIMEOUT_S = float(os.getenv("PUSH_TIMEOUT_S", "5"))  # one push request
+PUSH_TTL_S = 6 * 3600  # the push service drops an undelivered message after 6 hours
+PUSH_WORKERS = int(os.getenv("PUSH_WORKERS", "8"))
+
 # --- Cost and scale controls ---
 # The default of 3 is for local runs only. The deployed value is 10 (template.yaml DailyModelBudgetUsd, passed by
 # deploy.ps1 on every deploy).
