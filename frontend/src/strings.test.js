@@ -90,3 +90,26 @@ for (const lang of ['en', 'es', 'vi', 'zh', 'tl', 'ko', 'ar']) {
     }
   })
 }
+
+// PWA and phone-notification text: every new key exists in Spanish and Vietnamese with English's {placeholders},
+// and the auto-translated four either have it (same placeholders) or fall back to English (checked in i18n.js).
+const PWA_KEY = /^(install|offline|lastViewed|push)/
+for (const lang of ['es', 'vi']) {
+  test(`PWA and push strings complete in ${lang}`, () => {
+    const other = Object.fromEntries(flat(REVIEWED_STRINGS[lang]))
+    const keys = flat(REVIEWED_STRINGS.en).filter(([k]) => PWA_KEY.test(k))
+    assert.ok(keys.length >= 30, `expected 30+ PWA keys, found ${keys.length}`)
+    for (const [k, en] of keys) {
+      assert.equal(typeof other[k], 'string', `${lang} is missing ${k}`)
+      assert.ok(other[k].trim().length > 0, `${lang} ${k} is empty`)
+      assert.equal(holes(other[k]), holes(en), `${lang} ${k} placeholders differ`)
+    }
+  })
+}
+
+test('the push and install text never gives medical advice or names the official alert levels as ours', () => {
+  const text = flat(REVIEWED_STRINGS.en).filter(([k]) => PWA_KEY.test(k)).map(([, v]) => v).join(' ').toLowerCase()
+  for (const word of ['medicine', 'doctor', 'hospital', 'treat', 'symptom', 'warning', 'watch ', 'advisory']) {
+    assert.ok(!text.includes(word), `new strings mention "${word}"`)
+  }
+})

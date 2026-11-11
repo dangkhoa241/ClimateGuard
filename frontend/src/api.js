@@ -1,3 +1,5 @@
+import { inDemo } from './pwa.js'
+
 // Thin client for the ClimateGuard API. Local dev: `python backend/scripts/local_api.py`.
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8787').replace(/\/$/, '')
 
@@ -57,6 +59,26 @@ export const subscribe = ({ email, lang, location, website }) =>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, lang, website, ...location }),
   })
+
+// Phone notifications (web push). Demo mode never creates a real subscription, so these refuse to run there.
+export const subscribePush = ({ subscription, lang, location, website = '' }) => {
+  if (inDemo()) return Promise.reject(new ApiError('demo_mode', 0))
+  return request('/push/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ subscription, lang, website, ...location }),
+  })
+}
+
+// Needs the subscription's own endpoint: nothing else identifies the device.
+export const unsubscribePush = (endpoint) => {
+  if (inDemo()) return Promise.reject(new ApiError('demo_mode', 0))
+  return request('/push/unsubscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ endpoint }),
+  })
+}
 
 // A spoken question (16 kHz WAV from voice.js) -> {text, audio_ms}. The text goes into the question
 // box for the person to check before asking.

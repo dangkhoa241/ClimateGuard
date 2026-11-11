@@ -3,6 +3,7 @@ import { ALERT_LANGS, getZoneAlerts, subscribe, translateAlert } from './api.js'
 import { CoverageList, NotCoveredNotice } from './Coverage.jsx'
 import { HazardIcon, hazardKind } from './icons.jsx'
 import LocationPicker from './LocationPicker.jsx'
+import PushSignup from './PushSignup.jsx'
 import ReadAloud from './ReadAloud.jsx'
 import ShareWhatsApp from './ShareWhatsApp.jsx'
 import { loadLastAlert, saveLastAlert } from './pwa.js'
@@ -221,6 +222,7 @@ export default function AlertsScreen({ lang, t, zone, setZone, demo = false }) {
           </form>
         )
       )}
+      <PushSignup lang={lang} t={t} zone={zone} demo={demo} />
       <CoverageList t={t} />
       <NotCoveredNotice t={t} />
       {zone && <RecentAlerts zone={zone.zone} lang={lang} t={t} />}
