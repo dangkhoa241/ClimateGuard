@@ -1,5 +1,6 @@
 // Writes docs/architecture.svg, the README's main diagram, from the same data as the app's How it works page
-// (howItWorksData.js + the English strings). Run: npm run generate:how-diagram
+// (howItWorksData.js + the English strings), plus a README-only "Alert delivery" lane (email, then web push).
+// Run: npm run generate:how-diagram
 //
 // Designed for a README about 900px wide: the viewBox is 960px, so at 900px every label is still 14px or larger
 // and the badge 12px or larger. Each node is sized to its own text. The SVG paints its own light background, so it
@@ -11,7 +12,21 @@ import { ALL_HOW_NODES, HOW_DIAGRAM_LABELS, HOW_EVAL, HOW_LANES, nodeTitle } fro
 import { REVIEWED_STRINGS } from '../src/strings.js'
 
 const english = REVIEWED_STRINGS.en
-const nodeById = new Map(ALL_HOW_NODES.map((node) => [node.id, node]))
+
+// README only (not on the app's How it works page): how a sent alert reaches people. Email goes first; web push
+// follows for people who installed the app (backend/src/climateguard/notify.py and webpush.py).
+const DELIVERY_NODES = [
+  { id: 'deliver-email', meta: false, diagramTitle: 'Email first', diagramLabel: 'Amazon SNS, one topic per zone + language' },
+  { id: 'deliver-push', meta: false, diagramTitle: 'Then web push', diagramLabel: 'Subscriptions in DynamoDB; VAPID key in SSM' },
+  { id: 'deliver-services', meta: false, diagramTitle: 'Push services', diagramLabel: 'Google, Apple, Mozilla, Microsoft' },
+  { id: 'deliver-phone', meta: false, diagramTitle: 'Phone notification', diagramLabel: 'Installed app; tap opens the alert' },
+]
+const DELIVERY = {
+  title: 'Alert delivery',
+  note: 'Every email is published before any push starts. Push has a 20-second budget and never blocks or delays email.',
+  flow: { id: 'delivery', nodeIds: DELIVERY_NODES.map((n) => n.id) },
+}
+const nodeById = new Map([...ALL_HOW_NODES, ...DELIVERY_NODES].map((node) => [node.id, node]))
 const output = resolve(dirname(fileURLToPath(import.meta.url)), '../../docs/architecture.svg')
 const escapeXml = (text) => String(text).replace(/[&<>"']/g, (char) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;',
@@ -91,9 +106,9 @@ function textBlock(lines, x, y, font, attrs) {
 // ---- Nodes
 function layoutNode(node, maxText) {
   const badge = node.meta ? english.howMetaBadge : english.howNoMetaBadge
-  const title = wrap(nodeTitle(node, english), FONT.title, maxText)
-  const model = wrap(HOW_DIAGRAM_LABELS[node.id] ?? '', FONT.model, maxText)
-  if (!(node.id in HOW_DIAGRAM_LABELS)) throw new Error(`No diagram label for node ${node.id}`)
+  const title = wrap(node.diagramTitle ?? nodeTitle(node, english), FONT.title, maxText)
+  const model = wrap(node.diagramLabel ?? HOW_DIAGRAM_LABELS[node.id] ?? '', FONT.model, maxText)
+  if (!('diagramLabel' in node) && !(node.id in HOW_DIAGRAM_LABELS)) throw new Error(`No diagram label for node ${node.id}`)
   const badgeWidth = Math.ceil(measure(badge, FONT.badge) + 20)
   const textWidth = Math.max(badgeWidth, ...title.map((l) => measure(l, FONT.title)), ...model.map((l) => measure(l, FONT.model)))
   const contentHeight = FONT.badge.line + 8 + title.length * FONT.title.line + (model.length ? 6 + model.length * FONT.model.line : 0)
@@ -220,6 +235,7 @@ y += 16 + 18
 const lanes = []
 for (const lane of [
   { title: english[alertsLane.titleKey], flows: [layoutFlow(alertsFlow), layoutFlow(askFlow, english[askFlow.titleKey])] },
+  { title: DELIVERY.title, note: DELIVERY.note, flows: [layoutFlow(DELIVERY.flow)] },
   { title: english[recoveryLane.titleKey], flows: [layoutFlow(recoveryFlow)] },
   { title: english[HOW_EVAL.titleKey], note: english[HOW_EVAL.noteKey], flows: [layoutFlow(evalFlow)], dashed: true },
 ]) {
@@ -232,7 +248,7 @@ const H = y + 4
 const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-labelledby="title description">
   <title id="title">${escapeXml(english.howDiagramTitle)}</title>
-  <desc id="description">${escapeXml(`${english.howLaneAlerts}: NWS data, alert decision, safety rules, translation and read-aloud; Ask: voice transcription and answer. ${english.howLaneRecovery}: photos, SAM outlines, image analysis and report. ${english[HOW_EVAL.titleKey]}: Muse Wonder 1.0 review, not connected to the live path.`)}</desc>
+  <desc id="description">${escapeXml(`${english.howLaneAlerts}: NWS data, alert decision, safety rules, translation and read-aloud; Ask: voice transcription and answer. ${DELIVERY.title}: email first, then web push through the push services to the installed app. ${english.howLaneRecovery}: photos, SAM outlines, image analysis and report. ${english[HOW_EVAL.titleKey]}: Muse Wonder 1.0 review, not connected to the live path.`)}</desc>
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
       <path d="M0 0L10 5L0 10z" fill="${COLOR.arrow}"/>

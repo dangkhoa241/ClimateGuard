@@ -13,6 +13,8 @@ Built for the Meta Global AI Developer Hackathon (Indie Developer track). Theme:
 
 Built solo during the hackathon (Oct 26 to Nov 4, 2026) with AI coding assistants (GitHub Copilot, Claude Code).
 
+Submitted to the Meta Global AI Developer Hackathon (Nov 4, 2026): [exact submitted version (tag `hackathon-submission`)](https://github.com/dangkhoa241/ClimateGuard/tree/hackathon-submission). Work after the submission is listed under [What's new since the hackathon](#whats-new-since-the-hackathon).
+
 ## 60-second judge path
 
 Open the [demo](https://climate-guard-khaki.vercel.app/?demo=1) on your phone. Pick a language at the top if you like.
@@ -23,6 +25,14 @@ Prefer to watch first? The demo video shows all of this: https://youtu.be/W8-jUB
 2. **Report damage.** Tap **Try with sample photos**, tap a photo, then **Check my photos**. SAM 3.1 outlines the damage. Answer the questions, tap **Make my report**, then **Print or save as PDF**. This step takes about a minute.
 3. **Ask a question.** Go back, tap **Ask about Stockton**, tap a sample question. Try the mic, or **Read aloud**.
 4. **See how it decides.** The "How it works" strip at the bottom links to the decision history and shows the real AI cost of the live site so far.
+
+**Install the app and turn on phone notifications (added after the hackathon, optional):**
+
+- **Android (Chrome):** open the [live app](https://climate-guard-khaki.vercel.app), then tap **Install the app** at the bottom of the page (or the browser menu, **Install app**).
+- **iPhone or iPad (Safari, iOS 16.4 or later):** tap **Share**, then **Add to Home Screen**, then **Add**, and open ClimateGuard from the new Home Screen icon. The app's **Install the app** page shows the same steps.
+- **Turn notifications on:** in the installed app, open **Get alerts**, enter a ZIP code, pick a language in **Phone notifications**, and tap **Turn on phone notifications**. No email address is needed.
+- **Turn them off:** the same section shows **Turn off notifications**.
+- In a normal browser tab the **Phone notifications** section shows only with `?push=1` in the address. Demo mode never turns notifications on.
 
 ## The problem
 
@@ -62,11 +72,12 @@ We also send our own alerts when our data shows very hot days (95°F or more), u
 
 ## What it does
 
-- **Monitoring agent.** Every 15 minutes it checks NWS alerts, the forecast and air quality for each area with a confirmed subscriber. A cheap check skips the AI when there is no risk or nothing changed. Otherwise an AI agent decides whether to alert, writes the alert, and every decision is logged with its reason. Alerts go out by email, one topic per area and language.
+- **Monitoring agent.** Every 15 minutes it checks NWS alerts, the forecast and air quality for each area with a confirmed email subscriber or a phone-notification subscriber. A cheap check skips the AI when there is no risk or nothing changed. Otherwise an AI agent decides whether to alert, writes the alert, and every decision is logged with its reason. Alerts go out by email, one topic per area and language, and then as phone notifications to people who installed the app and turned them on.
 - **Ask.** Ask by text or voice, in your language. Answers use live data for your area and show their sources. **Read aloud** uses your phone's own voices. Questions about cooling centers and shelters get a cited web search, or a fixed "call 211" fallback.
 - **Supervisor view.** A fixed Cal/OSHA (California) or OSHA checklist for today's conditions, plus a short AI pre-shift talk to read aloud or share on WhatsApp.
 - **Recovery agent.** Pick a disaster, add 1 to 6 photos. SAM 3.1 outlines the damage, 2 to 4 fixed questions follow, then a report in your language plus English, a fixed checklist, and print-to-PDF.
 - **Decision history.** A public page, "How ClimateGuard decides", lists every decision the live agent made, including each time it chose not to alert.
+- **Installable app and phone notifications** (added after the hackathon). The app can be added to the home screen and shows the last alert you viewed when offline, labeled with its time and "may be out of date". People who install it can get alerts as phone notifications (web push) instead of, or as well as, email.
 - **Demo mode.** Real past events replayed through the live agent, sample photos, sample area, no email. If the budget is spent, it shows earlier saved real runs, not an error.
 - **Languages.** The screens and alerts come in 7 languages. A native Vietnamese speaker reviewed the Vietnamese for style (not every sentence). Spanish has no human review yet. Native-speaker review of both is pending for the newest text. Chinese, Tagalog, Korean and Arabic are **machine-translated and labeled as such** everywhere. Arabic switches the page to right-to-left.
 - Saved demo replay alerts use pre-generated translations so changing the screen language also changes the alert text. Live alert cards translate on demand and offer a retry if translation is unavailable; read-aloud requires a matching device voice.
@@ -88,9 +99,9 @@ Muse Image is not used.
 
 ## Architecture
 
-![ClimateGuard workflow. Alerts: NWS data every 15 minutes, then the alert decision by Muse Spark Open on Baseten, safety rules in Python, translation by Muse Spark 1.3, and the alert card with read-aloud. Ask: speech to text by Muse Voice Transcribe 1.0, then an answer by Muse Spark 1.3. Recovery: damage photos, SAM 3.1 outlines, Muse Spark 1.3 image analysis, and a report by Muse Spark 1.3. Evaluation only, not connected to the live product: Muse Wonder 1.0 review.](docs/architecture.svg)
+![ClimateGuard workflow. Alerts: NWS data every 15 minutes, then the alert decision by Muse Spark Open on Baseten, safety rules in Python, translation by Muse Spark 1.3, and the alert card with read-aloud. Ask: speech to text by Muse Voice Transcribe 1.0, then an answer by Muse Spark 1.3. Alert delivery: email first through Amazon SNS, then web push through the push services to the installed app. Recovery: damage photos, SAM 3.1 outlines, Muse Spark 1.3 image analysis, and a report by Muse Spark 1.3. Evaluation only, not connected to the live product: Muse Wonder 1.0 review.](docs/architecture.svg)
 
-Orange boxes use a Meta model; white boxes do not. The same diagram, with step details and costs, is on the app's How it works page, and both are generated from the same data (`frontend/scripts/generate-how-diagram.mjs`). Full model IDs are in the table above.
+Orange boxes use a Meta model; white boxes do not. The Alerts, Recovery and Evaluation parts are the same diagram as the app's How it works page (with step details and costs there), generated from the same data by `frontend/scripts/generate-how-diagram.mjs`. The Alert delivery lane (email first, then web push) is in this README diagram only. Full model IDs are in the table above.
 
 <details><summary>Detailed system diagram (Mermaid)</summary>
 
@@ -111,18 +122,24 @@ flowchart LR
     AGENT["Monitoring agent<br/>Muse Spark Open on Baseten<br/>tools: alerts, forecast, AQI, sent alerts, safety guidance"]
     GUARD["Guardrails in code (send_alert)<br/>no duplicates, daily cap, no medical advice,<br/>N95 only for smoke, NWS level names, accents"]
     TR["Muse Spark 1.3<br/>translates the checked English alert<br/>(zh, tl, ko, ar)"]
-    SNS["SNS email<br/>one topic per zone + language"]
+    SNS["SNS email<br/>one topic per zone + language<br/>(always first)"]
     PERSON(("Person's inbox"))
+    WP["Web push<br/>after every email, 20 s budget,<br/>TTL 6 h, urgency high"]
+    PSVC["Push services<br/>Google, Apple, Mozilla, Microsoft"]
+    PHONE(("Installed app<br/>notification"))
   end
 
   subgraph STORE["DynamoDB"]
     DB[("snapshots, alerts and decisions,<br/>usage and cost, rate limits, zones")]
+    PT[("PushTable<br/>push subscriptions by zone + language")]
   end
 
+  SSM[("SSM SecureString<br/>VAPID private key")]
+
   subgraph APP["App"]
-    FE["React app on Vercel<br/>7 languages, phone first"]
+    FE["React app on Vercel<br/>7 languages, phone first,<br/>installable (PWA), offline last alert"]
     API["API Gateway (HTTP API)"]
-    L1["API Lambda<br/>locate, zones, subscribe,<br/>decisions, demo setup"]
+    L1["API Lambda<br/>locate, zones, subscribe,<br/>push subscribe and unsubscribe,<br/>decisions, demo setup"]
     L2["Ask Lambda<br/>ask, voice, pre-shift talk,<br/>demo replay"]
     L3["Recovery Lambda<br/>async photo jobs"]
   end
@@ -153,6 +170,11 @@ flowchart LR
   TR --> SNS
   GUARD --> SNS
   SNS --> PERSON
+  SNS -- "then" --> WP
+  PT --> WP
+  SSM -. "read by the collector only" .-> WP
+  WP --> PSVC
+  PSVC --> PHONE
   AGENT --> DB
   COL -- "deletes photos older than 24 h" --> S3
 
@@ -161,6 +183,7 @@ flowchart LR
   API --> L2
   API --> L3
   L1 --> DB
+  L1 --> PT
   L2 --> DB
   L2 --> MS
   L2 --> VT
@@ -185,7 +208,7 @@ The same system diagram is in [docs/architecture.mmd](docs/architecture.mmd).
 - **Active official warnings and advisories are prioritized.** If the AI agent declines an active NWS Warning (other than the short-fuse types above) or an active NWS Advisory for a hazard we cover, code sends it back to write the alert, up to twice. Advisories for things we do not cover, such as a Small Craft Advisory, are not required. It may adjust the wording. If our data disagrees with a warning, temperatures are left out and the warning's own wording is used. Exceptions: the same hazard was already alerted in the last 24 hours, the daily cap applies, or the warning or advisory ends within 3 hours and the hazard is gone.
 - **Official level names, enforced.** Spanish and Vietnamese alerts are checked in code so a Watch is never called a Warning, and the reverse.
 - **N95 only for smoke.** Mask advice is rejected unless the data shows smoke or dust (particle pollution). N95 masks do not help with ozone.
-- **What we do not claim.** **Tornado, Flash Flood, Severe Thunderstorm and Extreme Wind warnings** give only minutes of notice. ClimateGuard checks every 15 minutes and sends email, which is too slow, so it never sends them. Keep **Wireless Emergency Alerts** on in your phone settings and use a **NOAA Weather Radio**. Watches for these hazards, which come hours ahead, may be sent.
+- **What we do not claim.** **Tornado, Flash Flood, Severe Thunderstorm and Extreme Wind warnings** give only minutes of notice. ClimateGuard checks every 15 minutes and sends email or a phone notification, which is too slow, so it never sends them in any channel. Keep **Wireless Emergency Alerts** on in your phone settings and use a **NOAA Weather Radio**. Watches for these hazards, which come hours ahead, may be sent.
 - **Photos.** Location (GPS) and other hidden data are removed on the phone and again on the server. Photos are kept 24 hours in a private bucket with no public links, then deleted. People can delete them at any time.
 - **Replays are always labeled.** "REPLAY of a real event, not live." Replays never send email and never appear in the live decision history.
 - **AI-written, check it.** Reports and talks say they were written by AI. Automatic translations say so. The agent's reasons are shown as written.
@@ -195,7 +218,8 @@ The same system diagram is in [docs/architecture.mmd](docs/architecture.mmd).
 ## Abuse protection
 
 - **Sign-up:** hidden honeypot, SNS double opt-in, at most 5 attempts per IP per hour and 3 per email per day, plus at most 3 distinct area-and-language subscriptions per email in a year. A global subscriber ceiling also applies. Identifiers are hashed; rate counters and per-email subscription markers expire through DynamoDB TTL.
-- **Request volume:** API Gateway caps the default stage at 5 requests/second (burst 10), with stricter route limits for sign-up, Ask, translation, speech and recovery. Lambda reserved concurrency is not available on the Free plan (the account limit is 10 concurrent executions, and reserving any would leave fewer than the required 10 unreserved), so protection relies on the API throttling, the per-IP and per-email rate limits, the sign-up honeypot and the daily model-spend cap.
+- **Phone notifications:** at most 5 sign-ups per IP per hour, 10 per device per day and 300 per day across the app, and **500 push subscriptions in total** (`MaxPushSubscribers`). One place and language per device. The device's push address must be on one of the real push services (Google, Apple, Mozilla, Microsoft): look-alike hosts are rejected, because the server sends to that address. Turning notifications off needs the device's own push address. No email address or exact location is stored, only the zone and language.
+- **Request volume:** API Gateway caps the default stage at 5 requests/second (burst 10), with stricter route limits for sign-up (email and phone notifications), Ask, translation, speech and recovery. Lambda reserved concurrency is not available on the Free plan (the account limit is 10 concurrent executions, and reserving any would leave fewer than the required 10 unreserved), so protection relies on the API throttling, the per-IP and per-email rate limits, the sign-up honeypot and the daily model-spend cap.
 - **Model spend:** each billable request reserves a conservative estimate in the existing DynamoDB rate-limit table before calling a model, then reconciles it with reported usage. The configurable hard cap defaults to **$10 per UTC day**. Model-backed endpoints return HTTP 429 with “The demo is busy, please try again later” when the remaining budget cannot cover a call. Saved demo replays and the static sample decision continue to work. At the hard cap, scheduled monitoring also stops making model calls, including for active warnings; keep Wireless Emergency Alerts enabled on your phone.
 - **No edge proxy or paid protection service is required.** Turnstile is not enabled. If added later, create a Cloudflare Turnstile site key for the frontend and a secret key for server-side verification; neither belongs in the repository.
 
@@ -220,20 +244,29 @@ The same system diagram is in [docs/architecture.mmd](docs/architecture.mmd).
     - **Oct 30 rerun (fresh model samples): 35 of 37 steps passed** (real 11/11, edge 17/17, hard 7/9). Both `edge_dense_fog` cases sent a fog alert. The failures were `hard_warning_plus_other_watch` (sent the heat alert but omitted the concurrent Fire Weather Watch) and `hard_neighbor_zone_alert` (see Known limitations). Safety checks passed: no medical wording in 39/39 sent messages, Vietnamese accents in 39/39, and no mask advice without smoke in 29/29. The back-translation check matched 55/66 messages (review flags, not a pass/fail gate). The run used local storage and no AWS resources; monitoring model cost was $0.299, plus $0.1112 for the back-translation checker ($0.4102 total). [Full report](backend/eval/results/20261030-1531.md).
     - **Oct 28 full eval (standard models, fresh samples): alert agent 35 of 36 steps passed** (real 11/11, edge 16/16, hard 8/9), re-run after the active-warning rule (see Safety and trust). No medical wording in 38/38 sent messages, Vietnamese written with accents 38/38, no mask advice without smoke 28/28, zero model calls on the 5 pre-filter cases. $0.0127 per alert, median 7.2 s per run. The first run of this eval failed `hard_warning_vs_mild_data` (the warning says 110°F, our data shows 82°F, the agent skipped the alert). That was a real bug and is fixed: the agent now sends it and leaves the numbers out. The Oct 28 run's one failure was `hard_neighbor_zone_alert`: a Flood Warning for Fresno County sits in a Stockton feed, and the new rule sends it.
   - Earlier development runs and the bugs they found are in [docs/TECHNICAL.md](docs/TECHNICAL.md).
-- **Tests.** 549 backend tests and 173 frontend tests (88 unit tests and 85 screen tests, including ones that open every main screen in a browser-like page and fail on any thrown error, and ones for refresh and the Back button), all offline.
+- **Tests.** 727 backend tests and 230 frontend tests (112 unit tests and 118 screen tests, including ones that open every main screen in a browser-like page and fail on any thrown error, and ones for refresh and the Back button), all offline. At the hackathon submission the counts were 549 backend and 173 frontend; the rest cover the app install, offline view, service worker and phone notifications.
 - **Cost logging.** Every model call goes through one wrapper that requires a token limit, caches repeats for an hour, and logs tokens and cost. A separate atomic DynamoDB counter enforces the **$10/day hard cap** across chat, vision, image outlining, speech and web-search calls.
-- **Measured cost** (Oct 2026): about **$0.013 per alert** (4 to 6 model calls); about **$0.003 per Ask answer** ($0.02 to $0.03 when it searches the web for shelters); about **$0.004 per pre-shift talk**; about **$0.0002 per voice question**; about **$0.01 per recovery report with 1 photo and $0.07 with 6**. Total model spend as of Nov 3, 2026: about **$7.22 of the $150 Meta credit** ($2.79 from the local development usage log, which covers development and evals and does not include live-site usage, plus $4.43 for all Muse Wonder review runs: five full evals, one of them with a deleted report, and one smoke test; Meta bills Muse Wonder but it is not in the usage log) and about **$6.77 of the $100 Baseten credit** (also from the local development log), about $13.99 together. These figures do not include live-site usage. AWS is $0 on the Free plan. The demo's "How it works" strip shows the live total.
-- **AWS.** One SAM template in **us-east-2**: Lambda, DynamoDB, EventBridge Scheduler, SNS, S3, API Gateway, SSM. It stays inside the AWS Free plan, so AWS costs about $0. `deploy.ps1` checks permissions and free-tier capacity before every deploy.
+- **Measured cost** (Oct 2026): about **$0.013 per alert** (4 to 6 model calls); about **$0.003 per Ask answer** ($0.02 to $0.03 when it searches the web for shelters); about **$0.004 per pre-shift talk**; about **$0.0002 per voice question**; about **$0.01 per recovery report with 1 photo and $0.07 with 6**. Total model spend as of Nov 3, 2026: about **$7.22 of the $150 Meta credit** ($2.79 from the local development usage log, which covers development and evals and does not include live-site usage, plus $4.43 for all Muse Wonder review runs: five full evals, one of them with a deleted report, and one smoke test; Meta bills Muse Wonder but it is not in the usage log) and about **$6.77 of the $100 Baseten credit** (also from the local development log), about $13.99 together. These figures do not include live-site usage. AWS is still $0 on the Free plan: DynamoDB provisions 16 of the free 25 read units and 19 of the free 25 write units (the push table added 1 and 1). The demo's "How it works" strip shows the live total.
+- **AWS.** One SAM template in **us-east-2**: Lambda, DynamoDB (7 tables), EventBridge Scheduler, SNS, S3, API Gateway, SSM. It stays inside the AWS Free plan, so AWS costs about $0. `deploy.ps1` checks permissions and free-tier capacity before every deploy.
 - **Bugs the tests found, now fixed:** missing accents in Spanish and Vietnamese, an ozone alert that told people to wear an N95, a model request that hung for 19 minutes (now a hard 60 s limit), and a collector permission that left the history counters at zero.
 
-## Install and phone notifications (preview)
+## What's new since the hackathon
 
-ClimateGuard can be installed on a phone (Add to Home Screen) and the last alert you viewed stays readable offline, labeled with its time and "may be out of date". **Phone notifications** (web push, no email address needed) are built but hidden: add `?push=1` to the address, or open the installed app (Home Screen), to see the "Turn on phone notifications" section on the Get alerts page. Demo mode never creates a push subscription. Details: [docs/TECHNICAL.md](docs/TECHNICAL.md#installable-app-and-phone-notifications-web-push).
+Everything below was added after the Nov 4, 2026 submission (the submitted version is the [`hackathon-submission` tag](https://github.com/dangkhoa241/ClimateGuard/tree/hackathon-submission)).
+
+- **Installable app (PWA).** A web app manifest with maskable icons, an **Install the app** page with Android and iPhone steps, and a service worker. When the API cannot be reached, the Get alerts page shows the last alert you viewed, labeled with its time and "May be out of date".
+- **Phone notifications (web push)** for people who install the app: pick a ZIP code and language, tap **Turn on phone notifications**, no email address needed. A sent alert is **published by email first**; web push follows, inside a 20-second budget, and a push failure never blocks or delays the email. The notification's title is the email's subject line with the official NWS level name (Warning, Watch or Advisory, in the person's language) when the alert has one; the body is the first sentences of the same checked alert. Tapping it opens that area's alerts in the person's language. Undeliverable devices (404 or 410 from the push service) are removed.
+- **Caps and rate limits for push sign-ups** in the same style as email: per IP, per device and per day, a total cap of 500, and an allow-list of the real push services.
+- **VAPID private key in SSM Parameter Store** (SecureString), read at runtime only by the collector. `backend/scripts/make_vapid_keys.py` creates it and prints only the public key; `deploy.ps1` checks that it exists and prints only its type and length, never the value.
+- **Service worker updates and a kill switch.** Each build stamps the service worker with a new id, so a new deploy replaces the old one at once and deletes the old cache. It caches only the app shell, never API responses, sign-ups or photos. `frontend/public/sw-kill.js` switches it off for everyone in one step ([docs/TECHNICAL.md](docs/TECHNICAL.md#service-worker-updates-and-kill-switch)).
+- **`backend/scripts/send_test_push.py`**, a local admin script (no API route) that sends one test notification to a ZIP code's subscribers or the most recent one, reading the key from SSM with your AWS sign-in.
+
+Design and testing notes: [docs/PWA-PLAN.md](docs/PWA-PLAN.md), [docs/PWA-TEST-PLAN.md](docs/PWA-TEST-PLAN.md), and the web push section of [docs/TECHNICAL.md](docs/TECHNICAL.md#installable-app-and-phone-notifications-web-push).
 
 ## Known limitations
 
-- **Not for minutes-long warnings.** See above. Alerts are email only (no SMS), so they depend on someone checking email. The first confirmation email comes from AWS, in English.
-- **Spanish has no human review yet, and Vietnamese was reviewed for style by a native speaker, not every sentence.** Native-speaker review of both is pending for the newest text (recovery, demo, the coverage list and hazard names), which was drafted with AI (`docs/recovery-text-es-vi.md`).
+- **Not for minutes-long warnings.** See above. Alerts go by email, or as phone notifications for people who installed the app; there is no SMS. The first confirmation email comes from AWS, in English.
+- **Spanish still has no native-speaker review, and Vietnamese was reviewed for style by a native speaker, not every sentence.** Native-speaker review of both is pending for the newest text (recovery, demo, the coverage list and hazard names), which was drafted with AI (`docs/recovery-text-es-vi.md`).
 - **Chinese, Tagalog, Korean and Arabic are machine-translated and not yet reviewed by a native speaker.** The app shows this note near the language selector. The text was checked in code (same keys, same placeholders, 911/211/N95 unchanged), but no native speaker has read it.
 - **The fixed checklists (recovery and supervisor) exist in English, Spanish and Vietnamese only, and show in English for Chinese, Tagalog, Korean and Arabic.**
 - **The agent is not deterministic.** The same data can give a different judgment on another run. In development, a few hard cases flipped between runs. The back-translation check is a flag for review, not proof of meaning, and was itself wrong on 5 of 13 flags in one run.
@@ -245,7 +278,10 @@ ClimateGuard can be installed on a phone (Add to Home Screen) and the last alert
 - **Cooling-center search** falls back to the 211 links in about 1 run in 8, when the model writes an uncited answer. That is the rule working, not a bug.
 - **US only,** by NWS forecast zone. In a large county, a county-wide alert reaches every zone in it.
 - **Read aloud depends on the phone.** If the phone has no voice for a language, the button is hidden. Desktop browsers often have no Vietnamese or Tagalog voice.
-- **Phone notifications (preview) on iPhone need the app installed.** Web push works on iPhone and iPad (iOS 16.4 or later) only after ClimateGuard is added to the Home Screen and opened from there. A notification may not make a sound when the phone is in silent mode, and Focus modes or battery settings can delay or hide it. Delivery is best-effort: email stays the reliable channel, and short-fuse warnings are still not sent in any channel.
+- **Phone notifications on iPhone and iPad need iOS 16.4 or later and Add to Home Screen.** They work only in the installed app, opened from the Home Screen icon, not in a Safari tab.
+- **Notifications can't override silent mode.** A notification makes no sound when the phone is on silent, and Focus modes or battery settings can delay or hide it. Delivery through the push services is best-effort; email stays the reliable channel.
+- **In a normal browser tab, the Phone notifications section shows only with `?push=1`** in the address. The installed app always shows it.
+- **The test-notification wording in Chinese, Tagalog, Korean and Arabic (`send_test_push.py`) has no native-speaker review.**
 - **Tested on** Chrome on Windows (including phone-width windows) and an iPhone. Not tested on every device.
 
 ## Run, test, deploy

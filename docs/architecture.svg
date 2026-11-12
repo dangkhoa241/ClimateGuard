@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 875" width="960" height="875" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 1126" width="960" height="1126" role="img" aria-labelledby="title description">
   <title id="title">Alert, Ask, and recovery workflow diagram</title>
-  <desc id="description">Alerts: NWS data, alert decision, safety rules, translation and read-aloud; Ask: voice transcription and answer. Recovery: photos, SAM outlines, image analysis and report. Evaluation only (not in the live product): Muse Wonder 1.0 review, not connected to the live path.</desc>
+  <desc id="description">Alerts: NWS data, alert decision, safety rules, translation and read-aloud; Ask: voice transcription and answer. Alert delivery: email first, then web push through the push services to the installed app. Recovery: photos, SAM outlines, image analysis and report. Evaluation only (not in the live product): Muse Wonder 1.0 review, not connected to the live path.</desc>
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
       <path d="M0 0L10 5L0 10z" fill="#57534e"/>
@@ -17,7 +17,7 @@
     .title { font-size: 16px; font-weight: 700; }
     .model { font-size: 15px; font-weight: 500; }
   </style>
-  <rect x="1" y="1" width="958" height="873" rx="20" fill="#fffdf8" stroke="#e7e1d6" stroke-width="2"/>
+  <rect x="1" y="1" width="958" height="1124" rx="20" fill="#fffdf8" stroke="#e7e1d6" stroke-width="2"/>
   <rect x="254.8" y="20" width="22" height="16" rx="4" fill="#fff1e3" stroke="#ea580c" stroke-width="2"/>
   <text x="284.8" y="33" class="legend">Meta model</text>
   <rect x="397.5" y="20" width="22" height="16" rx="4" fill="#ffffff" stroke="#a8a29e" stroke-width="2"/>
@@ -87,47 +87,86 @@
     <text x="606" y="371.6" class="title" fill="#7c2d12">Ask: answer</text>
     <text x="606" y="396.8" class="model" fill="#9a3412">Muse Spark 1.3</text>
   </g>
-  <rect x="20" y="449" width="920" height="193" rx="16" fill="#f7f5f2" stroke="#e2dcd2" stroke-width="1.5"/>
-  <text x="480" y="483.72" class="lane-title">Recovery</text>
+  <rect x="20" y="449" width="920" height="235" rx="16" fill="#f7f5f2" stroke="#e2dcd2" stroke-width="1.5"/>
+  <text x="480" y="483.72" class="lane-title">Alert delivery</text>
+  <text x="480" y="508.6" class="note">Every email is published before any push starts. Push has a 20-second budget and never blocks or delays email.</text>
+  <g class="node" data-id="deliver-email">
+    <rect x="49" y="527" width="196" height="137" rx="10" fill="#ffffff" stroke="#a8a29e" stroke-width="2"/>
+    <rect x="87" y="548.5" width="120" height="22" rx="11" fill="#f5f5f4" stroke="#d6d3d1"/>
+    <text x="147" y="564" class="badge" fill="#44403c">No Meta model</text>
+    <text x="147" y="594.1" class="title" fill="#1d1d1b">Email first</text>
+    <text x="147" y="619.3" class="model" fill="#57534e">Amazon SNS, one topic</text>
+    <text x="147" y="638.3" class="model" fill="#57534e">per zone + language</text>
+  </g>
+  <path class="arrow" d="M250 595.5H273" fill="none" stroke="#57534e" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+  <g class="node" data-id="deliver-push">
+    <rect x="279" y="527" width="199" height="137" rx="10" fill="#ffffff" stroke="#a8a29e" stroke-width="2"/>
+    <rect x="318.5" y="539" width="120" height="22" rx="11" fill="#f5f5f4" stroke="#d6d3d1"/>
+    <text x="378.5" y="554.5" class="badge" fill="#44403c">No Meta model</text>
+    <text x="378.5" y="584.6" class="title" fill="#1d1d1b">Then web push</text>
+    <text x="378.5" y="609.8" class="model" fill="#57534e">Subscriptions in</text>
+    <text x="378.5" y="628.8" class="model" fill="#57534e">DynamoDB; VAPID key</text>
+    <text x="378.5" y="647.8" class="model" fill="#57534e">in SSM</text>
+  </g>
+  <path class="arrow" d="M483 595.5H506" fill="none" stroke="#57534e" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+  <g class="node" data-id="deliver-services">
+    <rect x="512" y="527" width="191" height="137" rx="10" fill="#ffffff" stroke="#a8a29e" stroke-width="2"/>
+    <rect x="547.5" y="548.5" width="120" height="22" rx="11" fill="#f5f5f4" stroke="#d6d3d1"/>
+    <text x="607.5" y="564" class="badge" fill="#44403c">No Meta model</text>
+    <text x="607.5" y="594.1" class="title" fill="#1d1d1b">Push services</text>
+    <text x="607.5" y="619.3" class="model" fill="#57534e">Google, Apple, Mozilla,</text>
+    <text x="607.5" y="638.3" class="model" fill="#57534e">Microsoft</text>
+  </g>
+  <path class="arrow" d="M708 595.5H731" fill="none" stroke="#57534e" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+  <g class="node" data-id="deliver-phone">
+    <rect x="737" y="527" width="175" height="137" rx="10" fill="#ffffff" stroke="#a8a29e" stroke-width="2"/>
+    <rect x="764.5" y="548.5" width="120" height="22" rx="11" fill="#f5f5f4" stroke="#d6d3d1"/>
+    <text x="824.5" y="564" class="badge" fill="#44403c">No Meta model</text>
+    <text x="824.5" y="594.1" class="title" fill="#1d1d1b">Phone notification</text>
+    <text x="824.5" y="619.3" class="model" fill="#57534e">Installed app; tap</text>
+    <text x="824.5" y="638.3" class="model" fill="#57534e">opens the alert</text>
+  </g>
+  <rect x="20" y="700" width="920" height="193" rx="16" fill="#f7f5f2" stroke="#e2dcd2" stroke-width="1.5"/>
+  <text x="480" y="734.72" class="lane-title">Recovery</text>
   <g class="node" data-id="recovery-photos">
-    <rect x="99" y="503" width="154" height="119" rx="10" fill="#ffffff" stroke="#a8a29e" stroke-width="2"/>
-    <rect x="116" y="537.5" width="120" height="22" rx="11" fill="#f5f5f4" stroke="#d6d3d1"/>
-    <text x="176" y="553" class="badge" fill="#44403c">No Meta model</text>
-    <text x="176" y="583.1" class="title" fill="#1d1d1b">Damage photos</text>
+    <rect x="99" y="754" width="154" height="119" rx="10" fill="#ffffff" stroke="#a8a29e" stroke-width="2"/>
+    <rect x="116" y="788.5" width="120" height="22" rx="11" fill="#f5f5f4" stroke="#d6d3d1"/>
+    <text x="176" y="804" class="badge" fill="#44403c">No Meta model</text>
+    <text x="176" y="834.1" class="title" fill="#1d1d1b">Damage photos</text>
   </g>
-  <path class="arrow" d="M258 562.5H281" fill="none" stroke="#57534e" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+  <path class="arrow" d="M258 813.5H281" fill="none" stroke="#57534e" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrowhead)"/>
   <g class="node" data-id="sam">
-    <rect x="287" y="503" width="163" height="119" rx="10" fill="#fff1e3" stroke="#ea580c" stroke-width="2"/>
-    <rect x="319.5" y="525" width="98" height="22" rx="11" fill="#ffffff" stroke="#f4c79a"/>
-    <text x="368.5" y="540.5" class="badge" fill="#7c2d12">Meta model</text>
-    <text x="368.5" y="570.6" class="title" fill="#7c2d12">SAM 3.1 outlines</text>
-    <text x="368.5" y="595.8" class="model" fill="#9a3412">SAM 3.1</text>
+    <rect x="287" y="754" width="163" height="119" rx="10" fill="#fff1e3" stroke="#ea580c" stroke-width="2"/>
+    <rect x="319.5" y="776" width="98" height="22" rx="11" fill="#ffffff" stroke="#f4c79a"/>
+    <text x="368.5" y="791.5" class="badge" fill="#7c2d12">Meta model</text>
+    <text x="368.5" y="821.6" class="title" fill="#7c2d12">SAM 3.1 outlines</text>
+    <text x="368.5" y="846.8" class="model" fill="#9a3412">SAM 3.1</text>
   </g>
-  <path class="arrow" d="M455 562.5H478" fill="none" stroke="#57534e" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+  <path class="arrow" d="M455 813.5H478" fill="none" stroke="#57534e" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrowhead)"/>
   <g class="node" data-id="image-analysis">
-    <rect x="484" y="503" width="205" height="119" rx="10" fill="#fff1e3" stroke="#ea580c" stroke-width="2"/>
-    <rect x="537.5" y="515" width="98" height="22" rx="11" fill="#ffffff" stroke="#f4c79a"/>
-    <text x="586.5" y="530.5" class="badge" fill="#7c2d12">Meta model</text>
-    <text x="586.5" y="560.6" class="title" fill="#7c2d12">Muse Spark 1.3 image</text>
-    <text x="586.5" y="580.6" class="title" fill="#7c2d12">analysis</text>
-    <text x="586.5" y="605.8" class="model" fill="#9a3412">Muse Spark 1.3</text>
+    <rect x="484" y="754" width="205" height="119" rx="10" fill="#fff1e3" stroke="#ea580c" stroke-width="2"/>
+    <rect x="537.5" y="766" width="98" height="22" rx="11" fill="#ffffff" stroke="#f4c79a"/>
+    <text x="586.5" y="781.5" class="badge" fill="#7c2d12">Meta model</text>
+    <text x="586.5" y="811.6" class="title" fill="#7c2d12">Muse Spark 1.3 image</text>
+    <text x="586.5" y="831.6" class="title" fill="#7c2d12">analysis</text>
+    <text x="586.5" y="856.8" class="model" fill="#9a3412">Muse Spark 1.3</text>
   </g>
-  <path class="arrow" d="M694 562.5H717" fill="none" stroke="#57534e" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+  <path class="arrow" d="M694 813.5H717" fill="none" stroke="#57534e" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrowhead)"/>
   <g class="node" data-id="report">
-    <rect x="723" y="503" width="138" height="119" rx="10" fill="#fff1e3" stroke="#ea580c" stroke-width="2"/>
-    <rect x="743" y="525" width="98" height="22" rx="11" fill="#ffffff" stroke="#f4c79a"/>
-    <text x="792" y="540.5" class="badge" fill="#7c2d12">Meta model</text>
-    <text x="792" y="570.6" class="title" fill="#7c2d12">Report</text>
-    <text x="792" y="595.8" class="model" fill="#9a3412">Muse Spark 1.3</text>
+    <rect x="723" y="754" width="138" height="119" rx="10" fill="#fff1e3" stroke="#ea580c" stroke-width="2"/>
+    <rect x="743" y="776" width="98" height="22" rx="11" fill="#ffffff" stroke="#f4c79a"/>
+    <text x="792" y="791.5" class="badge" fill="#7c2d12">Meta model</text>
+    <text x="792" y="821.6" class="title" fill="#7c2d12">Report</text>
+    <text x="792" y="846.8" class="model" fill="#9a3412">Muse Spark 1.3</text>
   </g>
-  <rect x="20" y="658" width="920" height="197" rx="16" fill="#fffdf8" stroke="#78716c" stroke-width="2.5" stroke-dasharray="10 7"/>
-  <text x="480" y="692.72" class="lane-title">Evaluation only (not in the live product)</text>
-  <text x="480" y="717.6" class="note">Used offline to test our alerts. It is not connected to the live alert path.</text>
+  <rect x="20" y="909" width="920" height="197" rx="16" fill="#fffdf8" stroke="#78716c" stroke-width="2.5" stroke-dasharray="10 7"/>
+  <text x="480" y="943.72" class="lane-title">Evaluation only (not in the live product)</text>
+  <text x="480" y="968.6" class="note">Used offline to test our alerts. It is not connected to the live alert path.</text>
   <g class="node" data-id="wonder-review">
-    <rect x="368" y="736" width="225" height="99" rx="10" fill="#fff1e3" stroke="#ea580c" stroke-width="2"/>
-    <rect x="431.5" y="748" width="98" height="22" rx="11" fill="#ffffff" stroke="#f4c79a"/>
-    <text x="480.5" y="763.5" class="badge" fill="#7c2d12">Meta model</text>
-    <text x="480.5" y="793.6" class="title" fill="#7c2d12">Muse Wonder 1.0 review</text>
-    <text x="480.5" y="818.8" class="model" fill="#9a3412">Muse Wonder 1.0</text>
+    <rect x="368" y="987" width="225" height="99" rx="10" fill="#fff1e3" stroke="#ea580c" stroke-width="2"/>
+    <rect x="431.5" y="999" width="98" height="22" rx="11" fill="#ffffff" stroke="#f4c79a"/>
+    <text x="480.5" y="1014.5" class="badge" fill="#7c2d12">Meta model</text>
+    <text x="480.5" y="1044.6" class="title" fill="#7c2d12">Muse Wonder 1.0 review</text>
+    <text x="480.5" y="1069.8" class="model" fill="#9a3412">Muse Wonder 1.0</text>
   </g>
 </svg>
