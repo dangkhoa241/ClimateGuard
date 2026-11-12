@@ -185,6 +185,21 @@ def list_for(zone: str, lang: str) -> list[dict]:
     return [i for i in out if _live(i)]
 
 
+def all_subscribers() -> list[dict]:
+    """Every live subscriber item (admin scripts only: this scans the table)."""
+    if config.STORAGE == "dynamodb":
+        out, kwargs = [], {}
+        while True:
+            page = _table().scan(**kwargs)
+            out += page["Items"]
+            if "LastEvaluatedKey" not in page:
+                break
+            kwargs["ExclusiveStartKey"] = page["LastEvaluatedKey"]
+    else:
+        out = list(_load().values())
+    return [i for i in out if "endpoint" in i and _live(i)]
+
+
 def count_zone(zone: str) -> int:
     if config.STORAGE == "dynamodb":
         from boto3.dynamodb.conditions import Attr, Key

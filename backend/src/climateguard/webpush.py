@@ -88,14 +88,15 @@ def vapid_key() -> str | None:
     return key or None
 
 
-def _send(subscription: dict, payload: str, key: str) -> int:
-    """One push request. Returns the HTTP status (0 if there was none: timeout, network error)."""
+def _send(subscription: dict, payload: str, key: str, contact: str | None = None) -> int:
+    """One push request. Returns the HTTP status (0 if there was none: timeout, network error).
+    `contact` is the VAPID "sub" claim (the app's URL by default)."""
     from pywebpush import WebPushException, webpush
 
     try:
         resp = webpush(subscription_info={"endpoint": subscription["endpoint"],
                                           "keys": {"p256dh": subscription["p256dh"], "auth": subscription["auth"]}},
-                       data=payload, vapid_private_key=key, vapid_claims={"sub": config.FRONTEND_URL},
+                       data=payload, vapid_private_key=key, vapid_claims={"sub": contact or config.FRONTEND_URL},
                        ttl=config.PUSH_TTL_S, headers={"Urgency": "high"}, timeout=config.PUSH_TIMEOUT_S)
         return int(getattr(resp, "status_code", 201))
     except WebPushException as e:
