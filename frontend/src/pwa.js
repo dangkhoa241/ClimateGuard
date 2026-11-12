@@ -1,8 +1,11 @@
 // PWA helpers: service worker registration, install prompt, the push feature flag, and the "last alert viewed"
 // copy used offline. Nothing here touches the network except registering /sw.js.
 
-// --- feature flag: push UI is hidden unless the URL has ?push=1 (remembered for the tab session) ---
+// --- feature flag: push UI is hidden for normal browser visitors. It shows when the URL has ?push=1 (remembered
+// for the tab session) OR the app runs installed: an iPhone Home Screen app has no address bar and its own storage,
+// so ?push=1 cannot reach it. Demo mode is guarded separately (PushSignup, api.js, push.js never subscribe). ---
 export function pushFlagOn() {
+  if (isStandalone()) return true
   try {
     if (new URLSearchParams(window.location.search).get('push') === '1') {
       try { sessionStorage.setItem('cgPush', '1') } catch { /* storage blocked: the URL flag still works */ }

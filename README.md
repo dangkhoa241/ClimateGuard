@@ -228,7 +228,7 @@ The same system diagram is in [docs/architecture.mmd](docs/architecture.mmd).
 
 ## Install and phone notifications (preview)
 
-ClimateGuard can be installed on a phone (Add to Home Screen) and the last alert you viewed stays readable offline, labeled with its time and "may be out of date". **Phone notifications** (web push, no email address needed) are built but hidden: add `?push=1` to the address to see the "Turn on phone notifications" section on the Get alerts page. Demo mode never creates a push subscription. Details: [docs/TECHNICAL.md](docs/TECHNICAL.md#installable-app-and-phone-notifications-web-push).
+ClimateGuard can be installed on a phone (Add to Home Screen) and the last alert you viewed stays readable offline, labeled with its time and "may be out of date". **Phone notifications** (web push, no email address needed) are built but hidden: add `?push=1` to the address, or open the installed app (Home Screen), to see the "Turn on phone notifications" section on the Get alerts page. Demo mode never creates a push subscription. Details: [docs/TECHNICAL.md](docs/TECHNICAL.md#installable-app-and-phone-notifications-web-push).
 
 ## Known limitations
 

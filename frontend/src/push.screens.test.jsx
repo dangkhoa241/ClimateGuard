@@ -111,6 +111,53 @@ describe('feature flag', () => {
   })
 })
 
+describe('installed app (no address bar, so no ?push=1)', () => {
+  afterEach(() => { delete window.navigator.standalone })
+
+  it('shows in an installed app on Android (display-mode: standalone) without ?push=1', async () => {
+    setUa(ANDROID, true)
+    await open({ url: '/#/alerts' })
+    expect(container.querySelector('.push-signup')).not.toBeNull()
+    await act(async () => button(t.pushButton).click())
+    await settle()
+    expect(pushManager.subscribe).toHaveBeenCalled()
+  })
+
+  it('shows in an iPhone Home Screen app (navigator.standalone) without ?push=1', async () => {
+    setUa(IPHONE, false) // matchMedia says no; older iOS only sets navigator.standalone
+    Object.defineProperty(window.navigator, 'standalone', { configurable: true, value: true })
+    await open({ url: '/#/alerts' })
+    const section = container.querySelector('.push-signup')
+    expect(section).not.toBeNull()
+    expect(section.textContent).not.toContain(t.pushNeedInstall) // installed: the button works
+    await act(async () => button(t.pushButton).click())
+    await settle()
+    expect(pushManager.subscribe).toHaveBeenCalled()
+    expect(sessionStorage.getItem('cgPush')).toBeNull() // no URL flag was involved
+  })
+
+  it('stays hidden in a normal browser tab without ?push=1 (Android and iPhone)', async () => {
+    for (const ua of [ANDROID, IPHONE]) {
+      setUa(ua, false)
+      await open({ url: '/#/alerts', locate: false })
+      expect(container.querySelector('.push-signup')).toBeNull()
+      act(() => root.unmount())
+      root = createRoot(container)
+    }
+  })
+
+  it('in an installed app, demo mode still never subscribes', async () => {
+    setUa(IPHONE, true)
+    await open({ url: '/?demo=1#/alerts', locate: false })
+    const section = container.querySelector('.push-signup')
+    expect(section.textContent).toContain(t.pushDemoNote)
+    expect(section.querySelector('button')).toBeNull()
+    expect(window.Notification.requestPermission).not.toHaveBeenCalled()
+    expect(pushManager.subscribe).not.toHaveBeenCalled()
+    expect(pushCalls()).toHaveLength(0)
+  })
+})
+
 describe('turning notifications on', () => {
   it('asks permission on the tap, subscribes with the public key, and sends no email', async () => {
     await open()
