@@ -3,24 +3,27 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { PLACEHOLDER, buildIdFor, stampServiceWorker } from '../scripts/stamp-sw.mjs'
 
 const SOURCE = readFileSync(new URL('../public/sw.js', import.meta.url), 'utf8')
 const ORIGIN = 'https://app.example'
 
-function loadWorker({ online = true, pages = {} } = {}) {
+function loadWorker({ online = true, pages = {}, source = SOURCE, keys = ['old-cache', 'cg-shell-__BUILD_ID__'] } = {}) {
   const handlers = {}
   const store = new Map() // cache: url -> response
   const cache = {
-    put: async (req, res) => store.set(typeof req === 'string' ? new URL(req, ORIGIN).href : req.url, res),
+    put: async (req, res) => opened_caches.at(-1) && store.set(typeof req === 'string' ? new URL(req, ORIGIN).href : req.url, res),
     add: async (url) => { if (!online) throw new Error('offline'); store.set(new URL(url, ORIGIN).href, { ok: true, url }) },
   }
   const caches = {
-    open: async () => cache,
-    keys: async () => ['old-cache', 'cg-shell-v1'],
+    open: async (name) => { opened_caches.push(name); return cache },
+    keys: async () => keys,
     delete: async (k) => { deleted.push(k) },
     match: async (req) => store.get(typeof req === 'string' ? new URL(req, ORIGIN).href : req.url),
   }
   const deleted = []
+  const opened_caches = []
+  const lifecycle = []
   const fetched = []
   const shown = []
   const opened = []
@@ -35,13 +38,15 @@ function loadWorker({ online = true, pages = {} } = {}) {
   const self = {
     location: { origin: ORIGIN },
     addEventListener: (type, fn) => { handlers[type] = fn },
-    registration: { showNotification: async (title, opts) => { shown.push({ title, opts }) } },
-    clients: { claim: async () => {}, matchAll: async () => clientsList, openWindow: async (u) => { opened.push(u) } },
+    registration: { showNotification: async (title, opts) => { shown.push({ title, opts }) },
+      unregister: async () => { lifecycle.push('unregister'); return true } },
+    skipWaiting: async () => { lifecycle.push('skipWaiting') },
+    clients: { claim: async () => { lifecycle.push('claim') }, matchAll: async () => clientsList, openWindow: async (u) => { opened.push(u) } },
   }
-  new Function('self', 'caches', 'fetch', 'Response', SOURCE)(self, caches, fetchFn, { error: () => 'error-response' })
+  new Function('self', 'caches', 'fetch', 'Response', source)(self, caches, fetchFn, { error: () => 'error-response' })
   const waits = []
   const dispatch = (type, event) => { handlers[type]({ waitUntil: (p) => waits.push(p), ...event }); return Promise.all(waits) }
-  return { dispatch, store, fetched, shown, opened, deleted, clientsList, handlers }
+  return { dispatch, store, fetched, shown, opened, deleted, clientsList, handlers, lifecycle, opened_caches }
 }
 
 const req = (url, method = 'GET', mode = 'cors') => ({ url, method, mode })
@@ -143,4 +148,58 @@ test('a notification can never open another origin', async () => {
   const w = loadWorker()
   await w.dispatch('notificationclick', click('https://evil.example/phish'))
   assert.deepEqual(w.opened, [`${ORIGIN}/`])
+})
+
+// --- updates: a new deploy replaces the old service worker and its cache ---
+
+test('the source carries the build placeholder, and the cache name is built from it', () => {
+  assert.equal(SOURCE.split(PLACEHOLDER).length - 1, 1, 'exactly one placeholder to stamp')
+  assert.match(SOURCE, /const CACHE = `cg-shell-\$\{BUILD\}`/)
+})
+
+test('every deploy gets different service worker bytes, so the browser installs the new one', () => {
+  const a = stampServiceWorker(SOURCE, buildIdFor('<script src="/assets/index-aaa.js">'))
+  const b = stampServiceWorker(SOURCE, buildIdFor('<script src="/assets/index-bbb.js">'))
+  assert.notEqual(a, b)
+  assert.ok(!a.includes(PLACEHOLDER) && !b.includes(PLACEHOLDER))
+  assert.equal(stampServiceWorker(SOURCE, buildIdFor('same')), stampServiceWorker(SOURCE, buildIdFor('same'))) // same app, same worker
+  assert.throws(() => stampServiceWorker(SOURCE, "x'; evil()"))
+})
+
+test('a new version takes over at once: skipWaiting on install, clients.claim on activate', async () => {
+  const w = loadWorker()
+  await w.dispatch('install', {})
+  assert.deepEqual(w.lifecycle, ['skipWaiting'])
+  await w.dispatch('activate', {})
+  assert.deepEqual(w.lifecycle, ['skipWaiting', 'claim'])
+})
+
+test('the new version caches under its own name and deletes the cache of the previous version', async () => {
+  const source = stampServiceWorker(SOURCE, 'build2222222')
+  const w = loadWorker({ source, keys: ['cg-shell-build1111111', 'cg-shell-build2222222', 'cg-shell-v1'] })
+  await w.dispatch('install', {})
+  assert.ok(w.opened_caches.every((name) => name === 'cg-shell-build2222222'))
+  await w.dispatch('activate', {})
+  assert.deepEqual(w.deleted, ['cg-shell-build1111111', 'cg-shell-v1'])
+})
+
+// --- kill switch ---
+
+const KILL = readFileSync(new URL('../public/sw-kill.js', import.meta.url), 'utf8')
+
+test('kill switch: deletes every cache, unregisters, and handles no requests', async () => {
+  const w = loadWorker({ source: KILL, keys: ['cg-shell-build1111111', 'cg-shell-v1', 'anything-else'] })
+  await w.dispatch('install', {})
+  assert.deepEqual(w.lifecycle, ['skipWaiting']) // replaces the running worker without waiting
+  await w.dispatch('activate', {})
+  assert.deepEqual(w.deleted, ['cg-shell-build1111111', 'cg-shell-v1', 'anything-else'])
+  assert.deepEqual(w.lifecycle, ['skipWaiting', 'unregister'])
+  assert.deepEqual(Object.keys(w.handlers).sort(), ['activate', 'install']) // no fetch, push or click handlers
+  assert.equal(w.store.size, 0)
+  assert.deepEqual(w.fetched, [])
+})
+
+test('kill switch is a different file from the worker and is not stamped by the build', () => {
+  assert.notEqual(KILL, SOURCE)
+  assert.ok(!KILL.includes(PLACEHOLDER))
 })

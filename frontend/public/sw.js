@@ -3,7 +3,12 @@
 //   origin, and every request that is not on the allow-list below is left alone for the browser to handle.
 //   Sign-ups, photo uploads, damage reports and every other API response are never cached.
 // - Shows web push notifications and opens the matching alert page when one is tapped.
-const CACHE = 'cg-shell-v1'
+// - Updates: the build stamps BUILD below with a new id on every deploy (scripts/stamp-sw.mjs), so the browser sees
+//   a changed file, installs it, and it takes over at once (skipWaiting + clients.claim). The shell cache is named
+//   after the build, and activate deletes every older cache.
+// - Emergency off switch: public/sw-kill.js (see docs/TECHNICAL.md, "Service worker kill switch").
+const BUILD = '__BUILD_ID__'
+const CACHE = `cg-shell-${BUILD}`
 const SHELL = ['/', '/manifest.webmanifest', '/favicon.svg', '/favicon.ico', '/apple-touch-icon.png',
   '/icon-192.png', '/icon-512.png', '/icon-maskable-192.png', '/icon-maskable-512.png']
 // Static files only: hashed build assets and the icon and manifest files.
@@ -18,6 +23,7 @@ self.addEventListener('install', (event) => {
     await cache.put('/', page)
     const assets = [...new Set(html.match(/\/assets\/[^"'\s)]+/g) || [])]
     await Promise.all([...SHELL.slice(1), ...assets].map((url) => cache.add(url).catch(() => {})))
+    await self.skipWaiting() // replace the previous version now, not after every tab is closed
   })())
 })
 

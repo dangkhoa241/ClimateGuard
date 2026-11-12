@@ -486,6 +486,20 @@ python scripts/run_eval.py edge_prompt_injection real_flood_warning
   - **Pruning:** a 404 or 410 deletes that subscription and frees its slot. Other failures keep it.
   - **Logs:** counts only (`sent`, `gone`, `failed`, `skipped`), never endpoints, keys or the private key.
 
+### Service worker updates and kill switch
+
+- **A new deploy replaces the old service worker.** `public/sw.js` is a static file, so the build stamps it: `scripts/stamp-sw.mjs` (a small Vite plugin) writes a build id into `dist/sw.js`, a hash of the built `index.html`, which changes whenever the app's JS or CSS changes. The browser re-checks `/sw.js` on every visit, sees different bytes, and installs the new worker, which takes over at once (`skipWaiting()` on install, `clients.claim()` on activate). The app is a single JS and CSS bundle, so a page that is already open keeps working.
+- **The shell cache is versioned.** Its name is `cg-shell-<build id>`. On activate, the worker deletes every other cache, so old assets do not pile up. Tests cover the stamp, the takeover and the deletion.
+- **Kill switch (`frontend/public/sw-kill.js`).** If the service worker ever misbehaves (stale pages, a broken offline shell), switch it off for everyone in one step, then deploy:
+  ```powershell
+  Copy-Item frontend/public/sw-kill.js frontend/public/sw.js -Force
+  git commit -am "Service worker kill switch"; git push    # Vercel deploys main
+  ```
+  On each person's next visit the browser fetches `/sw.js`, gets the kill file, and it deletes every cache and unregisters itself. It has no fetch handler, so the site then loads straight from the network. Effects to know: the offline shell is gone, and unregistering ends that device's phone notifications (the server removes the device on its next push, a 410). Emails are unaffected.
+  **To bring it back:** `git revert` that commit (or `git checkout <earlier commit> -- frontend/public/sw.js`) and deploy; phones must turn notifications on again.
+- **Test notification (`backend/scripts/send_test_push.py`).** A local admin script, not an API route: it reads the subscriptions from DynamoDB and the VAPID key from SSM with your AWS credentials, and sends "ClimateGuard test notification" in the subscription's language to the most recent subscription, or to every subscription in a ZIP code's zone (`--zip`). `--dry-run` sends nothing, `--open-url` sets the site the tap opens, `--prune` removes devices the push service reports as gone. It prints zones, languages and counts only.
+- **Testing before a merge:** [PWA-TEST-PLAN.md](PWA-TEST-PLAN.md) (desktop Chrome at localhost against the live API).
+
 ### VAPID keys
 
 - The **private key** is an SSM SecureString, `/climateguard/vapid-private-key`, read at runtime **only by the collector** (the API function cannot read it). It is never in the repo, `.env.example`, logs or chat. A test scans the tracked files, and another checks the IAM policies.
